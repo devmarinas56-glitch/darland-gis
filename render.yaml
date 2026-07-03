@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: darland-gis
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: APP_NAME
+        value: DarLand GIS
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: darland-database
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: darland-database
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: darland-database
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: darland-database
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: darland-database
+          property: password
+
+databases:
+  - name: darland-database
+    databaseName: darland_gis
+    user: darland_user
