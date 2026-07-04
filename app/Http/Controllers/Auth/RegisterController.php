@@ -26,10 +26,11 @@ class RegisterController extends Controller
         ]);
 
         $user = User::create([
-            'name'          => $validated['first_name'] . ' ' . $validated['last_name'],
-            'email'         => $validated['email'],
-            'password'      => Hash::make($validated['password']),
-            'role'          => 'user',
+            'name'     => $validated['first_name'] . ' ' . $validated['last_name'],
+            'username' => strtolower(explode('@', $validated['email'])[0]),
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role'     => 'user',
         ]);
 
         Auth::login($user);

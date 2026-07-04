@@ -15,6 +15,7 @@ class TestUserSeeder extends Seeder
             ['email' => 'admin@darland.com'],
             [
                 'name'     => 'Admin User',
+                'username' => 'admin',
                 'email'    => 'admin@darland.com',
                 'password' => Hash::make('admin123'),
                 'role'     => 'admin',
@@ -26,6 +27,7 @@ class TestUserSeeder extends Seeder
             ['email' => 'user@darland.com'],
             [
                 'name'     => 'Test User',
+                'username' => 'testuser',
                 'email'    => 'user@darland.com',
                 'password' => Hash::make('user123'),
                 'role'     => 'user',
