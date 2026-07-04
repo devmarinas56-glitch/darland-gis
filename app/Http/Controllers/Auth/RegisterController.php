@@ -30,7 +30,7 @@ class RegisterController extends Controller
             'username' => strtolower(explode('@', $validated['email'])[0]),
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role'     => 'user',
+            'role'     => 'ajdp', // DarLand uses ajdp as default user role
         ]);
 
         Auth::login($user);
