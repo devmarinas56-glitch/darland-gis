@@ -10,7 +10,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: true
       - key: APP_URL
         value: https://darland-gis.onrender.com
       - key: SESSION_DRIVER

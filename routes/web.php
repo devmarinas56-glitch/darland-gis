@@ -7,6 +7,17 @@ use App\Http\Controllers\LandRecordsController;
 
 Route::get('/', function () { return redirect('/login'); });
 
+// Debug route for Render
+Route::get('/debug', function () {
+    return response()->json([
+        'app_key_set' => !empty(config('app.key')),
+        'db_connection' => config('database.default'),
+        'session_driver' => config('session.driver'),
+        'app_env' => config('app.env'),
+        'php_version' => PHP_VERSION,
+    ]);
+});
+
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
