@@ -2,41 +2,34 @@
 
 echo "=== Starting DarLand - Land GIS System ==="
 
-# Clear all caches
+# Clear all caches aggressively
 rm -rf bootstrap/cache/*.php
 rm -rf storage/framework/views/*.php
-php artisan cache:clear --no-interaction 2>/dev/null || true
-php artisan config:clear --no-interaction 2>/dev/null || true
-php artisan route:clear --no-interaction 2>/dev/null || true
-php artisan view:clear --no-interaction 2>/dev/null || true
+rm -rf storage/framework/cache/data/*
 
-# Ensure storage directories exist with full permissions
-mkdir -p storage/framework/sessions
-mkdir -p storage/framework/views
-mkdir -p storage/framework/cache
-mkdir -p storage/logs
-chmod -R 777 storage
-chmod -R 777 bootstrap/cache
+# Full permissions
+chmod -R 777 storage bootstrap/cache
 
-# Generate app key
+# Always generate key fresh
 php artisan key:generate --force --no-interaction
+
+# Show env for debugging
+echo "APP_ENV: $APP_ENV"
+echo "DB_CONNECTION: $DB_CONNECTION"
+echo "SESSION_DRIVER: $SESSION_DRIVER"
+
+# Clear again after key generation
+php artisan config:clear --no-interaction 2>/dev/null || true
+php artisan cache:clear --no-interaction 2>/dev/null || true
+php artisan view:clear --no-interaction 2>/dev/null || true
 
 # Run migrations
 echo "Running migrations..."
 php artisan migrate --force
 
-# Seed test users
+# Seed users
 echo "Seeding users..."
 php artisan db:seed --class=TestUserSeeder --force
 
-# Storage link
-php artisan storage:link 2>/dev/null || true
-
-# Set APP_URL
-if [ -z "$APP_URL" ]; then
-    export APP_URL="https://darland-gis.onrender.com"
-fi
-
-echo "APP_URL: $APP_URL"
-echo "Starting server on 0.0.0.0:$PORT"
+echo "Starting on 0.0.0.0:$PORT"
 php -S 0.0.0.0:$PORT -t public
