@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/land-records', [LandRecordsController::class, 'index'])->name('land-records.index');
     Route::post('/land-records', [LandRecordsController::class, 'store'])->name('land-records.store');
     Route::put('/land-records/{landLot}', [LandRecordsController::class, 'update'])->name('land-records.update');
-    Route::delete('/land-records/{landLot}', [LandRecordsController::class, 'destroy'])->name('land-records.destroy');    Route::get('/api/lots', [LandRecordsController::class, 'apiLots'])->name('api.lots');
+    Route::delete('/land-records/{landLot}', [LandRecordsController::class, 'destroy'])->name('land-records.destroy');
+    Route::get('/api/lots', [LandRecordsController::class, 'apiLots'])->name('api.lots');
     Route::post('/api/check-overlap', [LandRecordsController::class, 'checkOverlap'])->name('api.check-overlap');
 });
