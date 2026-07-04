@@ -26,10 +26,7 @@ class LoginController extends Controller
 
             $user = Auth::user();
 
-            if ($user->role === 'admin') {
-                return redirect()->intended('/admin/dashboard');
-            }
-
+            // Both admin and user go to same dashboard in DarLand
             return redirect()->intended('/dashboard');
         }
 
