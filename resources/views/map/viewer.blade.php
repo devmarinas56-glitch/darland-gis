@@ -80,7 +80,7 @@
 </head>
 <body>
     <aside class="sidebar">
-        <div class="logo-section"><img src="{{ asset('images/DarlandIcon.png') }}" alt="Logo"></div>
+        <div class="logo-section"><img src="{{ asset('images/Darlandicon.png') }}" alt="Logo"></div>
         <nav class="nav-menu">
             <a href="/dashboard" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
             <a href="/map-viewer" class="nav-item active"><i class="fas fa-map"></i><span>Map Viewer</span></a>
@@ -481,3 +481,4 @@
     </script>
 </body>
 </html>
+

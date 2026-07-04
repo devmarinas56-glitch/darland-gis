@@ -318,7 +318,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo-section">
-            <img src="{{ asset('images/DarlandIcon.png') }}" alt="Land GIS Logo">
+            <img src="{{ asset('images/Darlandicon.png') }}" alt="Land GIS Logo">
         </div>
         <nav class="nav-menu">
             <a href="/dashboard" class="nav-item active">
@@ -544,3 +544,4 @@
     </script>
 </body>
 </html>
+
