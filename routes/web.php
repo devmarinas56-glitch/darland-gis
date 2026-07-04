@@ -25,7 +25,13 @@ Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->na
 Route::post('/register', [RegisterController::class, 'register']);
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', fn() => view('dashboard.index'))->name('dashboard');
+    Route::get('/dashboard', function() {
+        try {
+            return view('dashboard.index');
+        } catch (\Exception $e) {
+            return response('Dashboard error: ' . $e->getMessage(), 500);
+        }
+    })->name('dashboard');
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
     Route::get('/land-records', [LandRecordsController::class, 'index'])->name('land-records.index');
     Route::post('/land-records', [LandRecordsController::class, 'store'])->name('land-records.store');
