@@ -5,21 +5,11 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring xml \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 WORKDIR /app
 
 COPY . .
 
 RUN cp .env.example .env
-
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --no-scripts \
-    --prefer-dist \
-    --no-cache
 
 RUN mkdir -p storage/framework/sessions \
     storage/framework/views \
