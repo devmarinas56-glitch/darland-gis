@@ -22,7 +22,7 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+            // Do not regenerate session ID — causes session loss on Render's proxy
             return redirect('/dashboard');
         }
 

@@ -16,7 +16,7 @@ services:
       - key: APP_KEY
         value: base64:DCCfl/sSl5AcfR1mdraNy7B0i9+Y8YfCkjSqnucF6OM=
       - key: SESSION_DRIVER
-        value: file
+        value: database
       - key: SESSION_SECURE_COOKIE
         value: false
       - key: CACHE_STORE
