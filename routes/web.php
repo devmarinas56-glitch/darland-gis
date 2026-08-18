@@ -31,9 +31,26 @@ Route::get('/debug-users', function () {
     $users = \App\Models\User::select('id','name','email','role','username',
         \Illuminate\Support\Facades\DB::raw('LEFT(password,20) as password_prefix'))
         ->get();
+
+    // Also test password verification directly
+    $admin = \App\Models\User::where('email','admin@darland.com')->first();
+    $hashTest = null;
+    if ($admin) {
+        $rawHash = \Illuminate\Support\Facades\DB::table('users')
+            ->where('email','admin@darland.com')
+            ->value('password');
+        $hashTest = [
+            'raw_hash_prefix' => substr($rawHash, 0, 30),
+            'hash_length'     => strlen($rawHash),
+            'verify_admin123' => \Illuminate\Support\Facades\Hash::check('admin123', $rawHash),
+            'verify_via_model'=> \Illuminate\Support\Facades\Hash::check('admin123', $admin->password),
+        ];
+    }
+
     return response()->json([
-        'count' => $users->count(),
-        'users' => $users,
+        'count'     => $users->count(),
+        'users'     => $users,
+        'hash_test' => $hashTest,
     ]);
 });
 
