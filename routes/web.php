@@ -10,11 +10,30 @@ Route::get('/', function () { return redirect('/login'); });
 // Debug route for Render
 Route::get('/debug', function () {
     return response()->json([
-        'app_key_set' => !empty(config('app.key')),
-        'db_connection' => config('database.default'),
+        'app_key_set'    => !empty(config('app.key')),
+        'db_connection'  => config('database.default'),
         'session_driver' => config('session.driver'),
-        'app_env' => config('app.env'),
-        'php_version' => PHP_VERSION,
+        'session_secure' => config('session.secure'),
+        'app_env'        => config('app.env'),
+        'app_url'        => config('app.url'),
+        'php_version'    => PHP_VERSION,
+        'is_https'       => request()->isSecure(),
+        'forwarded_proto'=> request()->header('X-Forwarded-Proto'),
+        'session_id'     => session()->getId(),
+        'auth_check'     => auth()->check(),
+        'session_data'   => session()->all(),
+        'trusted_proxies'=> config('trustedproxy.proxies'),
+    ]);
+});
+
+// Diagnostic: check if admin user exists in DB
+Route::get('/debug-users', function () {
+    $users = \App\Models\User::select('id','name','email','role','username',
+        \Illuminate\Support\Facades\DB::raw('LEFT(password,20) as password_prefix'))
+        ->get();
+    return response()->json([
+        'count' => $users->count(),
+        'users' => $users,
     ]);
 });
 
