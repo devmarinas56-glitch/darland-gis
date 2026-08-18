@@ -31,17 +31,5 @@ php artisan migrate:fresh --force
 echo "Seeding users..."
 php artisan db:seed --class=TestUserSeeder --force
 
-# Verify seeded passwords (debug)
-echo "=== Verifying seeded accounts ==="
-php artisan tinker --no-interaction <<'EOF'
-$u = \App\Models\User::where('email','admin@darland.com')->first();
-if ($u) {
-    echo "Admin found. Password hash: " . $u->getRawOriginal('password') . "\n";
-    echo "Hash check: " . (password_verify('admin123', $u->getRawOriginal('password')) ? 'PASS' : 'FAIL') . "\n";
-} else {
-    echo "Admin NOT found in database!\n";
-}
-EOF
-
 echo "Starting on 0.0.0.0:$PORT"
 php -S 0.0.0.0:$PORT -t public
