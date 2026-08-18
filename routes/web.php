@@ -54,7 +54,34 @@ Route::get('/debug-users', function () {
     ]);
 });
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+// Diagnostic: test auth attempt directly
+Route::get('/debug-auth', function () {
+    $email = request('email', 'admin@darland.com');
+    $password = request('password', 'admin123');
+
+    $user = \App\Models\User::where('email', $email)->first();
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+
+    $rawHash = \Illuminate\Support\Facades\DB::table('users')->where('email', $email)->value('password');
+
+    $result = [
+        'user_found'       => true,
+        'email'            => $user->email,
+        'role'             => $user->role,
+        'hash_prefix'      => substr($rawHash, 0, 30),
+        'hash_length'      => strlen($rawHash),
+        'verify_direct'    => \Illuminate\Support\Facades\Hash::check($password, $rawHash),
+        'verify_model'     => \Illuminate\Support\Facades\Hash::check($password, $user->password),
+        'auth_attempt'     => \Illuminate\Support\Facades\Auth::attempt(['email' => $email, 'password' => $password]),
+        'auth_check_after' => auth()->check(),
+    ];
+
+    \Illuminate\Support\Facades\Auth::logout();
+
+    return response()->json($result);
+});
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
@@ -65,7 +92,7 @@ Route::middleware(['auth'])->group(function () {
         try {
             return view('dashboard.index');
         } catch (\Exception $e) {
-            return response('Dashboard error: ' . $e->getMessage(), 500);
+            return response('Dashboard error for user ' . auth()->user()->email . ' role=' . auth()->user()->role . ': ' . $e->getMessage(), 500);
         }
     })->name('dashboard');
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
