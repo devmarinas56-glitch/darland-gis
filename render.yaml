@@ -13,8 +13,14 @@ services:
         value: true
       - key: APP_URL
         value: https://darland-gis.onrender.com
+      - key: APP_KEY
+        value: base64:DCCfl/sSl5AcfR1mdraNy7B0i9+Y8YfCkjSqnucF6OM=
       - key: SESSION_DRIVER
         value: cookie
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST

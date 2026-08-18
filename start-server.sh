@@ -10,18 +10,16 @@ rm -rf storage/framework/cache/data/*
 # Full permissions
 chmod -R 777 storage bootstrap/cache
 
-# Always generate key fresh
-php artisan key:generate --force --no-interaction
+# Only generate key if not already set
+if [ -z "$APP_KEY" ]; then
+    php artisan key:generate --force --no-interaction
+fi
 
 # Show env for debugging
 echo "APP_ENV: $APP_ENV"
 echo "DB_CONNECTION: $DB_CONNECTION"
 echo "SESSION_DRIVER: $SESSION_DRIVER"
-
-# Clear again after key generation
-php artisan config:clear --no-interaction 2>/dev/null || true
-php artisan cache:clear --no-interaction 2>/dev/null || true
-php artisan view:clear --no-interaction 2>/dev/null || true
+echo "CACHE_STORE: $CACHE_STORE"
 
 # Run migrations
 echo "Running migrations..."
