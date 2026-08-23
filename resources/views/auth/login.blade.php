@@ -169,9 +169,6 @@
                 <button type="submit" class="login-btn">LOG IN</button>
             </form>
 
-            <div class="register-row">
-                Don't Have an account? <a href="{{ route('register') }}">REGISTER NOW</a>
-            </div>
             <div class="back-home">
                 <a href="#">Back to Home</a>
             </div>

@@ -112,6 +112,9 @@
             <a href="/dashboard" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
             <a href="/map-viewer" class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
             <a href="/land-records" class="nav-item active"><i class="fas fa-file-alt"></i><span>Land Records</span></a>
+            @if(auth()->user()->role === 'admin')
+            <a href="{{ route('admin.users') }}" class="nav-item"><i class="fas fa-users"></i><span>Users</span></a>
+            @endif
         </nav>
         <div class="logout-section">
             <form method="POST" action="{{ route('logout') }}">

@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\LandRecordsController;
+use App\Http\Controllers\Admin\UserManagementController;
 
 Route::get('/', function () { return redirect('/login'); });
 
@@ -85,8 +85,8 @@ Route::get('/debug-auth', function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
+// Registration disabled — admin creates accounts
+// Route::get('/register', ...)
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function() {
@@ -103,4 +103,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/land-records/{landLot}', [LandRecordsController::class, 'destroy'])->name('land-records.destroy');
     Route::get('/api/lots', [LandRecordsController::class, 'apiLots'])->name('api.lots');
     Route::post('/api/check-overlap', [LandRecordsController::class, 'checkOverlap'])->name('api.check-overlap');
+    // Admin user management
+    Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
+    Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
+    Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
