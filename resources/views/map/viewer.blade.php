@@ -87,10 +87,7 @@
             <a href="/land-records" class="nav-item"><i class="fas fa-file-alt"></i><span>Land Records</span></a>
         </nav>
         <div class="logout-section">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></button>
-            </form>
+            <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></a>
         </div>
     </aside>
 

@@ -337,12 +337,9 @@
             @endif
         </nav>
         <div class="logout-section">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-btn">
+            <a href="/logout" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i><span>Log Out</span>
-                </button>
-            </form>
+                </a>
         </div>
     </aside>
 

@@ -81,10 +81,7 @@
             <a href="{{ route('admin.users') }}" class="nav-item active"><i class="fas fa-users"></i><span>Users</span></a>
         </nav>
         <div class="logout-section">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></button>
-            </form>
+            <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></a>
         </div>
     </aside>
 
