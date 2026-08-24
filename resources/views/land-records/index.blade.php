@@ -43,10 +43,7 @@
         .map-layout { display: grid; grid-template-columns: 1fr 300px; gap: 15px; margin-bottom: 15px; }
         .map-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
         #recordsMap { height: 380px; width: 100%; }
-        .draw-btn { position: absolute; top: 12px; right: 12px; z-index: 999; padding: 9px 16px; background: #1a2744; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.3s; }
-        .draw-btn:hover { background: #2d4070; }
-        .draw-btn.cancel { background: #c62828; }
-        .info-panel { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .info-panel { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-y: auto; }
         .info-placeholder { text-align: center; padding: 50px 15px; color: #ccc; }
         .info-placeholder i { font-size: 36px; margin-bottom: 10px; display: block; }
         .info-placeholder p { font-size: 13px; }
@@ -65,6 +62,24 @@
         .info-actions { display: flex; gap: 10px; margin-top: 15px; }
         .btn-view { flex:1; padding: 9px; background: white; border: 1px solid #1a2744; color: #1a2744; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:5px; }
         .btn-edit { flex:1; padding: 9px; background: #1976d2; color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:5px; }
+
+        /* Lot Data Computation Panel */
+        .comp-panel { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 12px; }
+        .comp-title { font-size: 13px; font-weight: 700; color: #1a2744; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
+        .comp-section-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .comp-stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f9f9f9; }
+        .comp-stat-row:last-child { border-bottom: none; }
+        .comp-stat-label { font-size: 12px; color: #555; display: flex; align-items: center; gap: 6px; }
+        .comp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .comp-stat-value { font-size: 13px; font-weight: 700; color: #333; }
+        .comp-highlight { background: #f0f4ff; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .comp-highlight-label { font-size: 11px; color: #666; }
+        .comp-highlight-value { font-size: 18px; font-weight: 800; color: #1a2744; }
+        .comp-highlight-unit { font-size: 10px; color: #999; }
+        .comp-bar-wrap { margin-bottom: 2px; }
+        .comp-bar-label-row { display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-bottom: 3px; }
+        .comp-bar-track { background: #f0f0f0; border-radius: 4px; height: 7px; overflow: hidden; }
+        .comp-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
         .table-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .table-header h3 { font-size: 15px; font-weight: 600; color: #333; }
@@ -78,31 +93,8 @@
         .records-table tr.selected td { background: #e3f2fd; }
     </style>
     <style>
-        /* Modals */
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
-        .overlay.show { display: flex; }
-        .modal { background: white; border-radius: 16px; padding: 35px; max-width: 430px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-        .modal-icon { font-size: 44px; color: #1a2744; margin-bottom: 15px; }
-        .modal h3 { font-size: 19px; font-weight: 700; color: #333; margin-bottom: 8px; }
-        .modal p { font-size: 13px; color: #666; margin-bottom: 22px; line-height: 1.5; }
-        .modal-btns { display: flex; gap: 12px; justify-content: center; }
-        .btn-confirm { padding: 12px 28px; background: #1a2744; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .btn-confirm:hover { background: #2d4070; }
-        .btn-cancel { padding: 12px 28px; background: #f5f5f5; color: #555; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
-        .form-overlay.show { display: flex; }
-        .form-card { background: white; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        .form-card h3 { font-size: 19px; font-weight: 700; color: #333; margin-bottom: 4px; }
-        .form-card p { font-size: 13px; color: #888; margin-bottom: 20px; }
-        .form-row { margin-bottom: 14px; }
-        .form-row label { font-size: 13px; font-weight: 600; color: #444; display: block; margin-bottom: 5px; }
-        .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 10px 13px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; color: #333; }
-        .form-row input:focus, .form-row select:focus, .form-row textarea:focus { outline: none; border-color: #1a2744; }
-        .form-row textarea { resize: vertical; min-height: 70px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 18px; }
-        .btn-submit { padding: 11px 28px; background: #1a2744; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .btn-discard { padding: 11px 18px; background: #ffebee; color: #c62828; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        /* Layout only — modals removed */
+        .overlay, .form-overlay { display: none; }
     </style>
 </head>
 <body>
@@ -178,18 +170,10 @@
             <div class="map-layout">
                 <div class="map-container">
                     <div id="recordsMap"></div>
-                    <button class="draw-btn" id="drawBtn" onclick="toggleDraw()">
-                        <i class="fas fa-draw-polygon"></i> Mark My Land
-                    </button>
                 </div>
 
-                <div class="info-panel" id="infoPanel">
-                    <div id="infoPanelContent">
-                        <div class="info-placeholder">
-                            <i class="fas fa-map-pin"></i>
-                            <p>Click a lot on the map or<br>draw to mark your land</p>
-                        </div>
-                    </div>
+                <div id="compPanel">
+                    <!-- Lot Data Computation Panel — built by JS -->
                 </div>
             </div>
 
@@ -226,99 +210,18 @@
         </div>
     </div>
 
-    <!-- Confirm Modal -->
-    <div class="overlay" id="confirmModal">
-        <div class="modal">
-            <div class="modal-icon"><i class="fas fa-map-marked-alt"></i></div>
-            <h3>Confirm Your Plot?</h3>
-            <p>Is this your land boundary? Confirm to proceed and fill in the land information.</p>
-            <div class="modal-btns">
-                <button class="btn-cancel" onclick="cancelDraw()">Cancel</button>
-                <button class="btn-confirm" onclick="confirmDraw()">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Land Info Form Modal -->
-    <div class="form-overlay" id="landFormModal">
-        <div class="form-card">
-            <h3>Land Information</h3>
-            <p>Fill in the details for your claimed plot</p>
-            <form id="landForm" method="POST" action="{{ route('land-records.store') }}">
-                @csrf
-                <input type="hidden" name="geojson" id="formGeojson">
-                <input type="hidden" name="area" id="formArea">
-                <div class="form-grid">
-                    <div class="form-row">
-                        <label>Owner Name</label>
-                        <input type="text" name="owner_name" placeholder="Full name" required>
-                    </div>
-                    <div class="form-row">
-                        <label>Lot No. / Land ID</label>
-                        <input type="text" name="land_id" placeholder="e.g. 10293" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <label>Barangay</label>
-                    <input type="text" name="barangay" placeholder="e.g. Anonas" required>
-                </div>
-                <div class="form-row">
-                    <label>Full Location</label>
-                    <input type="text" name="location" placeholder="e.g. Brgy. Anonas, Urdaneta City" required>
-                </div>
-                <div class="form-grid">
-                    <div class="form-row">
-                        <label>Land Type</label>
-                        <select name="land_type">
-                            <option value="residential">Residential</option>
-                            <option value="commercial">Commercial</option>
-                            <option value="agricultural">Agricultural</option>
-                            <option value="industrial">Industrial</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <label>Area (sqm)</label>
-                        <input type="number" name="area_display" id="areaDisplay" placeholder="Auto-calculated" readonly>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <label>Notes</label>
-                    <textarea name="notes" placeholder="Additional information..."></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-discard" onclick="discardDraw()">Discard</button>
-                    <button type="submit" class="btn-submit">Submit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
     <script>
         const allLots = @json($allLots);
         const colorMap = { residential:'#4caf50', commercial:'#ff9800', agricultural:'#9c27b0', industrial:'#f44336' };
         const isAdmin = {{ auth()->user()->role === 'admin' ? 'true' : 'false' }};
 
+        // ── Map Setup ──────────────────────────────────────────────
         const map = L.map('recordsMap').setView([15.9754, 120.5701], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
 
-        const drawnItems = new L.FeatureGroup().addTo(map);
         const lotLayers = {};
-        let drawingMode = false;
-        let currentLayer = null;
-        let currentArea = 0;
 
-        // Draw control
-        const drawControl = new L.Control.Draw({
-            draw: {
-                polygon: { allowIntersection: false, showArea: true, shapeOptions: { color: '#1a2744', fillColor: '#1a2744', fillOpacity: 0.3 } },
-                polyline: false, rectangle: false, circle: false, circlemarker: false, marker: false
-            },
-            edit: { featureGroup: drawnItems }
-        });
-
-        // Draw existing lots from DB (no hardcoded boxes)
         allLots.forEach(lot => {
             if (!lot.geojson) return;
             try {
@@ -332,70 +235,106 @@
             } catch(e) {}
         });
 
-        function toggleDraw() {
-            const btn = document.getElementById('drawBtn');
-            if (!drawingMode) {
-                drawingMode = true;
-                btn.innerHTML = '<i class="fas fa-times"></i> Cancel';
-                btn.classList.add('cancel');
-                map.addControl(drawControl);
-                new L.Draw.Polygon(map, drawControl.options.draw.polygon).enable();
-            } else {
-                drawingMode = false;
-                btn.innerHTML = '<i class="fas fa-draw-polygon"></i> Mark My Land';
-                btn.classList.remove('cancel');
-                map.removeControl(drawControl);
-            }
+        // ── Lot Data Computation ───────────────────────────────────
+        function computeStats(lots) {
+            const total = lots.length;
+            const totalArea = lots.reduce((s, l) => s + (parseFloat(l.area) || 0), 0);
+            const totalHa = (totalArea / 10000).toFixed(4);
+
+            // by type
+            const types = { residential: 0, commercial: 0, agricultural: 0, industrial: 0 };
+            const typeArea = { residential: 0, commercial: 0, agricultural: 0, industrial: 0 };
+            // by status
+            const statuses = { registered: 0, pending: 0, rejected: 0 };
+
+            lots.forEach(l => {
+                if (types[l.land_type] !== undefined) {
+                    types[l.land_type]++;
+                    typeArea[l.land_type] += parseFloat(l.area) || 0;
+                }
+                if (statuses[l.status] !== undefined) statuses[l.status]++;
+            });
+
+            return { total, totalArea: Math.round(totalArea), totalHa, types, typeArea, statuses };
         }
 
-        map.on(L.Draw.Event.CREATED, function(e) {
-            currentLayer = e.layer;
-            drawnItems.addLayer(currentLayer);
-            const latlngs = currentLayer.getLatLngs()[0];
-            currentArea = Math.round(calcArea(latlngs));
-            drawingMode = false;
-            const btn = document.getElementById('drawBtn');
-            btn.innerHTML = '<i class="fas fa-draw-polygon"></i> Mark My Land';
-            btn.classList.remove('cancel');
-            map.removeControl(drawControl);
-            document.getElementById('confirmModal').classList.add('show');
-        });
-
-        function calcArea(latlngs) {
-            if (!latlngs || latlngs.length < 3) return 0;
-            let area = 0;
-            const R = 6371000;
-            for (let i = 0; i < latlngs.length; i++) {
-                const j = (i + 1) % latlngs.length;
-                const xi = latlngs[i].lng * Math.PI / 180 * R * Math.cos(latlngs[i].lat * Math.PI / 180);
-                const yi = latlngs[i].lat * Math.PI / 180 * R;
-                const xj = latlngs[j].lng * Math.PI / 180 * R * Math.cos(latlngs[j].lat * Math.PI / 180);
-                const yj = latlngs[j].lat * Math.PI / 180 * R;
-                area += xi * yj - xj * yi;
-            }
-            return Math.abs(area / 2);
+        function bar(value, max, color) {
+            const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+            return `<div class="comp-bar-track"><div class="comp-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
         }
 
-        function cancelDraw() {
-            document.getElementById('confirmModal').classList.remove('show');
-            if (currentLayer) { drawnItems.removeLayer(currentLayer); currentLayer = null; }
+        function renderComputationPanel(lots) {
+            const s = computeStats(lots);
+            const typeColors = { residential:'#4caf50', commercial:'#ff9800', agricultural:'#9c27b0', industrial:'#f44336' };
+            const statusColors = { registered:'#1976d2', pending:'#ff9800', rejected:'#e53935' };
+
+            let html = `
+            <div class="comp-panel">
+                <div class="comp-title"><i class="fas fa-calculator"></i> Lot Data Computation</div>
+
+                <div class="comp-highlight">
+                    <div>
+                        <div class="comp-highlight-label">Total Lots</div>
+                        <div class="comp-highlight-value">${s.total.toLocaleString()}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="comp-highlight-label">Total Area</div>
+                        <div class="comp-highlight-value">${s.totalHa} <span class="comp-highlight-unit">ha</span></div>
+                        <div class="comp-highlight-unit">${s.totalArea.toLocaleString()} sqm</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="comp-section-label">By Land Type</div>
+                    ${Object.entries(s.types).map(([type, count]) => `
+                    <div class="comp-bar-wrap">
+                        <div class="comp-bar-label-row">
+                            <span style="display:flex;align-items:center;gap:5px">
+                                <span class="comp-dot" style="background:${typeColors[type]}"></span>
+                                ${type.charAt(0).toUpperCase()+type.slice(1)}
+                            </span>
+                            <span>${count} lots &nbsp;·&nbsp; ${Math.round(s.typeArea[type]).toLocaleString()} sqm</span>
+                        </div>
+                        ${bar(count, s.total, typeColors[type])}
+                    </div>`).join('')}
+                </div>
+
+                <div>
+                    <div class="comp-section-label">By Status</div>
+                    ${Object.entries(s.statuses).map(([status, count]) => `
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label">
+                            <span class="comp-dot" style="background:${statusColors[status]}"></span>
+                            ${status.charAt(0).toUpperCase()+status.slice(1)}
+                        </span>
+                        <span class="comp-stat-value">${count}</span>
+                    </div>`).join('')}
+                </div>
+
+                <div>
+                    <div class="comp-section-label">Area Summary</div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label"><i class="fas fa-ruler-combined" style="color:#999;font-size:11px"></i> Total sqm</span>
+                        <span class="comp-stat-value">${s.totalArea.toLocaleString()}</span>
+                    </div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label"><i class="fas fa-seedling" style="color:#999;font-size:11px"></i> Total hectares</span>
+                        <span class="comp-stat-value">${s.totalHa}</span>
+                    </div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label"><i class="fas fa-chart-bar" style="color:#999;font-size:11px"></i> Avg area/lot</span>
+                        <span class="comp-stat-value">${s.total > 0 ? Math.round(s.totalArea / s.total).toLocaleString() : 0} sqm</span>
+                    </div>
+                </div>
+            </div>`;
+
+            document.getElementById('compPanel').innerHTML = html;
         }
 
-        function confirmDraw() {
-            document.getElementById('confirmModal').classList.remove('show');
-            const latlngs = currentLayer.getLatLngs()[0];
-            const geojson = JSON.stringify([latlngs.map(ll => [ll.lng, ll.lat])]);
-            document.getElementById('formGeojson').value = geojson;
-            document.getElementById('formArea').value = currentArea;
-            document.getElementById('areaDisplay').value = currentArea;
-            document.getElementById('landFormModal').classList.add('show');
-        }
+        // Initial render with all lots
+        renderComputationPanel(allLots);
 
-        function discardDraw() {
-            document.getElementById('landFormModal').classList.remove('show');
-            if (currentLayer) { drawnItems.removeLayer(currentLayer); currentLayer = null; }
-        }
-
+        // ── Lot Selection ─────────────────────────────────────────
         function selectLot(landId) {
             const lot = allLots.find(l => l.land_id === landId);
             if (!lot) return;
@@ -405,33 +344,68 @@
             });
             if (lotLayers[landId]) map.fitBounds(lotLayers[landId].getBounds(), {padding:[30,30]});
             document.querySelectorAll('#recordsTable tr').forEach(tr => tr.classList.toggle('selected', tr.dataset.id===landId));
+
+            // Update computation panel to show selected lot's computed data
             const badgeMap = {residential:'badge-residential',commercial:'badge-commercial',agricultural:'badge-agricultural',industrial:'badge-industrial'};
-            document.getElementById('infoPanelContent').innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-                    <span style="font-size:15px;font-weight:700;color:#333">Land Information</span>
-                    <button onclick="clearSel()" style="background:#f0f0f0;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:11px">✕</button>
+            const areaHa = lot.area ? (lot.area / 10000).toFixed(4) : '—';
+            document.getElementById('compPanel').innerHTML = `
+            <div class="comp-panel">
+                <div class="comp-title" style="justify-content:space-between">
+                    <span><i class="fas fa-map-pin"></i> Selected Lot</span>
+                    <button onclick="clearSel()" style="background:#f0f0f0;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center">✕</button>
                 </div>
-                <div class="info-field"><div class="info-field-label">Land ID</div><div class="info-field-value">${lot.land_id}</div></div>
-                <div class="info-field"><div class="info-field-label">Owner</div><div class="info-field-value">${lot.owner_name}</div></div>
-                <div class="info-field"><div class="info-field-label">Location</div><div class="info-field-value" style="font-size:13px">${lot.location}</div></div>
-                <div class="info-row">
-                    <div class="info-col"><div class="info-col-label">Land Type</div><span class="land-type-badge ${badgeMap[lot.land_type]}">${lot.land_type.charAt(0).toUpperCase()+lot.land_type.slice(1)}</span></div>
-                    <div class="info-col"><div class="info-col-label">Area</div><div class="info-col-value">${lot.area??'—'}</div></div>
+
+                <div class="comp-highlight">
+                    <div>
+                        <div class="comp-highlight-label">Land ID</div>
+                        <div class="comp-highlight-value" style="font-size:15px">${lot.land_id}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <span class="land-type-badge ${badgeMap[lot.land_type]}">${lot.land_type.charAt(0).toUpperCase()+lot.land_type.slice(1)}</span>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-col"><div class="info-col-label">Status</div><div class="info-col-value">${lot.status?lot.status.charAt(0).toUpperCase()+lot.status.slice(1):'—'}</div></div>
-                    <div class="info-col"><div class="info-col-label">Date Registered</div><div class="info-col-value">${lot.date_registered??'—'}</div></div>
+
+                <div>
+                    <div class="comp-section-label">Owner</div>
+                    <div style="font-size:14px;font-weight:700;color:#333">${lot.owner_name}</div>
+                    <div style="font-size:12px;color:#888;margin-top:2px">${lot.location}</div>
                 </div>
+
+                <div>
+                    <div class="comp-section-label">Computed Area</div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label"><i class="fas fa-ruler-combined" style="color:#999;font-size:11px"></i> Square meters</span>
+                        <span class="comp-stat-value">${lot.area ? Number(lot.area).toLocaleString() : '—'} sqm</span>
+                    </div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label"><i class="fas fa-seedling" style="color:#999;font-size:11px"></i> Hectares</span>
+                        <span class="comp-stat-value">${areaHa} ha</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="comp-section-label">Status & Date</div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label">Status</span>
+                        <span class="comp-stat-value">${lot.status ? lot.status.charAt(0).toUpperCase()+lot.status.slice(1) : '—'}</span>
+                    </div>
+                    <div class="comp-stat-row">
+                        <span class="comp-stat-label">Date Registered</span>
+                        <span class="comp-stat-value" style="font-size:12px">${lot.date_registered ?? '—'}</span>
+                    </div>
+                </div>
+
                 <div class="info-actions">
-                    <button class="btn-view"><i class="fas fa-eye"></i> View details</button>
-                    ${isAdmin ? `<button class="btn-edit"><i class="fas fa-pencil-alt"></i> Edit record</button>` : ''}
-                </div>`;
+                    <button class="btn-view" onclick="clearSel()"><i class="fas fa-arrow-left"></i> Back to Stats</button>
+                    ${isAdmin ? `<button class="btn-edit"><i class="fas fa-pencil-alt"></i> Edit</button>` : ''}
+                </div>
+            </div>`;
         }
 
         function clearSel() {
             Object.entries(lotLayers).forEach(([id,layer]) => { const c=colorMap[allLots.find(l=>l.land_id===id)?.land_type]||'#4caf50'; layer.setStyle({color:c,fillColor:c,fillOpacity:0.4,weight:2}); });
-            document.getElementById('infoPanelContent').innerHTML = `<div class="info-placeholder"><i class="fas fa-map-pin"></i><p>Click a lot on the map or<br>draw to mark your land</p></div>`;
             document.querySelectorAll('#recordsTable tr').forEach(tr=>tr.classList.remove('selected'));
+            renderComputationPanel(allLots);
         }
 
         function filterTable(q) {
