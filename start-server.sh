@@ -21,11 +21,9 @@ echo "DB_CONNECTION: $DB_CONNECTION"
 echo "SESSION_DRIVER: $SESSION_DRIVER"
 echo "CACHE_STORE: $CACHE_STORE"
 
-# Run migrations (fresh to apply schema changes including username column)
+# Run migrations (adds new tables without wiping existing data)
 echo "Running migrations..."
-php artisan migrate:fresh --force
-
-# NOTE: Change migrate:fresh back to migrate after first successful deploy
+php artisan migrate --force
 
 # Seed users
 echo "Seeding users..."

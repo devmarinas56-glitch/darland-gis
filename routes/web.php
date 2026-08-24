@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\LandRecordsController;
+use App\Http\Controllers\LandSurveyController;
 use App\Http\Controllers\Admin\UserManagementController;
 
 Route::get('/', function () { return redirect('/login'); });
@@ -98,12 +99,17 @@ Route::middleware(['auth'])->group(function () {
         }
     })->name('dashboard');
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
-    Route::get('/land-records', [LandRecordsController::class, 'index'])->name('land-records.index');
-    Route::post('/land-records', [LandRecordsController::class, 'store'])->name('land-records.store');
-    Route::put('/land-records/{landLot}', [LandRecordsController::class, 'update'])->name('land-records.update');
-    Route::delete('/land-records/{landLot}', [LandRecordsController::class, 'destroy'])->name('land-records.destroy');
-    Route::get('/api/lots', [LandRecordsController::class, 'apiLots'])->name('api.lots');
-    Route::post('/api/check-overlap', [LandRecordsController::class, 'checkOverlap'])->name('api.check-overlap');
+    Route::get('/land-records', [LandSurveyController::class, 'index'])->name('land-records.index');
+
+    // Land Survey API routes
+    Route::get('/api/surveys', [LandSurveyController::class, 'apiSurveys'])->name('api.surveys');
+    Route::post('/api/surveys', [LandSurveyController::class, 'store'])->name('api.surveys.store');
+    Route::get('/api/surveys/{survey}', [LandSurveyController::class, 'show'])->name('api.surveys.show');
+    Route::put('/api/surveys/{survey}', [LandSurveyController::class, 'update'])->name('api.surveys.update');
+    Route::delete('/api/surveys/{survey}', [LandSurveyController::class, 'destroy'])->name('api.surveys.destroy');
+    Route::put('/api/lots/{lot}', [LandSurveyController::class, 'updateLot'])->name('api.lots.update');
+    Route::post('/api/lots/{lot}/polygon', [LandSurveyController::class, 'addPolygon'])->name('api.lots.polygon');
+    Route::delete('/api/lots/{lot}', [LandSurveyController::class, 'destroyLot'])->name('api.lots.destroy');
     // Admin user management
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
