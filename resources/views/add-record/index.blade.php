@@ -113,11 +113,11 @@
         .user-role-label { font-size: 11px; color: #aaa; text-transform: uppercase; }
         .chevron { font-size: 11px; color: #ccc; }
 
-        /* ── Content area — fills all remaining height, scrolls internally ── */
+        /* ── Content area — NO scroll here, fills height, layout handles overflow ── */
         .content-area {
             flex: 1;
-            overflow-y: auto;
-            padding: 20px 22px 24px;
+            overflow: hidden;
+            padding: 16px 18px 16px;
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -125,37 +125,40 @@
 
         .page-title {
             font-size: 17px; font-weight: 700; color: #222;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             flex-shrink: 0;
+            line-height: 1;
         }
 
-        /* ── Alert ── */
+        /* ── Alert — compact, doesn't shift layout ── */
         .alert {
-            padding: 10px 16px; border-radius: 8px;
-            font-size: 13px; margin-bottom: 14px;
-            display: flex; align-items: flex-start; gap: 10px;
+            padding: 8px 14px; border-radius: 8px;
+            font-size: 12px; margin-bottom: 10px;
+            display: flex; align-items: flex-start; gap: 8px;
             flex-shrink: 0;
         }
         .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
         .alert-error   { background: #fff0f0; color: #c62828; border: 1px solid #ffcdd2; }
 
-        /* ── Two-panel layout — fills remaining flex space ── */
+        /* ── Two-panel layout — fills remaining flex space, no overflow ── */
         .form-layout {
             display: grid;
-            grid-template-columns: minmax(360px, 1fr) minmax(400px, 45vw);
-            gap: 16px;
+            grid-template-columns: minmax(320px, 1fr) minmax(380px, 45vw);
+            gap: 14px;
             flex: 1;
             min-height: 0;
-            align-items: stretch;
+            overflow: hidden;
         }
 
-        /* ── Left panel: LDC form — scrolls independently ── */
+        /* ── Left panel: LDC form — ONLY this scrolls ── */
         .ldc-panel {
             background: #ebebeb;
             border-radius: 14px;
-            padding: 18px 20px 20px;
+            padding: 14px 16px 16px;
             overflow-y: auto;
+            overflow-x: hidden;
             min-height: 0;
+            height: 100%;
         }
         .ldc-panel-title {
             font-size: 11px; font-weight: 700;
@@ -262,12 +265,14 @@
             content: ''; flex: 1; height: 1px; background: #d8d8d8;
         }
 
-        /* ── Right panel — fills height, map dominates ── */
+        /* ── Right panel — fills height, NO scroll, locked in place ── */
         .right-panel {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             min-height: 0;
+            height: 100%;
+            overflow: hidden;
         }
 
         /* Map preview — grows to fill available space */
@@ -292,25 +297,26 @@
         }
         .map-pick-hint.hide { opacity: 0; }
 
-        /* Boundary section */
+        /* Boundary section — compact to give map more room */
         .boundary-panel {
             background: #ebebeb;
             border-radius: 14px;
-            padding: 14px 16px 16px;
+            padding: 10px 14px 12px;
             flex-shrink: 0;
         }
         .boundary-title {
             font-size: 11px; font-weight: 700;
             color: #888; text-transform: uppercase;
-            letter-spacing: 0.5px; margin-bottom: 10px;
+            letter-spacing: 0.5px; margin-bottom: 8px;
         }
 
-        /* Action buttons */
+        /* Action buttons — compact */
         .action-row {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
             flex-shrink: 0;
+            padding-top: 2px;
         }
         .btn-cancel {
             padding: 10px 24px;
@@ -381,17 +387,20 @@
 
         /* ── Responsive ── */
 
-        /* Tablet: stack panels, map still prominent */
+        /* Tablet: stack panels, each scrolls, map still big */
         @media (max-width: 1024px) {
             .form-layout {
                 grid-template-columns: 1fr;
-                overflow-y: auto;
+                overflow-y: auto;    /* stacked panels need outer scroll */
+                overflow-x: hidden;
             }
             .ldc-panel {
-                overflow-y: visible;  /* let parent scroll */
+                overflow-y: visible;
+                height: auto;
             }
             .right-panel {
-                min-height: 0;
+                height: auto;
+                overflow: visible;
             }
             .map-preview {
                 flex: none;
@@ -399,23 +408,17 @@
             }
         }
 
-        /* Mobile: single column, sidebar collapses */
+        /* Mobile */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 56px;
-            }
+            .sidebar { width: 56px; }
             .sidebar .nav-item span,
-            .sidebar .logout-btn span,
-            .sidebar .logo-section .logo-text { display: none; }
+            .sidebar .logout-btn span { display: none; }
             .sidebar .nav-item { justify-content: center; padding: 14px; gap: 0; }
             .sidebar .logout-btn { justify-content: center; padding: 11px; gap: 0; }
             .main-content { margin-left: 56px; }
             .top-bar { padding: 10px 16px; }
-            .search-box { max-width: 220px; }
-            .content-area { padding: 14px 14px 18px; }
-            .form-layout {
-                grid-template-columns: 1fr;
-            }
+            .search-box { max-width: 200px; }
+            .content-area { padding: 12px 12px 14px; }
             .field-row.triple { grid-template-columns: 1fr 1fr; }
             .map-preview { height: 320px; }
             .user-name, .user-role-label, .chevron { display: none; }
