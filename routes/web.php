@@ -93,9 +93,35 @@ Route::get('/logout', [LoginController::class, 'logout']);
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function() {
         try {
-            return view('dashboard.index');
+            $surveys  = \App\Models\LandSurvey::with('lots')->get();
+            $totalLots    = \App\Models\SurveyLot::count();
+            $totalSurveys = $surveys->count();
+            $totalArea    = $surveys->sum('total_area');
+
+            // Recent lots (latest 10) with their survey info
+            $recentLots = \App\Models\SurveyLot::with('survey')
+                ->latest()
+                ->take(10)
+                ->get();
+
+            // Lots per survey (use survey LSN as "location" proxy)
+            // Group by first part of LSN to simulate municipality
+            $byMunicipality = $surveys->groupBy(function($s) {
+                // Extract city/municipality from the notes or use LSN prefix
+                // Fall back to grouping by LSN series
+                $lsn = strtoupper($s->lsn ?? '');
+                if (str_contains($lsn, 'URD'))  return 'Urdaneta City';
+                if (str_contains($lsn, 'DAG'))  return 'Dagupan City';
+                if (str_contains($lsn, 'BIN'))  return 'Binalonan';
+                if (str_contains($lsn, 'VIL'))  return 'Villasis';
+                if (str_contains($lsn, 'LIN'))  return 'Lingayen';
+                if (str_contains($lsn, 'ALM'))  return 'Alaminos';
+                return 'Other';
+            })->map(fn($g) => $g->sum('lot_count'));
+
+            return view('dashboard.index', compact('surveys','totalLots','totalSurveys','totalArea','recentLots','byMunicipality'));
         } catch (\Exception $e) {
-            return response('Dashboard error for user ' . auth()->user()->email . ' role=' . auth()->user()->role . ': ' . $e->getMessage(), 500);
+            return response('Dashboard error: ' . $e->getMessage(), 500);
         }
     })->name('dashboard');
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');

@@ -496,18 +496,23 @@ async function saveLotEdit() {
 
     if (!owner) { alert('Owner name is required.'); return; }
 
-    const res = await apiFetch(`/api/lots/${id}`, 'PUT', { lot_number: num, owner_name: owner, notes });
-    if (res.success) {
-        closeEditModal();
-        map.closePopup();
-        await loadSurveys();
+    try {
+        const res = await apiFetch(`/api/lots/${id}`, 'PUT', { lot_number: num, owner_name: owner, notes });
+        if (res.success) {
+            closeEditModal();
+            map.closePopup();
+            await loadSurveys();
+        }
+    } catch(e) {
+        alert('Error saving lot: ' + e.message);
     }
 }
 
 // ── Load surveys ──────────────────────────────────────────────
 async function loadSurveys() {
-    const res = await apiFetch('/api/surveys', 'GET');
-    allSurveys = res;
+    try {
+        const res = await apiFetch('/api/surveys', 'GET');
+        allSurveys = res;
 
     // Clear old map layers
     Object.values(surveyLayers).forEach(s => {
@@ -519,6 +524,9 @@ async function loadSurveys() {
     allSurveys.forEach(s => renderSurveyOnMap(s));
     renderSurveyList(allSurveys);
     renderStats(allSurveys);
+    } catch(e) {
+        console.error('Failed to load surveys:', e.message);
+    }
 }
 
 // ── Survey list ───────────────────────────────────────────────
@@ -669,7 +677,20 @@ async function apiFetch(url, method = 'GET', body = null) {
     };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
-    return res.json();
+    const data = await res.json();
+
+    // Surface Laravel validation errors (422) as a readable message
+    if (!res.ok) {
+        if (data.errors) {
+            // Flatten all field error messages into one string
+            const messages = Object.values(data.errors).flat();
+            const err = new Error(messages.join('\n'));
+            err.validationErrors = data.errors;
+            throw err;
+        }
+        throw new Error(data.message || `Request failed (${res.status})`);
+    }
+    return data;
 }
 
 // ── Init ──────────────────────────────────────────────────────
