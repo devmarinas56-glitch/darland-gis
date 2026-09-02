@@ -21,45 +21,75 @@ class LandSurveyController extends Controller
         $validated = $request->validate([
             'lsn'            => ['required', 'string', 'unique:land_surveys,lsn'],
             'original_owner' => ['required', 'string'],
-            'total_area'     => ['required', 'numeric', 'min:1'],
-            'center_lat'     => ['required', 'numeric'],
-            'center_lng'     => ['required', 'numeric'],
+            'total_area'     => ['nullable', 'numeric', 'min:1'],
+            'center_lat'     => ['nullable', 'numeric'],
+            'center_lng'     => ['nullable', 'numeric'],
             'lot_count'      => ['required', 'integer', 'min:1', 'max:500'],
             'notes'          => ['nullable', 'string'],
+            'mode'           => ['nullable', 'in:draw,grid'],
             'lots'           => ['required', 'array'],
             'lots.*.lot_number'  => ['required', 'integer', 'min:1'],
             'lots.*.owner_name'  => ['required', 'string'],
+            'lots.*.polygon'     => ['nullable', 'array'],   // draw mode: [[lat,lng],...]
+            'lots.*.area'        => ['nullable', 'numeric'],  // draw mode: pre-computed area
         ]);
+
+        $mode = $validated['mode'] ?? 'grid';
+        $isDrawMode = $mode === 'draw';
+
+        // For draw mode, derive total_area from sum of lot areas
+        if ($isDrawMode) {
+            $totalArea = collect($validated['lots'])->sum(fn($l) => floatval($l['area'] ?? 0));
+            $centerLat = $validated['center_lat'] ?? 0;
+            $centerLng = $validated['center_lng'] ?? 0;
+        } else {
+            $totalArea = $validated['total_area'];
+            $centerLat = $validated['center_lat'];
+            $centerLng = $validated['center_lng'];
+        }
 
         $survey = LandSurvey::create([
             'lsn'            => $validated['lsn'],
             'original_owner' => $validated['original_owner'],
-            'total_area'     => $validated['total_area'],
-            'center_lat'     => $validated['center_lat'],
-            'center_lng'     => $validated['center_lng'],
+            'total_area'     => round($totalArea, 2),
+            'center_lat'     => $centerLat,
+            'center_lng'     => $centerLng,
             'lot_count'      => $validated['lot_count'],
             'notes'          => $validated['notes'] ?? null,
             'created_by'     => auth()->id(),
         ]);
 
-        $areaPerLot = round($validated['total_area'] / $validated['lot_count'], 2);
+        if ($isDrawMode) {
+            // Use the polygons drawn by the user directly
+            foreach ($validated['lots'] as $lotData) {
+                SurveyLot::create([
+                    'land_survey_id' => $survey->id,
+                    'lot_number'     => $lotData['lot_number'],
+                    'owner_name'     => $lotData['owner_name'],
+                    'area'           => round(floatval($lotData['area'] ?? 0), 2),
+                    'polygons'       => json_encode([$lotData['polygon']]),
+                    'notes'          => $lotData['notes'] ?? null,
+                ]);
+            }
+        } else {
+            // Grid mode: auto-generate rectangles
+            $areaPerLot = round($totalArea / $validated['lot_count'], 2);
+            $polygons   = $this->generateRectangles(
+                (float) $centerLat,
+                (float) $centerLng,
+                (float) $totalArea,
+                (int)   $validated['lot_count']
+            );
 
-        // Generate rectangles for each lot
-        $polygons = $this->generateRectangles(
-            (float) $validated['center_lat'],
-            (float) $validated['center_lng'],
-            (float) $validated['total_area'],
-            (int)   $validated['lot_count']
-        );
-
-        foreach ($validated['lots'] as $i => $lotData) {
-            SurveyLot::create([
-                'land_survey_id' => $survey->id,
-                'lot_number'     => $lotData['lot_number'],
-                'owner_name'     => $lotData['owner_name'],
-                'area'           => $areaPerLot,
-                'polygons'       => json_encode([$polygons[$i] ?? $polygons[0]]),
-            ]);
+            foreach ($validated['lots'] as $i => $lotData) {
+                SurveyLot::create([
+                    'land_survey_id' => $survey->id,
+                    'lot_number'     => $lotData['lot_number'],
+                    'owner_name'     => $lotData['owner_name'],
+                    'area'           => $areaPerLot,
+                    'polygons'       => json_encode([$polygons[$i] ?? $polygons[0]]),
+                ]);
+            }
         }
 
         return response()->json(['success' => true, 'survey' => $survey->load('lots')]);
