@@ -12,10 +12,13 @@
 
         html, body {
             height: 100%;
+            width: 100%;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #e8e8e8;
-            display: flex;
+            overflow: hidden; /* prevent body scroll — inner panels scroll */
         }
+
+        body { display: flex; }
 
         /* ── Sidebar ── */
         .sidebar {
@@ -27,6 +30,7 @@
             height: 100vh;
             left: 0; top: 0;
             z-index: 1000;
+            flex-shrink: 0;
         }
         .logo-section {
             padding: 20px 15px;
@@ -66,13 +70,15 @@
         }
         .logout-btn:hover { background: rgba(255,255,255,0.2); color: white; }
 
-        /* ── Main ── */
+        /* ── Main — fills remaining width, full viewport height ── */
         .main-content {
             margin-left: 200px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            min-width: 0;
         }
 
         /* ── Top bar ── */
@@ -107,65 +113,76 @@
         .user-role-label { font-size: 11px; color: #aaa; text-transform: uppercase; }
         .chevron { font-size: 11px; color: #ccc; }
 
-        /* ── Page content ── */
+        /* ── Content area — fills all remaining height, scrolls internally ── */
         .content-area {
             flex: 1;
-            padding: 22px 26px 32px;
             overflow-y: auto;
+            padding: 20px 22px 24px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
+
         .page-title {
-            font-size: 18px; font-weight: 700; color: #222; margin-bottom: 18px;
+            font-size: 17px; font-weight: 700; color: #222;
+            margin-bottom: 14px;
+            flex-shrink: 0;
         }
 
         /* ── Alert ── */
         .alert {
             padding: 10px 16px; border-radius: 8px;
-            font-size: 13px; margin-bottom: 16px;
+            font-size: 13px; margin-bottom: 14px;
             display: flex; align-items: flex-start; gap: 10px;
+            flex-shrink: 0;
         }
         .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
         .alert-error   { background: #fff0f0; color: #c62828; border: 1px solid #ffcdd2; }
 
-        /* ── Two-panel layout ── */
+        /* ── Two-panel layout — fills remaining flex space ── */
         .form-layout {
             display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 18px;
-            align-items: start;
+            grid-template-columns: minmax(360px, 1fr) minmax(400px, 45vw);
+            gap: 16px;
+            flex: 1;
+            min-height: 0;
+            align-items: stretch;
         }
 
-        /* ── Left panel: LDC form ── */
+        /* ── Left panel: LDC form — scrolls independently ── */
         .ldc-panel {
             background: #ebebeb;
             border-radius: 14px;
-            padding: 22px 24px 26px;
+            padding: 18px 20px 20px;
+            overflow-y: auto;
+            min-height: 0;
         }
         .ldc-panel-title {
-            font-size: 12px; font-weight: 700;
+            font-size: 11px; font-weight: 700;
             color: #888; text-transform: uppercase;
-            letter-spacing: 0.5px; margin-bottom: 18px;
+            letter-spacing: 0.5px; margin-bottom: 14px;
         }
 
         .field-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 14px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
         .field-row.single { grid-template-columns: 1fr; }
         .field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
 
-        .field-group { display: flex; flex-direction: column; gap: 4px; }
+        .field-group { display: flex; flex-direction: column; gap: 3px; }
         .field-label {
             font-size: 11px; font-weight: 600;
             color: #666; letter-spacing: 0.2px;
         }
         .field-label .req { color: #e53935; margin-left: 2px; }
         .field-input {
-            padding: 8px 10px;
+            padding: 7px 9px;
             border: 1px solid #d4d4d4;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
             color: #333;
             background: white;
             transition: border-color 0.2s;
@@ -175,7 +192,7 @@
         .field-input:read-only { background: #f5f5f5; color: #888; cursor: default; }
         .field-input.invalid { border-color: #e53935; }
 
-        .field-error { font-size: 11px; color: #e53935; margin-top: 2px; display: none; }
+        .field-error { font-size: 10px; color: #e53935; margin-top: 2px; display: none; }
         .field-error.show { display: block; }
 
         /* Lot owner dynamic rows */
@@ -183,38 +200,37 @@
             background: white;
             border: 1px solid #d4d4d4;
             border-radius: 6px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
-            padding: 6px 0;
+            padding: 4px 0;
         }
         .lot-owner-row {
             display: grid;
-            grid-template-columns: 36px 1fr;
+            grid-template-columns: 32px 1fr;
             align-items: center;
             gap: 8px;
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-bottom: 1px solid #f5f5f5;
         }
         .lot-owner-row:last-child { border-bottom: none; }
         .lot-num-badge {
-            width: 28px; height: 28px;
+            width: 26px; height: 26px;
             background: #1a2744; color: white;
-            border-radius: 6px;
-            font-size: 11px; font-weight: 700;
+            border-radius: 5px;
+            font-size: 10px; font-weight: 700;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
         .lot-owner-input {
-            padding: 6px 9px;
+            padding: 5px 8px;
             border: 1px solid #e0e0e0;
             border-radius: 5px;
             font-size: 12px; color: #333;
             width: 100%;
         }
         .lot-owner-input:focus { outline: none; border-color: #1a2744; }
-
         .lot-placeholder {
-            padding: 18px 12px;
+            padding: 14px 12px;
             text-align: center;
             font-size: 12px; color: #bbb;
         }
@@ -226,41 +242,47 @@
             gap: 8px;
             background: #e3edf5;
             border-radius: 6px;
-            padding: 8px 12px;
-            margin-top: 12px;
-            font-size: 12px;
+            padding: 7px 10px;
+            margin-top: 8px;
+            font-size: 11px;
             color: #1a2744;
         }
-        .computed-row i { font-size: 14px; }
-        .computed-row strong { font-size: 14px; font-weight: 800; }
+        .computed-row i { font-size: 13px; }
+        .computed-row strong { font-size: 13px; font-weight: 800; }
 
         /* Divider */
         .section-divider {
-            font-size: 11px; font-weight: 700;
+            font-size: 10px; font-weight: 700;
             color: #999; text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 18px 0 12px;
+            margin: 14px 0 10px;
             display: flex; align-items: center; gap: 8px;
         }
         .section-divider::after {
             content: ''; flex: 1; height: 1px; background: #d8d8d8;
         }
 
-        /* ── Right panel ── */
-        .right-panel { display: flex; flex-direction: column; gap: 14px; }
+        /* ── Right panel — fills height, map dominates ── */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
 
-        /* Map preview */
+        /* Map preview — grows to fill available space */
         .map-preview {
             border-radius: 12px;
             overflow: hidden;
-            height: 220px;
+            flex: 1;              /* ← fills remaining height */
+            min-height: 300px;    /* floor so it's always useful */
             background: #ccc;
             position: relative;
         }
         #previewMap { width: 100%; height: 100%; }
         .map-pick-hint {
             position: absolute;
-            bottom: 10px; left: 50%; transform: translateX(-50%);
+            bottom: 12px; left: 50%; transform: translateX(-50%);
             background: rgba(26,39,68,0.82);
             color: white; font-size: 11px;
             padding: 5px 14px; border-radius: 20px;
@@ -274,23 +296,24 @@
         .boundary-panel {
             background: #ebebeb;
             border-radius: 14px;
-            padding: 18px 20px 20px;
+            padding: 14px 16px 16px;
+            flex-shrink: 0;
         }
         .boundary-title {
-            font-size: 12px; font-weight: 700;
+            font-size: 11px; font-weight: 700;
             color: #888; text-transform: uppercase;
-            letter-spacing: 0.5px; margin-bottom: 14px;
+            letter-spacing: 0.5px; margin-bottom: 10px;
         }
 
         /* Action buttons */
         .action-row {
             display: flex;
             justify-content: flex-end;
-            gap: 12px;
-            padding-top: 14px;
+            gap: 10px;
+            flex-shrink: 0;
         }
         .btn-cancel {
-            padding: 11px 28px;
+            padding: 10px 24px;
             background: #e0e0e0; color: #555;
             border: none; border-radius: 8px;
             font-size: 13px; font-weight: 600;
@@ -298,7 +321,7 @@
         }
         .btn-cancel:hover { background: #d0d0d0; }
         .btn-save {
-            padding: 11px 32px;
+            padding: 10px 28px;
             background: #1a2744; color: white;
             border: none; border-radius: 8px;
             font-size: 13px; font-weight: 700;
@@ -331,29 +354,79 @@
         .success-overlay.show { display: flex; }
         .success-card {
             background: white; border-radius: 16px;
-            padding: 38px 34px; max-width: 380px; width: 90%;
+            padding: 36px 30px; max-width: 380px; width: 90%;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         .success-icon {
-            width: 62px; height: 62px; border-radius: 50%;
+            width: 58px; height: 58px; border-radius: 50%;
             background: #e8f5e9;
             display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 28px; color: #2e7d32;
+            margin: 0 auto 14px;
+            font-size: 26px; color: #2e7d32;
         }
-        .success-card h3 { font-size: 18px; font-weight: 700; color: #222; margin-bottom: 8px; }
-        .success-card p  { font-size: 13px; color: #888; margin-bottom: 24px; line-height: 1.5; }
+        .success-card h3 { font-size: 17px; font-weight: 700; color: #222; margin-bottom: 8px; }
+        .success-card p  { font-size: 13px; color: #888; margin-bottom: 22px; line-height: 1.5; }
         .success-btns { display: flex; gap: 10px; justify-content: center; }
         .btn-view-records {
-            padding: 11px 24px; background: #1a2744; color: white;
+            padding: 10px 22px; background: #1a2744; color: white;
             border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
             cursor: pointer; text-decoration: none;
         }
         .btn-add-another {
-            padding: 11px 24px; background: #f5f5f5; color: #555;
+            padding: 10px 22px; background: #f5f5f5; color: #555;
             border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
             cursor: pointer;
+        }
+
+        /* ── Responsive ── */
+
+        /* Tablet: stack panels, map still prominent */
+        @media (max-width: 1024px) {
+            .form-layout {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+            .ldc-panel {
+                overflow-y: visible;  /* let parent scroll */
+            }
+            .right-panel {
+                min-height: 0;
+            }
+            .map-preview {
+                flex: none;
+                height: 420px;
+            }
+        }
+
+        /* Mobile: single column, sidebar collapses */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 56px;
+            }
+            .sidebar .nav-item span,
+            .sidebar .logout-btn span,
+            .sidebar .logo-section .logo-text { display: none; }
+            .sidebar .nav-item { justify-content: center; padding: 14px; gap: 0; }
+            .sidebar .logout-btn { justify-content: center; padding: 11px; gap: 0; }
+            .main-content { margin-left: 56px; }
+            .top-bar { padding: 10px 16px; }
+            .search-box { max-width: 220px; }
+            .content-area { padding: 14px 14px 18px; }
+            .form-layout {
+                grid-template-columns: 1fr;
+            }
+            .field-row.triple { grid-template-columns: 1fr 1fr; }
+            .map-preview { height: 320px; }
+            .user-name, .user-role-label, .chevron { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .field-row,
+            .field-row.triple { grid-template-columns: 1fr; }
+            .map-preview { height: 260px; }
+            .action-row { flex-direction: column; }
+            .btn-cancel, .btn-save { width: 100%; justify-content: center; }
         }
     </style>
 </head>
