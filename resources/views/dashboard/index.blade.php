@@ -382,19 +382,12 @@
             <img src="{{ asset('images/Darlandicon.png') }}" alt="Land GIS">
         </div>
         <nav class="nav-menu">
-            <a href="/dashboard" class="nav-item active">
-                <i class="fas fa-home"></i><span>Dashboard</span>
-            </a>
-            <a href="/map-viewer" class="nav-item">
-                <i class="fas fa-map"></i><span>Map Viewer</span>
-            </a>
-            <a href="/land-records" class="nav-item">
-                <i class="fas fa-file-alt"></i><span>Land Records</span>
-            </a>
+            <a href="/dashboard" class="nav-item active"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="/map-viewer" class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
+            <a href="/land-records" class="nav-item"><i class="fas fa-file-alt"></i><span>Land Records</span></a>
+            <a href="/add-record" class="nav-item"><i class="fas fa-plus-square"></i><span>Add Record</span></a>
             @if(auth()->user()->role === 'admin')
-            <a href="{{ route('admin.users') }}" class="nav-item">
-                <i class="fas fa-users"></i><span>Users</span>
-            </a>
+            <a href="{{ route('admin.users') }}" class="nav-item"><i class="fas fa-users"></i><span>Users</span></a>
             @endif
         </nav>
         <div class="logout-section">

@@ -126,6 +126,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
     Route::get('/land-records', [LandSurveyController::class, 'index'])->name('land-records.index');
+    Route::get('/add-record', fn() => view('add-record.index'))->name('add-record');
 
     // Land Survey API routes
     Route::get('/api/surveys', [LandSurveyController::class, 'apiSurveys'])->name('api.surveys');
