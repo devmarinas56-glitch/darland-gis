@@ -94,13 +94,13 @@
             </div>
             <div class="top-right">
                 <i class="fas fa-bell bell-icon"></i>
-                <div class="user-info">
+                <a href="/profile" class="user-info" style="text-decoration:none;cursor:pointer">
                     <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
                     <div>
                         <div class="user-name">{{ auth()->user()->name }}</div>
                         <div class="user-role-label">{{ strtoupper(auth()->user()->role) }}</div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 

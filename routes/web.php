@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\LandRecordsController;
 use App\Http\Controllers\LandSurveyController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
 
 Route::get('/', function () { return redirect('/login'); });
@@ -127,6 +128,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
     Route::get('/land-records', [LandSurveyController::class, 'index'])->name('land-records.index');
     Route::get('/add-record', fn() => view('add-record.index'))->name('add-record');
+
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Land Survey API routes
     Route::get('/api/surveys', [LandSurveyController::class, 'apiSurveys'])->name('api.surveys');

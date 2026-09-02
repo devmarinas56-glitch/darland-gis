@@ -143,13 +143,13 @@
         <div class="page-title"><i class="fas fa-layer-group" style="margin-right:6px;color:#1a2744"></i>Land Survey Records</div>
         <div class="top-right">
             <i class="fas fa-bell" style="font-size:17px;color:#999;cursor:pointer"></i>
-            <div style="display:flex;align-items:center;gap:8px">
+            <a href="/profile" style="display:flex;align-items:center;gap:8px;text-decoration:none;cursor:pointer">
                 <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
                 <div>
                     <div class="user-name">{{ auth()->user()->name }}</div>
                     <div class="user-role-label">{{ strtoupper(auth()->user()->role) }}</div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
