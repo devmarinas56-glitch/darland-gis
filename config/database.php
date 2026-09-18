@@ -26,7 +26,7 @@ return [
             'url'            => null, // explicitly null so DB_URL cannot override
             'host'           => env('DB_HOST', 'ep-wandering-moon-b4fljr7p-pooler.c-6.us-east-2.aws.neon.tech'),
             'port'           => env('DB_PORT', '5432'),
-            'database'       => env('DB_DATABASE', 'neondb'),
+            'database'       => env('DB_DATABASE', 'darland'),
             'username'       => env('DB_USERNAME', 'neondb_owner'),
             'password'       => env('DB_PASSWORD', 'npg_NoCrYm5S7igG'),
             'charset'        => env('DB_CHARSET', 'utf8'),
