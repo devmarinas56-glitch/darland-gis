@@ -26,11 +26,11 @@ services:
       - key: QUEUE_CONNECTION
         value: sync
 
-      # ── Neon PostgreSQL ──────────────────────────────────────────
+      # ── Neon PostgreSQL (DarLand) ────────────────────────────────
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: ep-hidden-breeze-b36x2m5f-pooler.c-4.ap-southeast-1.aws.neon.tech
+        value: ep-wandering-moon-b4fljr7p-pooler.c-6.us-east-2.aws.neon.tech
       - key: DB_PORT
         value: "5432"
       - key: DB_DATABASE
@@ -38,6 +38,6 @@ services:
       - key: DB_USERNAME
         value: neondb_owner
       - key: DB_PASSWORD
-        value: npg_vaeTHSG0UXk3
+        value: npg_NoCrYm5S7igG
       - key: DB_SSLMODE
         value: require
