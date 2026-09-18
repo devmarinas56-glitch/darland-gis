@@ -155,3 +155,19 @@ Route::get('/run-migrations', function(\Illuminate\Http\Request $request) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// Fresh migration — drops all tables then re-runs
+Route::get('/fresh-migrate', function(\Illuminate\Http\Request $request) {
+    if ($request->get('secret') !== 'dar2026setup') abort(403);
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true]);
+        $migrateOut = \Illuminate\Support\Facades\Artisan::output();
+        return response()->json([
+            'success'        => true,
+            'migrate_output' => $migrateOut,
+            'note'           => 'Now visit /setup-admin?secret=dar2026setup',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
