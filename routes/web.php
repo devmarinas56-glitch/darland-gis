@@ -171,3 +171,30 @@ Route::get('/fresh-migrate', function(\Illuminate\Http\Request $request) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// Nuke and fresh migrate
+Route::get('/nuke-migrate', function(\Illuminate\Http\Request $request) {
+    if ($request->get('secret') !== 'dar2026setup') abort(403);
+    try {
+        $db = \Illuminate\Support\Facades\DB::connection();
+
+        // Drop all tables individually
+        $tables = $db->select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+        foreach ($tables as $table) {
+            $db->statement("DROP TABLE IF EXISTS \"{$table->tablename}\" CASCADE");
+        }
+
+        // Run migrations
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrateOut = \Illuminate\Support\Facades\Artisan::output();
+
+        return response()->json([
+            'success'        => true,
+            'tables_dropped' => count($tables),
+            'migrate_output' => $migrateOut,
+            'next'           => 'Visit /setup-admin?secret=dar2026setup',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
