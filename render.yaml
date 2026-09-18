@@ -10,43 +10,34 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: true
+        value: false
       - key: APP_URL
         value: https://darland-gis.onrender.com
       - key: APP_KEY
         value: base64:DCCfl/sSl5AcfR1mdraNy7B0i9+Y8YfCkjSqnucF6OM=
       - key: SESSION_DRIVER
-        value: database
+        value: file
+      - key: SESSION_LIFETIME
+        value: 120
       - key: SESSION_SECURE_COOKIE
-        value: false
+        value: true
       - key: CACHE_STORE
         value: file
       - key: QUEUE_CONNECTION
         value: sync
+
+      # ── Neon PostgreSQL ──────────────────────────────────────────
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        fromDatabase:
-          name: darland-database
-          property: host
+        value: ep-hidden-breeze-b36x2m5f-pooler.c-4.ap-southeast-1.aws.neon.tech
       - key: DB_PORT
-        fromDatabase:
-          name: darland-database
-          property: port
+        value: "5432"
       - key: DB_DATABASE
-        fromDatabase:
-          name: darland-database
-          property: database
+        value: neondb
       - key: DB_USERNAME
-        fromDatabase:
-          name: darland-database
-          property: user
+        value: neondb_owner
       - key: DB_PASSWORD
-        fromDatabase:
-          name: darland-database
-          property: password
-
-databases:
-  - name: darland-database
-    databaseName: darland_gis
-    user: darland_user
+        value: npg_vaeTHSG0UXk3
+      - key: DB_SSLMODE
+        value: require
