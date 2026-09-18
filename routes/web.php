@@ -198,3 +198,29 @@ Route::get('/nuke-migrate', function(\Illuminate\Http\Request $request) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// Create admin user
+Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
+    if ($request->get('secret') !== 'dar2026setup') abort(403);
+    try {
+        \Illuminate\Support\Facades\DB::table('users')->where('username', 'admin')->delete();
+        \Illuminate\Support\Facades\DB::table('users')->insert([
+            'name'                  => 'Administrator',
+            'username'              => 'admin',
+            'email'                 => 'admin@dar.gov.ph',
+            'password'              => \Illuminate\Support\Facades\Hash::make('admin123'),
+            'role'                  => 'admin',
+            'email_verified_at'     => now(),
+            'created_at'            => now(),
+            'updated_at'            => now(),
+        ]);
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Admin created!',
+            'email'    => 'admin@dar.gov.ph',
+            'password' => 'admin123',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
