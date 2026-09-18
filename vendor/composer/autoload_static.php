@@ -475,11 +475,18 @@ class ComposerStaticInit53b5d56b3b7e3cbac1713e68c8850f6c
     );
 
     public static $classMap = array (
+        'App\\Http\\Controllers\\AccomplishmentReportController' => __DIR__ . '/../..' . '/app/Http/Controllers/AccomplishmentReportController.php',
+        'App\\Http\\Controllers\\Admin\\UserManagementController' => __DIR__ . '/../..' . '/app/Http/Controllers/Admin/UserManagementController.php',
         'App\\Http\\Controllers\\Auth\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/LoginController.php',
         'App\\Http\\Controllers\\Auth\\RegisterController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisterController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
         'App\\Http\\Controllers\\LandRecordsController' => __DIR__ . '/../..' . '/app/Http/Controllers/LandRecordsController.php',
+        'App\\Http\\Controllers\\LandSurveyController' => __DIR__ . '/../..' . '/app/Http/Controllers/LandSurveyController.php',
+        'App\\Http\\Controllers\\ProfileController' => __DIR__ . '/../..' . '/app/Http/Controllers/ProfileController.php',
+        'App\\Models\\AccomplishmentReport' => __DIR__ . '/../..' . '/app/Models/AccomplishmentReport.php',
         'App\\Models\\LandLot' => __DIR__ . '/../..' . '/app/Models/LandLot.php',
+        'App\\Models\\LandSurvey' => __DIR__ . '/../..' . '/app/Models/LandSurvey.php',
+        'App\\Models\\SurveyLot' => __DIR__ . '/../..' . '/app/Models/SurveyLot.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',

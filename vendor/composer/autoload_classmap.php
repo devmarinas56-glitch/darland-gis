@@ -6,11 +6,18 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Http\\Controllers\\AccomplishmentReportController' => $baseDir . '/app/Http/Controllers/AccomplishmentReportController.php',
+    'App\\Http\\Controllers\\Admin\\UserManagementController' => $baseDir . '/app/Http/Controllers/Admin/UserManagementController.php',
     'App\\Http\\Controllers\\Auth\\LoginController' => $baseDir . '/app/Http/Controllers/Auth/LoginController.php',
     'App\\Http\\Controllers\\Auth\\RegisterController' => $baseDir . '/app/Http/Controllers/Auth/RegisterController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
     'App\\Http\\Controllers\\LandRecordsController' => $baseDir . '/app/Http/Controllers/LandRecordsController.php',
+    'App\\Http\\Controllers\\LandSurveyController' => $baseDir . '/app/Http/Controllers/LandSurveyController.php',
+    'App\\Http\\Controllers\\ProfileController' => $baseDir . '/app/Http/Controllers/ProfileController.php',
+    'App\\Models\\AccomplishmentReport' => $baseDir . '/app/Models/AccomplishmentReport.php',
     'App\\Models\\LandLot' => $baseDir . '/app/Models/LandLot.php',
+    'App\\Models\\LandSurvey' => $baseDir . '/app/Models/LandSurvey.php',
+    'App\\Models\\SurveyLot' => $baseDir . '/app/Models/SurveyLot.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
