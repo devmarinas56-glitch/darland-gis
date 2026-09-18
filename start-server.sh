@@ -10,6 +10,9 @@ rm -rf storage/framework/cache/data/*
 # Full permissions
 chmod -R 777 storage bootstrap/cache
 
+# Regenerate autoloader to ensure all classes are found
+composer dump-autoload --optimize --no-interaction
+
 # Only generate key if not already set
 if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force --no-interaction
@@ -21,13 +24,9 @@ echo "DB_CONNECTION: $DB_CONNECTION"
 echo "SESSION_DRIVER: $SESSION_DRIVER"
 echo "CACHE_STORE: $CACHE_STORE"
 
-# Run migrations (adds new tables without wiping existing data)
+# Run migrations
 echo "Running migrations..."
-php artisan migrate --force
-
-# Seed users
-echo "Seeding users..."
-php artisan db:seed --class=TestUserSeeder --force
+php artisan migrate --force || echo "Migrate failed, continuing..."
 
 echo "Starting on 0.0.0.0:$PORT"
 php -S 0.0.0.0:$PORT -t public
