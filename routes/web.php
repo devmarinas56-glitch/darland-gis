@@ -6,6 +6,7 @@ use App\Http\Controllers\LandRecordsController;
 use App\Http\Controllers\LandSurveyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\AccomplishmentReportController;
 
 Route::get('/', function () { return redirect('/login'); });
 
@@ -94,37 +95,26 @@ Route::get('/logout', [LoginController::class, 'logout']);
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function() {
         try {
-            $surveys  = \App\Models\LandSurvey::with('lots')->get();
-            $totalLots    = \App\Models\SurveyLot::count();
-            $totalSurveys = $surveys->count();
-            $totalArea    = $surveys->sum('total_area');
-
-            // Recent lots (latest 10) with their survey info
-            $recentLots = \App\Models\SurveyLot::with('survey')
-                ->latest()
-                ->take(10)
-                ->get();
-
-            // Lots per survey (use survey LSN as "location" proxy)
-            // Group by first part of LSN to simulate municipality
-            $byMunicipality = $surveys->groupBy(function($s) {
-                // Extract city/municipality from the notes or use LSN prefix
-                // Fall back to grouping by LSN series
-                $lsn = strtoupper($s->lsn ?? '');
-                if (str_contains($lsn, 'URD'))  return 'Urdaneta City';
-                if (str_contains($lsn, 'DAG'))  return 'Dagupan City';
-                if (str_contains($lsn, 'BIN'))  return 'Binalonan';
-                if (str_contains($lsn, 'VIL'))  return 'Villasis';
-                if (str_contains($lsn, 'LIN'))  return 'Lingayen';
-                if (str_contains($lsn, 'ALM'))  return 'Alaminos';
-                return 'Other';
-            })->map(fn($g) => $g->sum('lot_count'));
-
-            return view('dashboard.index', compact('surveys','totalLots','totalSurveys','totalArea','recentLots','byMunicipality'));
+            $stats = AccomplishmentReportController::dashboardStats(auth()->id());
+            return view('dashboard.index', [
+                'totalSubmitted' => $stats['totalSubmitted'],
+                'pendingReview'  => $stats['pendingReview'],
+                'approved'       => $stats['approved'],
+                'returned'       => $stats['returned'],
+                'announcements'  => [], // populate from DB when announcement model exists
+            ]);
         } catch (\Exception $e) {
             return response('Dashboard error: ' . $e->getMessage(), 500);
         }
     })->name('dashboard');
+    // Submit Report & My Reports
+    Route::get('/submit-report', [AccomplishmentReportController::class, 'submitForm'])->name('submit-report');
+    Route::get('/my-reports',    [AccomplishmentReportController::class, 'myReports'])->name('my-reports');
+    Route::get('/my-reports/{year}/{month}', [AccomplishmentReportController::class, 'monthDetail'])
+         ->name('my-reports.month')
+         ->where(['year' => '[0-9]{4}', 'month' => '[0-9]{1,2}']);
+    Route::post('/api/reports',  [AccomplishmentReportController::class, 'store'])->name('api.reports.store');
+
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
     Route::get('/land-records', [LandSurveyController::class, 'index'])->name('land-records.index');
     Route::get('/add-record', fn() => view('add-record.index'))->name('add-record');
@@ -148,4 +138,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+});
+
+// Force run migrations + seed admin
+Route::get('/run-migrations', function(\Illuminate\Http\Request $request) {
+    if ($request->get('secret') !== 'dar2026setup') abort(403);
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrateOut = \Illuminate\Support\Facades\Artisan::output();
+        return response()->json([
+            'success'        => true,
+            'migrate_output' => $migrateOut,
+            'note'           => 'Now visit /setup-admin?secret=dar2026setup to create the admin user',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 });
