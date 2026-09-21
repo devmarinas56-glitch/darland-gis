@@ -7,23 +7,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e8e8e8; display: flex; min-height: 100vh; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f0f0; display: flex; min-height: 100vh; }
 
         /* ── Sidebar ── */
-        .sidebar { width: 200px; background: #1a2744; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 1000; }
-        .logo-section { padding: 20px 15px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .logo-section img { width: 50px; height: 50px; object-fit: contain; }
-        .nav-menu { flex: 1; padding: 15px 0; }
-        .nav-item { display: flex; align-items: center; padding: 14px 20px; color: rgba(255,255,255,0.7); text-decoration: none; gap: 12px; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; }
-        .nav-item i { font-size: 16px; width: 18px; }
-        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
-        .nav-item.active { background: rgba(255,255,255,0.15); color: white; }
-        .logout-section { padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .logout-btn { width: 100%; padding: 11px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 500; text-transform: uppercase; transition: all 0.2s; text-decoration: none; }
-        .logout-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+        .sidebar { width: 190px; background: #fff; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 1000; border-right: 1px solid #e5e7eb; }
+        .logo-section { padding: 16px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f0f0f0; }
+        .logo-section img { width: 42px; height: 42px; object-fit: contain; flex-shrink: 0; }
+        .logo-text { line-height: 1.2; }
+        .logo-text .dept { font-size: 8px; font-weight: 700; color: #333; text-transform: uppercase; letter-spacing: 0.3px; }
+        .logo-text .name { font-size: 7px; color: #666; text-transform: uppercase; letter-spacing: 0.2px; }
+        .nav-menu { flex: 1; padding: 10px 0; }
+        .nav-item { display: flex; align-items: center; padding: 11px 18px; color: #555; text-decoration: none; gap: 11px; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+        .nav-item i { font-size: 15px; width: 17px; flex-shrink: 0; }
+        .nav-item:hover { background: #f5f5f5; color: #333; }
+        .nav-item.active { background: #e8f5e9; color: #2e7d32; font-weight: 600; }
+        .logout-section { padding: 12px 14px; border-top: 1px solid #f0f0f0; }
+        .logout-btn { width: 100%; padding: 10px 14px; background: #fff; color: #555; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; text-transform: uppercase; text-decoration: none; transition: all 0.15s; }
+        .logout-btn:hover { background: #fef2f2; color: #c62828; border-color: #f5c6c6; }
 
         /* ── Main ── */
-        .main-content { margin-left: 200px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+        .main-content { margin-left: 190px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
 
         /* ── Top bar ── */
         .top-bar { background: white; padding: 11px 28px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); flex-shrink: 0; }
@@ -89,16 +92,20 @@
 
     <aside class="sidebar">
         <div class="logo-section">
-            <img src="{{ asset('images/Darlandicon.png') }}" alt="Land GIS">
+            <img src="{{ asset('images/Darlandicon.png') }}" alt="DAR">
+            <div class="logo-text">
+                <div class="dept">Department of</div>
+                <div class="name">Agrarian Reform</div>
+            </div>
         </div>
         <nav class="nav-menu">
-            <a href="/dashboard"    class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
-            <a href="/map-viewer"   class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
-            <a href="/land-records" class="nav-item"><i class="fas fa-file-alt"></i><span>Land Records</span></a>
-            <a href="/add-record"   class="nav-item"><i class="fas fa-plus-square"></i><span>Add Record</span></a>
+            <a href="/dashboard"     class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <a href="/submit-report" class="nav-item"><i class="fas fa-file-alt"></i><span>Submit Report</span></a>
+            <a href="/my-reports"    class="nav-item"><i class="fas fa-folder-open"></i><span>My Reports</span></a>
             @if(auth()->user()->role === 'admin')
-            <a href="{{ route('admin.users') }}" class="nav-item"><i class="fas fa-users"></i><span>Users</span></a>
+            <a href="{{ route('admin.users') }}" class="nav-item"><i class="fas fa-users-cog"></i><span>Users</span></a>
             @endif
+            <a href="/profile" class="nav-item active"><i class="fas fa-cog"></i><span>Account Setting</span></a>
         </nav>
         <div class="logout-section">
             <a href="/logout" class="logout-btn">

@@ -10,7 +10,7 @@ rm -rf storage/framework/cache/data/*
 # Full permissions
 chmod -R 777 storage bootstrap/cache
 
-# Regenerate autoloader to ensure all classes are found
+# Regenerate autoloader
 composer dump-autoload --optimize --no-interaction
 
 # Only generate key if not already set
@@ -18,11 +18,8 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force --no-interaction
 fi
 
-# Show env for debugging
 echo "APP_ENV: $APP_ENV"
 echo "DB_CONNECTION: $DB_CONNECTION"
-echo "SESSION_DRIVER: $SESSION_DRIVER"
-echo "CACHE_STORE: $CACHE_STORE"
 
 # Run migrations
 echo "Running migrations..."

@@ -23,5 +23,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo('/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle Token Mismatch (419) — redirect back to login with message
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Session expired.', 'error' => 'token_mismatch'], 419);
+            }
+            if ($request->is('login') && $request->isMethod('post')) {
+                return redirect('/login')
+                    ->withInput($request->except('password'))
+                    ->withErrors(['session' => 'Your session expired. Please try again.']);
+            }
+            return redirect('/login')
+                ->withErrors(['session' => 'Your session expired. Please log in again.']);
+        });
     })->create();
