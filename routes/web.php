@@ -176,20 +176,31 @@ Route::get('/fresh-migrate', function(\Illuminate\Http\Request $request) {
 Route::get('/nuke-migrate', function(\Illuminate\Http\Request $request) {
     if ($request->get('secret') !== 'dar2026setup') abort(403);
     try {
-        $db = \Illuminate\Support\Facades\DB::connection();
+        // Force direct (non-pooler) connection for DDL
+        $directHost = str_replace('-pooler', '', config('database.connections.pgsql.host'));
+        config([
+            'database.connections.pgsql_direct' => array_merge(
+                config('database.connections.pgsql'),
+                ['host' => $directHost, 'name' => 'pgsql_direct']
+            )
+        ]);
+        \Illuminate\Support\Facades\DB::purge('pgsql_direct');
+        $db = \Illuminate\Support\Facades\DB::connection('pgsql_direct');
 
-        // Drop all tables individually
+        // Drop all tables
         $tables = $db->select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
         foreach ($tables as $table) {
             $db->statement("DROP TABLE IF EXISTS \"{$table->tablename}\" CASCADE");
         }
 
-        // Run migrations
+        // Run migrations on direct connection
+        config(['database.default' => 'pgsql_direct']);
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOut = \Illuminate\Support\Facades\Artisan::output();
 
         return response()->json([
             'success'        => true,
+            'direct_host'    => $directHost,
             'tables_dropped' => count($tables),
             'migrate_output' => $migrateOut,
             'next'           => 'Visit /setup-admin?secret=dar2026setup',
