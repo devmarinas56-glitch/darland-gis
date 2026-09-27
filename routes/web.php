@@ -235,3 +235,13 @@ Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// Debug: confirm which app is running
+Route::get('/which-app', function() {
+    return response()->json([
+        'app_name'  => config('app.name'),
+        'app_url'   => config('app.url'),
+        'view_path' => resource_path('views/dashboard/index.blade.php'),
+        'view_exists' => file_exists(resource_path('views/dashboard/index.blade.php')),
+    ]);
+});
