@@ -27,7 +27,7 @@ class LoginController extends Controller
             if ($user->role === 'admin') {
                 return redirect('/admin/users');
             }
-            return redirect('/dashboard');
+            return redirect('/map-viewer');
         }
 
         return back()->withErrors(['email' => 'Invalid credentials.']);

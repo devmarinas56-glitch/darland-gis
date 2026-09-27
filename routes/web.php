@@ -94,18 +94,7 @@ Route::get('/logout', [LoginController::class, 'logout']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function() {
-        try {
-            $stats = AccomplishmentReportController::dashboardStats(auth()->id());
-            return view('dashboard.index', [
-                'totalSubmitted' => $stats['totalSubmitted'],
-                'pendingReview'  => $stats['pendingReview'],
-                'approved'       => $stats['approved'],
-                'returned'       => $stats['returned'],
-                'announcements'  => [], // populate from DB when announcement model exists
-            ]);
-        } catch (\Exception $e) {
-            return response('Dashboard error: ' . $e->getMessage(), 500);
-        }
+        return redirect('/map-viewer');
     })->name('dashboard');
     // Submit Report & My Reports
     Route::get('/submit-report', [AccomplishmentReportController::class, 'submitForm'])->name('submit-report');
