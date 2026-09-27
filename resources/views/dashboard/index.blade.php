@@ -247,10 +247,7 @@
             <a href="/dashboard"     class="nav-item active"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
             <a href="/submit-report" class="nav-item"><i class="fas fa-file-alt"></i><span>Submit Report</span></a>
             <a href="/my-reports"    class="nav-item"><i class="fas fa-folder-open"></i><span>My Reports</span></a>
-            @if(auth()->user()->role === 'admin')
-            <a href="{{ route('admin.users') }}" class="nav-item"><i class="fas fa-users-cog"></i><span>Users</span></a>
-            @endif
-        </nav>
+            </nav>
         <div class="logout-section">
             <a href="/logout" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i><span>Log Out</span>
