@@ -94,7 +94,24 @@ Route::get('/logout', [LoginController::class, 'logout']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function() {
-        return redirect('/map-viewer');
+        $surveys     = \App\Models\LandSurvey::with('lots')->orderBy('lsn')->get();
+        $totalLots   = \App\Models\SurveyLot::count();
+        $totalSurveys = $surveys->count();
+        $totalArea   = \App\Models\SurveyLot::sum('area');
+
+        // Lots per municipality (using original_owner barangay/location as proxy)
+        // Group surveys by first word of notes or original_owner for municipality
+        $byMunicipality = \App\Models\LandSurvey::selectRaw("split_part(original_owner, ',', 2) as municipality, count(*) as count")
+            ->groupByRaw("split_part(original_owner, ',', 2)")
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+
+        $recentSurveys = $surveys->take(10);
+
+        return view('dashboard.index', compact(
+            'totalLots', 'totalSurveys', 'totalArea', 'byMunicipality', 'recentSurveys'
+        ));
     })->name('dashboard');
     // Submit Report & My Reports
     Route::get('/submit-report', [AccomplishmentReportController::class, 'submitForm'])->name('submit-report');
