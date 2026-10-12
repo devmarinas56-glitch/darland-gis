@@ -205,11 +205,17 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-input" placeholder="Min 8 characters" required>
+                        <div style="position:relative">
+                            <input type="password" id="dl_create_pw" name="password" class="form-input" placeholder="Min 8 characters" required style="padding-right:38px">
+                            <i class="fas fa-eye" onclick="togglePwField('dl_create_pw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#aaa;font-size:14px"></i>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Confirm Password</label>
-                        <input type="password" name="password_confirmation" class="form-input" placeholder="Repeat password" required>
+                        <div style="position:relative">
+                            <input type="password" id="dl_create_pw_confirm" name="password_confirmation" class="form-input" placeholder="Repeat password" required style="padding-right:38px">
+                            <i class="fas fa-eye" onclick="togglePwField('dl_create_pw_confirm',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#aaa;font-size:14px"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -252,12 +258,18 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">New Password</label>
-                        <input type="password" name="password" class="form-input" placeholder="Leave blank to keep">
+                        <div style="position:relative">
+                            <input type="password" id="dl_edit_pw" name="password" class="form-input" placeholder="Leave blank to keep" style="padding-right:38px">
+                            <i class="fas fa-eye" onclick="togglePwField('dl_edit_pw',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#aaa;font-size:14px"></i>
+                        </div>
                         <div class="password-note">Leave blank to keep current</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Confirm Password</label>
-                        <input type="password" name="password_confirmation" class="form-input" placeholder="Repeat if changing">
+                        <div style="position:relative">
+                            <input type="password" id="dl_edit_pw_confirm" name="password_confirmation" class="form-input" placeholder="Repeat if changing" style="padding-right:38px">
+                            <i class="fas fa-eye" onclick="togglePwField('dl_edit_pw_confirm',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#aaa;font-size:14px"></i>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -269,6 +281,13 @@
     </div>
 
     <script>
+        function togglePwField(id, icon) {
+            const inp = document.getElementById(id);
+            const show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            icon.classList.toggle('fa-eye', !show);
+            icon.classList.toggle('fa-eye-slash', show);
+        }
         function openCreateModal() { document.getElementById('createModal').classList.add('show'); }
         function openEditModal(id, name, username, email, role) {
             document.getElementById('editForm').action = '/admin/users/' + id;

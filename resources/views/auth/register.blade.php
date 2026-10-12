@@ -153,11 +153,13 @@
                 <div class="form-group">
                     <input type="tel" name="mobile_number" class="form-input" placeholder="Mobile Number" value="{{ old('mobile_number') }}">
                 </div>
-                <div class="form-group">
-                    <input type="password" name="password" class="form-input" placeholder="Password" required>
+                <div class="form-group" style="position:relative">
+                    <input type="password" id="dl_pw" name="password" class="form-input" placeholder="Password" required style="padding-right:42px">
+                    <i class="fas fa-eye" onclick="togglePwField('dl_pw',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:#aaa;font-size:15px"></i>
                 </div>
-                <div class="form-group">
-                    <input type="password" name="password_confirmation" class="form-input" placeholder="Password confirmation" required>
+                <div class="form-group" style="position:relative">
+                    <input type="password" id="dl_pw_confirm" name="password_confirmation" class="form-input" placeholder="Password confirmation" required style="padding-right:42px">
+                    <i class="fas fa-eye" onclick="togglePwField('dl_pw_confirm',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:#aaa;font-size:15px"></i>
                 </div>
 
                 <p class="terms-text">
@@ -171,5 +173,15 @@
             <a href="{{ route('login') }}" class="back-login">CLICK HERE TO GO BACK TO LOG IN</a>
         </div>
     </div>
+
+    <script>
+        function togglePwField(id, icon) {
+            const inp = document.getElementById(id);
+            const show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            icon.classList.toggle('fa-eye', !show);
+            icon.classList.toggle('fa-eye-slash', show);
+        }
+    </script>
 </body>
 </html>
