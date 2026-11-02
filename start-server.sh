@@ -25,5 +25,9 @@ echo "DB_CONNECTION: $DB_CONNECTION"
 echo "Running migrations..."
 php artisan migrate --force || echo "Migrate failed, continuing..."
 
+# Seed GIS users (admin + staff)
+echo "Creating GIS users..."
+php artisan db:seed --class=GisUserSeeder --force || echo "GIS seeder failed, continuing..."
+
 echo "Starting on 0.0.0.0:$PORT"
 php -S 0.0.0.0:$PORT -t public
