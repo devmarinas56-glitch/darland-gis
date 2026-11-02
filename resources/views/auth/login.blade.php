@@ -223,8 +223,11 @@
         });
 
         function selectSystem(sys) {
+            if (sys === 'fms') {
+                window.location.href = 'https://dar-file-management-system.onrender.com/login';
+                return;
+            }
             setActive(sys);
-            // Focus email field
             document.getElementById('emailInput').focus();
         }
 
