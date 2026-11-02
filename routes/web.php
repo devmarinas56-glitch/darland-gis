@@ -258,14 +258,19 @@ Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
     }
 });
 
-// Force create GIS users
+// Force create GIS users + mirror FMS accounts for unified login
 Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
     if ($request->get('secret') !== 'dar2026setup') abort(403);
     try {
         $users = [
-            ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin', 'role' => 'admin', 'password' => 'admin123'],
-            ['email' => 'gis@dar.gov.ph',      'name' => 'GIS Staff',         'username' => 'gisstaff', 'role' => 'user',  'password' => 'gis123'],
+            // ── GIS accounts (stay on DarLand) ──
+            ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin',   'role' => 'admin', 'password' => 'admin123'],
+            ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff',   'role' => 'user',  'password' => 'gis123'],
+
+            // ── FMS accounts (redirect to File Management) ──
+            ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Administrator', 'username' => 'fmsadmin',   'role' => 'fms',   'password' => 'admin123'],
         ];
+
         $results = [];
         foreach ($users as $u) {
             \Illuminate\Support\Facades\DB::table('users')->where('email', $u['email'])->delete();
@@ -281,8 +286,6 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
             ]);
             $results[] = ['email' => $u['email'], 'password' => $u['password'], 'role' => $u['role']];
         }
-        // Also remove admin@dar.gov.ph from GIS DB to avoid confusion
-        \Illuminate\Support\Facades\DB::table('users')->where('email', 'admin@dar.gov.ph')->delete();
 
         return response()->json(['success' => true, 'users' => $results]);
     } catch (\Exception $e) {

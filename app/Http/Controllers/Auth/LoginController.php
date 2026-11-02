@@ -25,16 +25,17 @@ class LoginController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // FMS roles → redirect to file management system
-            $fmsRoles = ['ajdp', 'ltsp', 'arbdsp'];
+            // FMS role or FMS-assigned roles → redirect to File Management System
+            $fmsRoles = ['fms', 'ajdp', 'ltsp', 'arbdsp'];
             if (in_array(strtolower($user->role), $fmsRoles)) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+                // Redirect to FMS login — user logs in there with same credentials
                 return redirect('https://dar-file-management-system.onrender.com/login');
             }
 
-            // GIS users → stay here
+            // GIS users (admin, user) → stay here
             return redirect('/dashboard');
         }
 

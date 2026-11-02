@@ -11,43 +11,35 @@ class GisUserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            [
-                'name'              => 'GIS Administrator',
-                'username'          => 'gisadmin',
-                'email'             => 'gisadmin@dar.gov.ph',
-                'password'          => Hash::make('admin123'),
-                'role'              => 'admin',
-                'email_verified_at' => now(),
-                'created_at'        => now(),
-                'updated_at'        => now(),
-            ],
-            [
-                'name'              => 'GIS Staff',
-                'username'          => 'gisstaff',
-                'email'             => 'gis@dar.gov.ph',
-                'password'          => Hash::make('gis123'),
-                'role'              => 'user',
-                'email_verified_at' => now(),
-                'created_at'        => now(),
-                'updated_at'        => now(),
-            ],
+            // GIS accounts
+            ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin', 'role' => 'admin', 'password' => 'admin123'],
+            ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff', 'role' => 'user',  'password' => 'gis123'],
+            // FMS mirror accounts (role=fms triggers redirect to FMS app)
+            ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Administrator', 'username' => 'fmsadmin', 'role' => 'fms',   'password' => 'admin123'],
         ];
 
-        foreach ($users as $data) {
-            // Upsert — update if exists, insert if not
-            $existing = DB::table('users')->where('email', $data['email'])->first();
+        foreach ($users as $u) {
+            $existing = DB::table('users')->where('email', $u['email'])->first();
             if ($existing) {
-                DB::table('users')->where('email', $data['email'])->update([
-                    'name'     => $data['name'],
-                    'role'     => $data['role'],
-                    'password' => $data['password'],
+                DB::table('users')->where('email', $u['email'])->update([
+                    'name'       => $u['name'],
+                    'role'       => $u['role'],
+                    'password'   => Hash::make($u['password']),
                     'updated_at' => now(),
                 ]);
-                echo "Updated: {$data['email']}\n";
             } else {
-                DB::table('users')->insert($data);
-                echo "Created: {$data['email']}\n";
+                DB::table('users')->insert([
+                    'name'              => $u['name'],
+                    'username'          => $u['username'],
+                    'email'             => $u['email'],
+                    'password'          => Hash::make($u['password']),
+                    'role'              => $u['role'],
+                    'email_verified_at' => now(),
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
             }
+            echo "Seeded: {$u['email']} ({$u['role']})\n";
         }
     }
 }
