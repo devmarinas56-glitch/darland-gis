@@ -21,33 +21,28 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        $system = $request->input('system', 'gis'); // 'gis' or 'fms'
-
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // File Management System roles — redirect to the FMS app
+            // File Management roles — redirect to FMS app and log out from GIS
             $fmsRoles = ['ajdp', 'ltsp', 'arbdsp'];
-            $fmsAdminEmail = 'admin@dar.gov.ph'; // FMS admin email
-
-            // If user selected FMS tab or their role belongs to FMS
-            if ($system === 'fms' || in_array(strtolower($user->role), $fmsRoles) ||
-                $user->email === $fmsAdminEmail) {
+            if (in_array(strtolower($user->role), $fmsRoles) ||
+                ($user->role === 'admin' && str_contains($user->email, 'dar.gov.ph') &&
+                 $user->email !== 'admin@dar.gov.ph')) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                // Redirect to FMS login with email pre-filled
-                return redirect('https://dar-file-management-system.onrender.com/login')
-                    ->with('info', 'Please log in to the File Management System.');
+                return redirect('https://dar-file-management-system.onrender.com/login');
             }
 
-            // GIS users
+            // GIS users stay here
             return redirect('/dashboard');
         }
 
-        return back()->withErrors(['email' => 'Invalid credentials. Please check your email and password.'])
-                     ->withInput($request->only('email'));
+        return back()
+            ->withInput($request->only('email'))
+            ->withErrors(['email' => 'Invalid credentials. Please check your email and password.']);
     }
 
     public function logout(Request $request)
