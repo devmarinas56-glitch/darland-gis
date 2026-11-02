@@ -258,17 +258,20 @@ Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
     }
 });
 
-// Force create GIS users + mirror FMS accounts for unified login
+// Force create ALL users (GIS + FMS mirror) for unified login
 Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
     if ($request->get('secret') !== 'dar2026setup') abort(403);
     try {
         $users = [
-            // ── GIS accounts (stay on DarLand) ──
+            // ── Land GIS accounts ──────────────────────────────────
             ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin',   'role' => 'admin', 'password' => 'admin123'],
             ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff',   'role' => 'user',  'password' => 'gis123'],
 
-            // ── FMS accounts (redirect to File Management) ──
-            ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Administrator', 'username' => 'fmsadmin',   'role' => 'fms',   'password' => 'admin123'],
+            // ── File Management mirror accounts (role=fms → redirect) ──
+            ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Admin',         'username' => 'fmsadmin',   'role' => 'fms',   'password' => 'admin123'],
+            ['email' => 'ajdp@dar.gov.ph',      'name' => 'AJDP Staff',        'username' => 'ajdpstaff',  'role' => 'fms',   'password' => 'ajdp123'],
+            ['email' => 'ltsp@dar.gov.ph',       'name' => 'LTSP Staff',        'username' => 'ltspstaff',  'role' => 'fms',   'password' => 'ltsp123'],
+            ['email' => 'arbdsp@dar.gov.ph',    'name' => 'ARBDSP Staff',      'username' => 'arbdspstaff','role' => 'fms',   'password' => 'arbdsp123'],
         ];
 
         $results = [];
@@ -287,7 +290,7 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
             $results[] = ['email' => $u['email'], 'password' => $u['password'], 'role' => $u['role']];
         }
 
-        return response()->json(['success' => true, 'users' => $results]);
+        return response()->json(['success' => true, 'accounts_created' => count($results), 'users' => $results]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }
