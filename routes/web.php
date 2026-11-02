@@ -258,7 +258,34 @@ Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
     }
 });
 
-// Debug: confirm which app is running
+// Force create GIS users
+Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
+    if ($request->get('secret') !== 'dar2026setup') abort(403);
+    try {
+        $users = [
+            ['email' => 'admin@dar.gov.ph', 'name' => 'Administrator', 'username' => 'admin',    'role' => 'admin', 'password' => 'admin123'],
+            ['email' => 'gis@dar.gov.ph',   'name' => 'GIS Staff',     'username' => 'gisstaff', 'role' => 'user',  'password' => 'gis123'],
+        ];
+        $results = [];
+        foreach ($users as $u) {
+            \Illuminate\Support\Facades\DB::table('users')->where('email', $u['email'])->delete();
+            \Illuminate\Support\Facades\DB::table('users')->insert([
+                'name'              => $u['name'],
+                'username'          => $u['username'],
+                'email'             => $u['email'],
+                'password'          => \Illuminate\Support\Facades\Hash::make($u['password']),
+                'role'              => $u['role'],
+                'email_verified_at' => now(),
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+            $results[] = ['email' => $u['email'], 'password' => $u['password'], 'role' => $u['role']];
+        }
+        return response()->json(['success' => true, 'users' => $results]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
 Route::get('/which-app', function() {
     return response()->json([
         'app_name'  => config('app.name'),
