@@ -220,7 +220,8 @@ Route::get('/nuke-migrate', function(\Illuminate\Http\Request $request) {
 Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
     if ($request->get('secret') !== 'dar2026setup') abort(403);
     try {
-        \Illuminate\Support\Facades\DB::table('users')->where('username', 'admin')->delete();
+        // DarLand GIS Admin
+        \Illuminate\Support\Facades\DB::table('users')->where('email', 'admin@dar.gov.ph')->delete();
         \Illuminate\Support\Facades\DB::table('users')->insert([
             'name'                  => 'Administrator',
             'username'              => 'admin',
@@ -231,11 +232,26 @@ Route::get('/setup-admin', function(\Illuminate\Http\Request $request) {
             'created_at'            => now(),
             'updated_at'            => now(),
         ]);
+
+        // DarLand GIS regular user
+        \Illuminate\Support\Facades\DB::table('users')->where('email', 'gis@dar.gov.ph')->delete();
+        \Illuminate\Support\Facades\DB::table('users')->insert([
+            'name'                  => 'GIS Staff',
+            'username'              => 'gisstaff',
+            'email'                 => 'gis@dar.gov.ph',
+            'password'              => \Illuminate\Support\Facades\Hash::make('gis123'),
+            'role'                  => 'user',
+            'email_verified_at'     => now(),
+            'created_at'            => now(),
+            'updated_at'            => now(),
+        ]);
+
         return response()->json([
             'success'  => true,
-            'message'  => 'Admin created!',
-            'email'    => 'admin@dar.gov.ph',
-            'password' => 'admin123',
+            'accounts' => [
+                ['email' => 'admin@dar.gov.ph', 'password' => 'admin123', 'role' => 'admin'],
+                ['email' => 'gis@dar.gov.ph',   'password' => 'gis123',   'role' => 'user'],
+            ],
         ]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
