@@ -31,7 +31,6 @@ class LoginController extends Controller
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                // Redirect to FMS login — user logs in there with same credentials
                 return redirect('https://dar-file-management-system.onrender.com/login');
             }
 
