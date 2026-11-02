@@ -34,7 +34,7 @@ class LoginController extends Controller
                 return redirect('https://dar-file-management-system.onrender.com/login');
             }
 
-            // GIS roles (admin, user) → stay here
+            // GIS users → stay here
             return redirect('/dashboard');
         }
 

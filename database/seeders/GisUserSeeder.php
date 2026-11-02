@@ -12,9 +12,9 @@ class GisUserSeeder extends Seeder
     {
         $users = [
             [
-                'name'              => 'Administrator',
-                'username'          => 'admin',
-                'email'             => 'admin@dar.gov.ph',
+                'name'              => 'GIS Administrator',
+                'username'          => 'gisadmin',
+                'email'             => 'gisadmin@dar.gov.ph',
                 'password'          => Hash::make('admin123'),
                 'role'              => 'admin',
                 'email_verified_at' => now(),

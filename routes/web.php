@@ -263,8 +263,8 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
     if ($request->get('secret') !== 'dar2026setup') abort(403);
     try {
         $users = [
-            ['email' => 'admin@dar.gov.ph', 'name' => 'Administrator', 'username' => 'admin',    'role' => 'admin', 'password' => 'admin123'],
-            ['email' => 'gis@dar.gov.ph',   'name' => 'GIS Staff',     'username' => 'gisstaff', 'role' => 'user',  'password' => 'gis123'],
+            ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin', 'role' => 'admin', 'password' => 'admin123'],
+            ['email' => 'gis@dar.gov.ph',      'name' => 'GIS Staff',         'username' => 'gisstaff', 'role' => 'user',  'password' => 'gis123'],
         ];
         $results = [];
         foreach ($users as $u) {
@@ -281,6 +281,9 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
             ]);
             $results[] = ['email' => $u['email'], 'password' => $u['password'], 'role' => $u['role']];
         }
+        // Also remove admin@dar.gov.ph from GIS DB to avoid confusion
+        \Illuminate\Support\Facades\DB::table('users')->where('email', 'admin@dar.gov.ph')->delete();
+
         return response()->json(['success' => true, 'users' => $results]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
