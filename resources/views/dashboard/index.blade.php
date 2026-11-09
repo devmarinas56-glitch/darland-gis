@@ -87,7 +87,6 @@
             <a href="/dashboard"    class="nav-item active"><i class="fas fa-home"></i><span>Dashboard</span></a>
             <a href="/map-viewer"   class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
             <a href="/land-records" class="nav-item"><i class="fas fa-file-alt"></i><span>Land Records</span></a>
-            <a href="/add-record"   class="nav-item"><i class="fas fa-plus-square"></i><span>Add Record</span></a>
         </nav>
         <div class="logout-section">
             <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></a>

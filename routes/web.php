@@ -99,10 +99,9 @@ Route::middleware(['auth'])->group(function () {
         $totalSurveys = $surveys->count();
         $totalArea   = \App\Models\SurveyLot::sum('area');
 
-        // Lots per municipality (using original_owner barangay/location as proxy)
-        // Group surveys by first word of notes or original_owner for municipality
-        $byMunicipality = \App\Models\LandSurvey::selectRaw("split_part(original_owner, ',', 2) as municipality, count(*) as count")
-            ->groupByRaw("split_part(original_owner, ',', 2)")
+        // Surveys per municipality
+        $byMunicipality = \App\Models\LandSurvey::selectRaw("COALESCE(NULLIF(municipality, ''), 'Unknown') as municipality, count(*) as count")
+            ->groupByRaw("COALESCE(NULLIF(municipality, ''), 'Unknown')")
             ->orderByDesc('count')
             ->limit(10)
             ->get();
@@ -123,7 +122,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/map-viewer', fn() => view('map.viewer'))->name('map.viewer');
     Route::get('/land-records', [LandSurveyController::class, 'index'])->name('land-records.index');
-    Route::get('/add-record', fn() => view('add-record.index'))->name('add-record');
+    Route::get('/add-record', fn() => redirect('/land-records'))->name('add-record');
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -137,8 +136,10 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/api/surveys/{survey}', [LandSurveyController::class, 'update'])->name('api.surveys.update');
     Route::delete('/api/surveys/{survey}', [LandSurveyController::class, 'destroy'])->name('api.surveys.destroy');
     Route::put('/api/lots/{lot}', [LandSurveyController::class, 'updateLot'])->name('api.lots.update');
-    Route::post('/api/lots/{lot}/polygon', [LandSurveyController::class, 'addPolygon'])->name('api.lots.polygon');
+    Route::post('/api/lots/{lot}/divide', [LandSurveyController::class, 'divideLot'])->name('api.lots.divide');
     Route::delete('/api/lots/{lot}', [LandSurveyController::class, 'destroyLot'])->name('api.lots.destroy');
+    Route::post('/api/surveys/{survey}/add-lot', [LandSurveyController::class, 'addLotToSurvey'])->name('api.surveys.add-lot');
+    Route::post('/api/check-overlap', [LandSurveyController::class, 'checkOverlap'])->name('api.check-overlap');
     // Admin user management
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');

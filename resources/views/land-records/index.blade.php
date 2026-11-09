@@ -138,6 +138,123 @@
         .draw-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11px; color: #666; margin-top: 6px; }
         .draw-legend-item { display: flex; align-items: center; gap: 4px; }
         .draw-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+        /* ── Info tooltips ── */
+        .info-tip {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 15px; height: 15px; border-radius: 50%;
+            background: #c8d6f0; color: #1a2744;
+            font-size: 9.5px; font-weight: 700; cursor: help;
+            position: relative; flex-shrink: 0; margin-left: 4px;
+            vertical-align: middle;
+        }
+        .info-tip::after {
+            content: attr(data-tip);
+            position: absolute; bottom: calc(100% + 6px); left: 50%;
+            transform: translateX(-50%);
+            background: #1a2744; color: white;
+            padding: 7px 11px; border-radius: 8px;
+            font-size: 11px; font-weight: 400; white-space: normal;
+            width: 210px; max-width: 210px; z-index: 10000;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: left;
+        }
+        .info-tip::before {
+            content: ''; position: absolute; bottom: calc(100% + 1px); left: 50%;
+            transform: translateX(-50%); border: 5px solid transparent;
+            border-top-color: #1a2744; opacity: 0; transition: opacity 0.2s;
+        }
+        .info-tip:hover::after, .info-tip:hover::before { opacity: 1; }
+
+        /* ── Map style toggle ── */
+        .map-style-toggle {
+            position: absolute; top: 10px; right: 10px; z-index: 1000;
+            width: 38px; height: 38px; border-radius: 8px;
+            background: white; border: none; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: #1a2744; transition: background 0.15s;
+        }
+        .map-style-toggle:hover { background: #f0f4ff; }
+        .map-style-label {
+            position: absolute; top: 52px; right: 10px; z-index: 1000;
+            font-size: 10px; color: #555; background: rgba(255,255,255,0.92);
+            padding: 2px 8px; border-radius: 5px; pointer-events: none;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ── Computed chip ── */
+        .computed-chip {
+            display: flex; align-items: center; gap: 6px;
+            background: #e3edf5; border-radius: 6px; padding: 7px 10px;
+            margin-top: 6px; font-size: 11px; color: #1a2744;
+        }
+        .computed-chip i { font-size: 13px; }
+        .computed-chip strong { font-weight: 800; }
+
+        /* ── Required marker ── */
+        .req { color: #e53935; margin-left: 2px; }
+
+        /* ── Pangasinan search & pins ── */
+        .pangasinan-search {
+            position: absolute; top: 10px; left: 10px; z-index: 1000;
+            width: 220px;
+        }
+        .muni-input-wrap { position: relative; }
+        .muni-input {
+            width: 100%; padding: 8px 32px 8px 34px;
+            border: none; border-radius: 8px;
+            font-size: 12.5px; color: #333;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            outline: none;
+        }
+        .muni-input:focus { box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+        .muni-input-icon {
+            position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+            color: #1a2744; font-size: 13px; pointer-events: none;
+        }
+        .muni-toggle-btn {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            width: 24px; height: 24px; border: none; border-radius: 5px;
+            background: #e8edf5; color: #1a2744; cursor: pointer;
+            font-size: 11px; display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .muni-toggle-btn:hover { background: #d0dcef; }
+        .muni-toggle-btn.active { background: #1a2744; color: white; }
+        .muni-dropdown {
+            display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            max-height: 260px; overflow-y: auto;
+            background: white; border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            z-index: 1001;
+        }
+        .muni-dropdown.show { display: block; }
+        .muni-item {
+            padding: 8px 12px; font-size: 12px; color: #444;
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #f5f5f5; transition: background 0.1s;
+        }
+        .muni-item:last-child { border-bottom: none; }
+        .muni-item:hover { background: #f0f4ff; color: #1a2744; }
+        .muni-item i { font-size: 10px; color: #aaa; }
+        .muni-item:hover i { color: #1a2744; }
+        .muni-item .muni-type { font-size: 9.5px; color: #aaa; margin-left: auto; text-transform: uppercase; }
+
+        /* Municipality pin on map */
+        .muni-pin-marker {
+            display: flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; border-radius: 50% 50% 50% 0;
+            background: #1a2744; color: white; font-size: 9px; font-weight: 700;
+            transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 2px solid white;
+        }
+        .muni-pin-marker span { transform: rotate(45deg); }
+        .muni-pin-marker.city { background: #2e7d32; }
+        .leaflet-popup-content .muni-popup-name { font-size: 13px; font-weight: 700; color: #1a2744; }
+        .leaflet-popup-content .muni-popup-type { font-size: 11px; color: #888; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -148,7 +265,6 @@
         <a href="/dashboard"    class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
         <a href="/map-viewer"   class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
         <a href="/land-records" class="nav-item active"><i class="fas fa-layer-group"></i><span>Land Records</span></a>
-        <a href="/add-record"   class="nav-item"><i class="fas fa-plus-square"></i><span>Add Record</span></a>
         </nav>
     <div class="logout-section">
         <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></a>
@@ -174,6 +290,19 @@
         <!-- Map -->
         <div class="map-wrap">
             <div id="map"></div>
+
+            <!-- Pangasinan municipality search -->
+            <div class="pangasinan-search">
+                <div class="muni-input-wrap">
+                    <i class="fas fa-search muni-input-icon"></i>
+                    <input type="text" class="muni-input" id="muniSearch" placeholder="Search Pangasinan municipalities..." oninput="filterMuni(this.value)" onfocus="showMuniDropdown()" autocomplete="off">
+                    <button class="muni-toggle-btn active" id="muniToggleBtn" onclick="toggleMuniPins()" title="Show/hide municipality pins"><i class="fas fa-map-marker-alt" id="muniToggleIcon"></i></button>
+                </div>
+                <div class="muni-dropdown" id="muniDropdown"></div>
+            </div>
+
+            <button class="map-style-toggle" id="mapStyleToggle" onclick="toggleMapStyle()" title="Switch map style"><i class="fas fa-satellite" id="mapStyleIcon"></i></button>
+            <div class="map-style-label" id="mapStyleLabel">Satellite</div>
             <div class="map-hint" id="mapHint"><i class="fas fa-draw-polygon"></i> Draw mode: click points to trace a lot boundary. Double-click to finish.</div>
         </div>
 
@@ -182,7 +311,7 @@
             <div class="panel-tabs">
                 <button class="tab-btn active" onclick="switchTab('ldc')"><i class="fas fa-calculator"></i> LDC</button>
                 <button class="tab-btn" onclick="switchTab('surveys')"><i class="fas fa-list"></i> Surveys</button>
-                <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-bar"></i> Stats</button>
+                <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-bar"></i> Stats <span class="info-tip" style="width:13px;height:13px;font-size:8px" data-tip="LDC: Create land surveys by drawing or auto-generating lots. Surveys: Browse saved surveys and their lots. Stats: View summary statistics and breakdowns.">?</span></button>
             </div>
 
             <!-- ── LDC Tab ── -->
@@ -201,18 +330,79 @@
 
                 <!-- Shared: LSN info (both modes) -->
                 <div class="ldc-section">
-                    <div class="ldc-section-title"><i class="fas fa-map-marker-alt"></i> Survey Info</div>
-                    <div class="form-row">
-                        <label class="form-label">LSN (Survey Number)</label>
-                        <input type="text" id="lsnInput" class="form-input" placeholder="e.g. Psd-123456">
+                    <div class="ldc-section-title"><i class="fas fa-map-marker-alt"></i> Survey Info <span class="info-tip" data-tip="Enter the land survey details. Fields marked * are required. Location fields help identify the property.">?</span></div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">LSN (Survey Number) <span class="req">*</span></label>
+                            <input type="text" id="lsnInput" class="form-input" placeholder="e.g. Psd-123456">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Barangay No./Zone</label>
+                            <input type="text" id="surveyZone" class="form-input" placeholder="e.g. Zone 3">
+                        </div>
                     </div>
-                    <div class="form-row">
-                        <label class="form-label">Original Owner</label>
-                        <input type="text" id="originalOwner" class="form-input" placeholder="Full name">
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Original Owner <span class="req">*</span></label>
+                            <input type="text" id="originalOwner" class="form-input" placeholder="Full name">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Named Barangay</label>
+                            <input type="text" id="surveyBarangay" class="form-input" placeholder="e.g. Brgy. Anonas">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Location</label>
+                            <input type="text" id="surveyLocation" class="form-input" placeholder="Full address">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Municipality/City</label>
+                            <input type="text" id="surveyMunicipality" class="form-input" placeholder="e.g. Urdaneta City">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Province</label>
+                            <input type="text" id="surveyProvince" class="form-input" placeholder="e.g. Pangasinan">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Date Registered</label>
+                            <input type="date" id="surveyDate" class="form-input">
+                        </div>
                     </div>
                     <div class="form-row">
                         <label class="form-label">Notes (optional)</label>
-                        <input type="text" id="surveyNotes" class="form-input" placeholder="e.g. Brgy. Anonas, Urdaneta">
+                        <input type="text" id="surveyNotes" class="form-input" placeholder="Additional notes">
+                    </div>
+                </div>
+
+                <!-- Boundary Details -->
+                <div class="ldc-section">
+                    <div class="ldc-section-title"><i class="fas fa-draw-polygon"></i> Boundary Details <span class="info-tip" data-tip="Boundary info describes the physical edges of the land. Line is the direction (e.g. N-S). Bearing is the compass direction. Distance is the length in meters. These are optional but help with legal documentation.">?</span></div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Line</label>
+                            <input type="text" id="boundaryLine" class="form-input" placeholder="e.g. N-S">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Bearing</label>
+                            <input type="text" id="boundaryBearing" class="form-input" placeholder="e.g. N 45°E">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Distance (m)</label>
+                            <input type="number" id="boundaryDistance" class="form-input" placeholder="e.g. 120">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Lot Reference No.</label>
+                            <input type="text" id="boundaryLotNo" class="form-input" placeholder="e.g. 1-A">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label class="form-label">Tenant / Claimant</label>
+                        <input type="text" id="boundaryClaimant" class="form-input" placeholder="Name (if different from owner)">
                     </div>
                 </div>
 
@@ -223,7 +413,7 @@
                         <div class="draw-step active-step" id="step1">
                             <div class="step-header">
                                 <div class="step-num">1</div>
-                                <div class="step-title">Draw each lot on the map</div>
+                                <div class="step-title">Draw each lot on the map <span class="info-tip" data-tip="Click the Start Drawing button, then click points on the map to trace each lot boundary. Double-click to finish a lot. Repeat for every lot in the survey.">?</span></div>
                             </div>
                             <div class="step-desc">Click the button below, trace the lot boundary by clicking points, double-click to finish. Repeat for every lot.</div>
                             <div style="margin-top:8px">
@@ -259,6 +449,13 @@
                         </div>
                     </div>
 
+                    <!-- Overlap warning banner (shown when overlap blocks drawing) -->
+                    <div id="overlapWarning" style="display:none;background:#ffebee;border:1px solid #e53935;border-radius:7px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:#c62828">
+                        <i class="fas fa-ban"></i> <strong>Overlap detected — drawing blocked!</strong>
+                        <div id="overlapDetails" style="margin-top:4px;font-size:11px"></div>
+                        <div style="margin-top:6px;font-size:11px;color:#888">Plots cannot overlap existing lots. Please redraw in a non-overlapping area.</div>
+                    </div>
+
                     <button class="btn-primary" onclick="saveLSNDraw()">
                         <i class="fas fa-save"></i> Save Land Survey
                     </button>
@@ -270,7 +467,7 @@
                 <!-- ══ GRID MODE ══ -->
                 <div id="gridModePanel" style="display:none">
                     <div class="ldc-section">
-                        <div class="ldc-section-title"><i class="fas fa-map-pin"></i> Center Location</div>
+                        <div class="ldc-section-title"><i class="fas fa-map-pin"></i> Center Location <span class="info-tip" data-tip="Click the Pick button, then click on the map to set the center point. Grid lots will be generated around this center location.">?</span></div>
                         <div class="form-row">
                             <label class="form-label">Click map to set center</label>
                             <div class="coord-row">
@@ -282,24 +479,28 @@
                     </div>
 
                     <div class="ldc-section">
-                        <div class="ldc-section-title"><i class="fas fa-ruler-combined"></i> Area &amp; Division</div>
+                        <div class="ldc-section-title"><i class="fas fa-ruler-combined"></i> Area &amp; Division <span class="info-tip" data-tip="Enter the total land area in square meters and how many lots to divide it into. The system auto-calculates the area per lot and generates equal-sized grid rectangles on the map.">?</span></div>
                         <div class="form-grid-2">
                             <div class="form-row">
-                                <label class="form-label">Total Area (sqm)</label>
+                                <label class="form-label">Total Area (sqm) <span class="req">*</span></label>
                                 <input type="number" id="totalArea" class="form-input" placeholder="e.g. 50000" min="1" oninput="updateLotRows()">
                             </div>
                             <div class="form-row">
-                                <label class="form-label">No. of Lots</label>
+                                <label class="form-label">No. of Lots <span class="req">*</span></label>
                                 <input type="number" id="lotCount" class="form-input" placeholder="e.g. 10" min="1" max="500" oninput="updateLotRows()">
                             </div>
                         </div>
-                        <div class="area-display" id="areaPerLotDisplay">
+                        <div class="area-display" id="areaPerLotDisplay" style="display:none">
                             Area per lot: <strong id="areaPerLotVal"></strong> sqm &nbsp;·&nbsp; <strong id="areaPerLotHa"></strong> ha
+                        </div>
+                        <div class="computed-chip" id="computedChip" style="display:none">
+                            <i class="fas fa-calculator"></i>
+                            <span><strong id="computedNum">0</strong> lots &times; <strong id="computedAreaEach">0</strong> sqm = <strong id="computedTotal">0</strong> sqm (<strong id="computedHa">0</strong> ha)</span>
                         </div>
                     </div>
 
                     <div class="ldc-section">
-                        <div class="ldc-section-title"><i class="fas fa-users"></i> Lot Owners</div>
+                        <div class="ldc-section-title"><i class="fas fa-users"></i> Lot Owners <span class="info-tip" data-tip="Assign an owner name to each lot. If left blank, the original owner from the Survey Info above will be used automatically.">?</span></div>
                         <div class="lot-rows" id="lotOwnerRows">
                             <div style="font-size:11.5px;color:#aaa;text-align:center;padding:16px">Enter number of lots above</div>
                         </div>
@@ -346,6 +547,63 @@
     </div>
 </div>
 
+<!-- Add Lot to Survey Modal -->
+<div id="addLotModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:white;border-radius:14px;padding:26px;width:360px;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+        <h3 style="font-size:15px;font-weight:700;color:#1a2744;margin-bottom:6px"><i class="fas fa-plus-circle" style="margin-right:6px;color:#2e7d32"></i>Add Lot to Survey <span class="info-tip" data-tip="Draw a new lot on the map and assign an owner. The lot is added to the existing survey and the total area is recalculated automatically.">?</span></h3>
+        <p style="font-size:12px;color:#888;margin-bottom:16px">Draw the new lot on the map, then fill in details below.</p>
+        <input type="hidden" id="addLotSurveyId">
+        <div id="addLotOverlapWarning" style="display:none;background:#fff3e0;border:1px solid #ff9800;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11.5px;color:#e65100">
+            <i class="fas fa-exclamation-triangle"></i> Overlap detected with existing lots.
+        </div>
+        <div class="form-row"><label class="form-label">Owner Name</label><input type="text" id="addLotOwner" class="form-input" placeholder="Owner of new lot"></div>
+        <div class="form-row"><label class="form-label">Notes (optional)</label><input type="text" id="addLotNotes" class="form-input" placeholder="Optional"></div>
+        <div style="background:#f0f4ff;border-radius:7px;padding:10px;margin-bottom:12px;font-size:12px;color:#555">
+            <div id="addLotDrawStatus"><i class="fas fa-draw-polygon"></i> Click <strong>Draw Lot</strong> then trace on the map. Double-click to finish.</div>
+            <div id="addLotAreaDisplay" style="display:none;margin-top:4px;color:#2e7d32;font-weight:600"></div>
+        </div>
+        <button id="addLotDrawBtn" onclick="startAddLotDraw()" style="width:100%;padding:9px;background:#2e7d32;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;margin-bottom:10px">
+            <i class="fas fa-draw-polygon"></i> <span id="addLotDrawBtnText">Draw Lot on Map</span>
+        </button>
+        <div style="display:flex;gap:10px">
+            <button onclick="closeAddLotModal()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
+            <button onclick="saveAddLot()" style="flex:1;padding:9px;background:#1a2744;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700">Save Lot</button>
+        </div>
+    </div>
+</div>
+
+<!-- Divide Lot Modal -->
+<div id="divideLotModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:white;border-radius:14px;padding:26px;width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+        <h3 style="font-size:15px;font-weight:700;color:#1a2744;margin-bottom:6px"><i class="fas fa-cut" style="margin-right:6px;color:#e53935"></i>Divide Lot <span class="info-tip" data-tip="Split a lot into two parts by drawing each half on the map. Assign owners to both Part A and Part B. The original lot becomes Part A and a new lot is created for Part B.">?</span></h3>
+        <p style="font-size:12px;color:#888;margin-bottom:16px">Draw a line through the lot to divide it into two parts. Then assign owners to each half.</p>
+        <input type="hidden" id="divideLotId">
+        <div style="background:#f0f4ff;border-radius:7px;padding:10px;margin-bottom:12px;font-size:12px;color:#555">
+            <div id="divideDrawStatus"><i class="fas fa-draw-polygon"></i> Click <strong>Draw Part A</strong> to trace the first half. Double-click to finish, then draw Part B.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+                <button id="divideDrawABtn" onclick="startDivideDrawA()" style="width:100%;padding:8px;background:#1976d2;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:6px">
+                    <i class="fas fa-draw-polygon"></i> Draw Part A
+                </button>
+                <div class="form-row"><label class="form-label" style="color:#1976d2">Owner A</label><input type="text" id="divideOwnerA" class="form-input" placeholder="Owner"></div>
+                <div id="divideAreaA" style="font-size:11px;color:#1976d2;font-weight:600"></div>
+            </div>
+            <div>
+                <button id="divideDrawBBtn" onclick="startDivideDrawB()" style="width:100%;padding:8px;background:#e53935;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:6px" disabled>
+                    <i class="fas fa-draw-polygon"></i> Draw Part B
+                </button>
+                <div class="form-row"><label class="form-label" style="color:#e53935">Owner B</label><input type="text" id="divideOwnerB" class="form-input" placeholder="Owner"></div>
+                <div id="divideAreaB" style="font-size:11px;color:#e53935;font-weight:600"></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px">
+            <button onclick="closeDivideLotModal()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
+            <button onclick="saveDivideLot()" style="flex:1;padding:9px;background:#1a2744;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700">Save Division</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script>
@@ -354,9 +612,178 @@ const isAdmin = {{ auth()->user()->role === 'admin' ? 'true' : 'false' }};
 
 // ── Map ───────────────────────────────────────────────────────
 const map = L.map('map').setView([15.9754, 120.5701], 14);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+// ── Map style toggle (classic ↔ satellite) ──
+let currentTileLayer = null;
+let mapStyleIsSatellite = false;
+
+const classicTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap', maxZoom: 19
-}).addTo(map);
+});
+const satelliteTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri', maxZoom: 20
+});
+
+currentTileLayer = classicTiles;
+currentTileLayer.addTo(map);
+
+function toggleMapStyle() {
+    map.removeLayer(currentTileLayer);
+    mapStyleIsSatellite = !mapStyleIsSatellite;
+    currentTileLayer = mapStyleIsSatellite ? satelliteTiles : classicTiles;
+    currentTileLayer.addTo(map);
+    const icon = document.getElementById('mapStyleIcon');
+    const label = document.getElementById('mapStyleLabel');
+    if (mapStyleIsSatellite) {
+        icon.className = 'fas fa-map';
+        label.textContent = 'Street';
+    } else {
+        icon.className = 'fas fa-satellite';
+        label.textContent = 'Satellite';
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PANGASINAN MUNICIPALITY PINS & SEARCH
+// ══════════════════════════════════════════════════════════════
+const pangasinanMunis = [
+    // Cities
+    {name:'Alaminos City',   lat:16.1558, lng:119.9781, type:'City'},
+    {name:'Dagupan City',    lat:16.0433, lng:120.3333, type:'City'},
+    {name:'San Carlos City', lat:15.8000, lng:120.3481, type:'City'},
+    {name:'Urdaneta City',   lat:15.9754, lng:120.5701, type:'City'},
+    // Municipalities (District 1 - Western)
+    {name:'Agno',       lat:16.1153, lng:119.7658, type:'Municipality'},
+    {name:'Bani',       lat:16.1742, lng:119.8997, type:'Municipality'},
+    {name:'Bolinao',    lat:16.2464, lng:119.8922, type:'Municipality'},
+    {name:'Burgos',     lat:16.3050, lng:119.8997, type:'Municipality'},
+    {name:'Dasol',      lat:16.0594, lng:119.8522, type:'Municipality'},
+    {name:'Infanta',    lat:16.1139, lng:119.9175, type:'Municipality'},
+    {name:'Mabini',     lat:16.0233, lng:120.0925, type:'Municipality'},
+    {name:'Sual',       lat:16.0389, lng:120.0944, type:'Municipality'},
+    // Municipalities (District 2 - Central West)
+    {name:'Anda',       lat:16.1914, lng:120.2014, type:'Municipality'},
+    {name:'Labrador',   lat:15.9786, lng:120.1403, type:'Municipality'},
+    {name:'Lingayen',   lat:15.8914, lng:120.2361, type:'Municipality'},
+    {name:'Bugallon',   lat:15.7069, lng:120.1422, type:'Municipality'},
+    {name:'Aguilar',    lat:15.6239, lng:120.1753, type:'Municipality'},
+    {name:'Mangatarem', lat:15.7458, lng:120.1522, type:'Municipality'},
+    // Municipalities (District 3 - Central)
+    {name:'Bayambang',  lat:15.7997, lng:120.4572, type:'Municipality'},
+    {name:'Calasiao',   lat:15.9658, lng:120.3622, type:'Municipality'},
+    {name:'Mapandan',   lat:15.8939, lng:120.4092, type:'Municipality'},
+    {name:'Santa Barbara', lat:15.8386, lng:120.3978, type:'Municipality'},
+    {name:'Malasiqui',  lat:15.9108, lng:120.4206, type:'Municipality'},
+    {name:'Binmaley',   lat:15.9489, lng:120.2825, type:'Municipality'},
+    {name:'Basista',    lat:15.8556, lng:120.3597, type:'Municipality'},
+    // Municipalities (District 4 - Central East)
+    {name:'Bautista',   lat:15.8608, lng:120.4881, type:'Municipality'},
+    {name:'Urbiztondo', lat:15.8033, lng:120.4564, type:'Municipality'},
+    {name:'Santa Maria',lat:15.9331, lng:120.4814, type:'Municipality'},
+    {name:'Tayug',      lat:16.1031, lng:120.7347, type:'Municipality'},
+    // Municipalities (District 5 - North East)
+    {name:'Binalonan',  lat:16.0247, lng:120.5492, type:'Municipality'},
+    {name:'Manaoag',    lat:16.0089, lng:120.4086, type:'Municipality'},
+    {name:'Laoac',      lat:16.0500, lng:120.5861, type:'Municipality'},
+    {name:'Pozorrubio', lat:16.0883, lng:120.5489, type:'Municipality'},
+    {name:'Sison',      lat:16.1347, lng:120.5414, type:'Municipality'},
+    {name:'San Manuel', lat:15.9756, lng:120.5956, type:'Municipality'},
+    {name:'San Nicolas',lat:16.0333, lng:120.6256, type:'Municipality'},
+    {name:'Umingan',    lat:16.0611, lng:120.7856, type:'Municipality'},
+    // Municipalities (District 6 - North)
+    {name:'Alcala',     lat:15.9467, lng:120.6892, type:'Municipality'},
+    {name:'Asingan',    lat:15.9756, lng:120.6581, type:'Municipality'},
+    {name:'Balungao',   lat:15.9344, lng:120.6861, type:'Municipality'},
+    {name:'Natividad',  lat:16.0561, lng:120.6728, type:'Municipality'},
+    {name:'Rosales',    lat:15.8781, lng:120.5808, type:'Municipality'},
+    {name:'Santo Tomas',lat:15.8769, lng:120.5789, type:'Municipality'},
+    {name:'Villasis',   lat:15.9386, lng:120.5689, type:'Municipality'},
+    // Municipalities (North Coast)
+    {name:'San Fabian', lat:16.1153, lng:120.3592, type:'Municipality'},
+    {name:'Mangaldan',  lat:16.0758, lng:120.4064, type:'Municipality'},
+    {name:'San Jacinto',lat:16.0286, lng:120.3592, type:'Municipality'},
+];
+
+let muniPinsLayer = L.layerGroup().addTo(map);
+let muniPinsVisible = true;
+let muniMarkers = [];
+
+// Create pins for each municipality
+pangasinanMunis.forEach((m, idx) => {
+    const marker = L.marker([m.lat, m.lng], {
+        icon: L.divIcon({
+            className: '',
+            html: `<div class="muni-pin-marker ${m.type === 'City' ? 'city' : ''}"><span>${m.name.charAt(0)}</span></div>`,
+            iconSize: [22, 22],
+            iconAnchor: [11, 22],
+            popupAnchor: [0, -22],
+        })
+    });
+    marker.bindPopup(`
+        <div class="muni-popup-name">${m.name}</div>
+        <div class="muni-popup-type">${m.type} · Pangasinan</div>
+        <div style="font-size:11px;color:#555;margin-top:4px">Lat: ${m.lat.toFixed(4)}, Lng: ${m.lng.toFixed(4)}</div>
+    `);
+    marker.addTo(muniPinsLayer);
+    muniMarkers.push({marker, ...m});
+});
+
+// Search filter
+function filterMuni(query) {
+    const dd = document.getElementById('muniDropdown');
+    const q = query.trim().toLowerCase();
+    if (!q) { dd.classList.remove('show'); return; }
+    const matches = pangasinanMunis.filter(m => m.name.toLowerCase().includes(q)).slice(0, 30);
+    if (matches.length === 0) {
+        dd.innerHTML = '<div class="muni-item" style="color:#aaa;cursor:default">No municipalities found</div>';
+        dd.classList.add('show');
+        return;
+    }
+    dd.innerHTML = matches.map(m =>
+        `<div class="muni-item" onclick="flyToMuni('${m.name}')"><i class="fas fa-map-marker-alt"></i> ${m.name} <span class="muni-type">${m.type}</span></div>`
+    ).join('');
+    dd.classList.add('show');
+}
+
+function showMuniDropdown() {
+    const q = document.getElementById('muniSearch').value.trim();
+    if (q) filterMuni(q);
+}
+
+function flyToMuni(name) {
+    const m = pangasinanMunis.find(x => x.name === name);
+    if (!m) return;
+    map.flyTo([m.lat, m.lng], 15, {duration: 1.2});
+    // Open popup for this marker
+    const mm = muniMarkers.find(x => x.name === name);
+    if (mm) setTimeout(() => mm.marker.openPopup(), 1200);
+    document.getElementById('muniSearch').value = m.name;
+    document.getElementById('muniDropdown').classList.remove('show');
+}
+
+function toggleMuniPins() {
+    muniPinsVisible = !muniPinsVisible;
+    const btn = document.getElementById('muniToggleBtn');
+    const icon = document.getElementById('muniToggleIcon');
+    if (muniPinsVisible) {
+        muniPinsLayer.addTo(map);
+        btn.classList.add('active');
+        icon.className = 'fas fa-map-marker-alt';
+    } else {
+        map.removeLayer(muniPinsLayer);
+        btn.classList.remove('active');
+        icon.className = 'fas fa-map-marker-alt';
+        icon.style.opacity = '0.4';
+    }
+    if (muniPinsVisible) icon.style.opacity = '1';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.pangasinan-search')) {
+        document.getElementById('muniDropdown').classList.remove('show');
+    }
+});
 
 let surveyLayers = {};
 let allSurveys   = [];
@@ -556,10 +983,29 @@ function removeDrawnLot(index) {
     renderDrawnLotsList();
 }
 
+// ── Build notes from extra form fields ──
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function buildNotes() {
+    return [
+        val('surveyNotes'),
+        val('surveyZone')        ? 'Zone: '      + val('surveyZone')        : '',
+        val('surveyBarangay')     ? 'Brgy: '      + val('surveyBarangay')     : '',
+        val('surveyLocation')     ? 'Loc: '       + val('surveyLocation')     : '',
+        val('surveyProvince')     ? 'Province: '  + val('surveyProvince')     : '',
+        val('boundaryLine')       ? 'Line: '      + val('boundaryLine')       : '',
+        val('boundaryBearing')    ? 'Bearing: '   + val('boundaryBearing')    : '',
+        val('boundaryDistance')   ? 'Distance: '  + val('boundaryDistance')   + 'm' : '',
+        val('boundaryLotNo')       ? 'Lot ref: '   + val('boundaryLotNo')      : '',
+        val('boundaryClaimant')   ? 'Claimant: '  + val('boundaryClaimant')   : '',
+    ].filter(Boolean).join(' | ');
+}
+
 async function saveLSNDraw() {
     const lsn   = document.getElementById('lsnInput').value.trim();
     const owner = document.getElementById('originalOwner').value.trim();
-    const notes = document.getElementById('surveyNotes').value.trim();
+    const municipality = document.getElementById('surveyMunicipality').value.trim();
+    const dateRegistered = document.getElementById('surveyDate').value;
+    const notes = buildNotes();
 
     if (!lsn)   { showAlert('error', 'Please enter an LSN.'); return; }
     if (!owner) { showAlert('error', 'Please enter the original owner.'); return; }
@@ -584,7 +1030,7 @@ async function saveLSNDraw() {
 
     try {
         const res = await apiFetch('/api/surveys', 'POST', {
-            lsn, original_owner: owner, notes,
+            lsn, original_owner: owner, municipality, date_registered: dateRegistered, notes,
             center_lat: centerLat, center_lng: centerLng,
             lot_count: lots.length,
             mode: 'draw',
@@ -607,7 +1053,10 @@ function resetDrawMode() {
     drawnPolygons.forEach(p => { drawnLayerGroup.removeLayer(p.layer); drawnLayerGroup.removeLayer(p.labelMarker); });
     drawnPolygons = [];
     renderDrawnLotsList();
-    ['lsnInput','originalOwner','surveyNotes'].forEach(id => document.getElementById(id).value='');
+    ['lsnInput','originalOwner','surveyNotes','surveyMunicipality','surveyDate',
+     'surveyZone','surveyBarangay','surveyLocation','surveyProvince',
+     'boundaryLine','boundaryBearing','boundaryDistance','boundaryLotNo','boundaryClaimant'
+    ].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
     document.getElementById('step2').classList.remove('active-step','done-step');
     document.getElementById('step3').classList.remove('active-step','done-step');
     document.getElementById('drawBtnText').textContent = 'Start Drawing Lot';
@@ -657,7 +1106,18 @@ function updateLotRows() {
         document.getElementById('areaPerLotVal').textContent = Number(perLot).toLocaleString();
         document.getElementById('areaPerLotHa').textContent  = (perLot/10000).toFixed(4);
         display.style.display = 'block';
-    } else { display.style.display = 'none'; }
+        // Computed chip
+        const chip = document.getElementById('computedChip');
+        document.getElementById('computedNum').textContent = count;
+        document.getElementById('computedAreaEach').textContent = Number(perLot).toLocaleString();
+        document.getElementById('computedTotal').textContent = area.toLocaleString();
+        document.getElementById('computedHa').textContent = (area/10000).toFixed(4);
+        if (chip) chip.style.display = 'flex';
+    } else {
+        display.style.display = 'none';
+        const chip = document.getElementById('computedChip');
+        if (chip) chip.style.display = 'none';
+    }
 
     if (count < 1 || count > 500) {
         container.innerHTML = '<div style="font-size:11.5px;color:#aaa;text-align:center;padding:14px">Enter 1–500 lots</div>';
@@ -673,7 +1133,9 @@ function updateLotRows() {
 async function saveLSNGrid() {
     const lsn   = document.getElementById('lsnInput').value.trim();
     const owner = document.getElementById('originalOwner').value.trim();
-    const notes = document.getElementById('surveyNotes').value.trim();
+    const municipality = document.getElementById('surveyMunicipality').value.trim();
+    const dateRegistered = document.getElementById('surveyDate').value;
+    const notes = buildNotes();
     const lat   = parseFloat(document.getElementById('centerLat').value);
     const lng   = parseFloat(document.getElementById('centerLng').value);
     const area  = parseFloat(document.getElementById('totalArea').value);
@@ -688,7 +1150,7 @@ async function saveLSNGrid() {
     }
     try {
         const res = await apiFetch('/api/surveys', 'POST', {
-            lsn, original_owner: owner, notes,
+            lsn, original_owner: owner, municipality, date_registered: dateRegistered, notes,
             total_area: area, center_lat: lat, center_lng: lng,
             lot_count: count, mode: 'grid', lots,
         });
@@ -702,10 +1164,15 @@ async function saveLSNGrid() {
 }
 
 function resetGridMode() {
-    ['lsnInput','originalOwner','surveyNotes','centerLat','centerLng','totalArea','lotCount']
-        .forEach(id => document.getElementById(id).value='');
+    ['lsnInput','originalOwner','surveyNotes','surveyMunicipality','surveyDate',
+     'surveyZone','surveyBarangay','surveyLocation','surveyProvince',
+     'boundaryLine','boundaryBearing','boundaryDistance','boundaryLotNo','boundaryClaimant',
+     'centerLat','centerLng','totalArea','lotCount'
+    ].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
     document.getElementById('lotOwnerRows').innerHTML = '<div style="font-size:11.5px;color:#aaa;text-align:center;padding:14px">Enter number of lots above</div>';
     document.getElementById('areaPerLotDisplay').style.display = 'none';
+    const chip = document.getElementById('computedChip');
+    if (chip) chip.style.display = 'none';
     if (pickedMarker) { map.removeLayer(pickedMarker); pickedMarker = null; }
 }
 
@@ -767,6 +1234,9 @@ function openLotPopup(lot, layer) {
     const editBtn = isAdmin
         ? `<button class="popup-edit-btn" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')">Edit Lot</button>`
         : '';
+    const divideBtn = isAdmin
+        ? `<button class="popup-edit-btn" style="background:#e53935;margin-top:4px" onclick="map.closePopup();openDivideLotModal(${lot.id})"><i class="fas fa-cut"></i> Divide Lot</button>`
+        : '';
     L.popup({ maxWidth: 220 })
         .setLatLng(layer.getBounds().getCenter())
         .setContent(`
@@ -776,6 +1246,7 @@ function openLotPopup(lot, layer) {
             <div class="popup-row">Area: <span>${areaHa} ha</span></div>
             ${lot.notes ? `<div class="popup-row">Notes: <span>${lot.notes}</span></div>` : ''}
             ${editBtn}
+            ${divideBtn}
         `)
         .openOn(map);
 }
@@ -861,6 +1332,8 @@ function showSurveyDetail(survey) {
         </div>
         <div class="ldc-section" style="margin-bottom:8px">
             <div class="stat-row"><span class="stat-lbl">Owner</span><span class="stat-val">${survey.original_owner}</span></div>
+            ${survey.municipality ? `<div class="stat-row"><span class="stat-lbl">Municipality</span><span class="stat-val">${survey.municipality}</span></div>` : ''}
+            ${survey.date_registered ? `<div class="stat-row"><span class="stat-lbl">Date Registered</span><span class="stat-val">${survey.date_registered}</span></div>` : ''}
             <div class="stat-row"><span class="stat-lbl">Total Area</span><span class="stat-val">${Number(survey.total_area).toLocaleString()} sqm</span></div>
             <div class="stat-row"><span class="stat-lbl">Hectares</span><span class="stat-val">${(survey.total_area/10000).toFixed(4)} ha</span></div>
             <div class="stat-row"><span class="stat-lbl">Lots</span><span class="stat-val">${survey.lot_count}</span></div>
@@ -874,6 +1347,7 @@ function showSurveyDetail(survey) {
             <span class="lot-list-area">${Number(lot.area).toLocaleString()} sqm</span>
             ${isAdmin ? `<button class="btn-sm btn-edit-sm" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')"><i class="fas fa-pencil-alt"></i></button>` : ''}
         </div>`).join('')}
+        ${isAdmin ? `<button class="btn-primary" style="margin-top:10px;width:100%" onclick="openAddLotModal(${survey.id})"><i class="fas fa-plus-circle"></i> Add Lot to Survey</button>` : ''}
         ${isAdmin ? `<button class="btn-secondary" style="margin-top:8px" onclick="deleteSurvey(${survey.id},'${escJs(survey.lsn)}')"><i class="fas fa-trash" style="color:#e53935"></i> Delete Survey</button>` : ''}
     `;
 }
@@ -936,6 +1410,340 @@ async function apiFetch(url, method='GET', body=null) {
         throw new Error(msgs.join('\n'));
     }
     return data;
+}
+
+// ══════════════════════════════════════════════════════════════
+// OVERLAP DETECTION
+// ══════════════════════════════════════════════════════════════
+async function checkPolygonOverlap(polygon, excludeLotId = null) {
+    try {
+        const res = await apiFetch('/api/check-overlap', 'POST', {
+            polygon,
+            exclude_lot: excludeLotId,
+        });
+        return res.overlaps || [];
+    } catch (e) {
+        console.warn('Overlap check failed:', e.message);
+        return [];
+    }
+}
+
+function showOverlapWarning(overlaps) {
+    const w = document.getElementById('overlapWarning');
+    const d = document.getElementById('overlapDetails');
+    if (overlaps.length === 0) {
+        w.style.display = 'none';
+        return;
+    }
+    w.style.display = 'block';
+    d.innerHTML = overlaps.map(o =>
+        `<div>• Lot ${o.lot_number} (${o.lsn}) — ${o.owner}</div>`
+    ).join('');
+}
+
+// Wrap finishCurrentPolygon — check overlap BEFORE drawing, block if overlap
+const _origFinish = finishCurrentPolygon;
+let _overlapChecking = false;
+finishCurrentPolygon = async function() {
+    if (_overlapChecking) return;
+    _overlapChecking = true;
+    drawingActive = false; // prevent further clicks during async check
+
+    const coords = currentPoints.map(ll => [ll.lat, ll.lng]);
+    const overlaps = await checkPolygonOverlap(coords);
+
+    if (overlaps.length > 0) {
+        const overlapMsg = overlaps.map(o => `Lot ${o.lot_number} (${o.lsn})`).join(', ');
+        cancelCurrentDraw();
+        document.getElementById('overlapWarning').style.display = 'none';
+        showAlert('error', `<strong>Overlap detected!</strong> Cannot draw here — overlaps with: ${overlapMsg}. Drawing cancelled. Please redraw in a non-overlapping area.`);
+        _overlapChecking = false;
+        return;
+    }
+
+    _origFinish();
+    _overlapChecking = false;
+};
+
+// ══════════════════════════════════════════════════════════════
+// ADD LOT TO EXISTING SURVEY
+// ══════════════════════════════════════════════════════════════
+let addLotDrawing    = false;
+let addLotPoints     = [];
+let addLotPreviewLG  = L.layerGroup().addTo(map);
+let addLotFinalLayer = null;
+let addLotFinalCoords= null;
+let addLotSurveyId   = null;
+
+function openAddLotModal(surveyId) {
+    addLotSurveyId = surveyId;
+    addLotPoints   = [];
+    addLotFinalLayer = null;
+    addLotFinalCoords= null;
+    addLotPreviewLG.clearLayers();
+    document.getElementById('addLotSurveyId').value = surveyId;
+    document.getElementById('addLotOwner').value    = '';
+    document.getElementById('addLotNotes').value    = '';
+    document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-draw-polygon"></i> Click <strong>Draw Lot</strong> then trace on the map. Double-click to finish.';
+    document.getElementById('addLotAreaDisplay').style.display = 'none';
+    document.getElementById('addLotOverlapWarning').style.display = 'none';
+    document.getElementById('addLotDrawBtnText').textContent = 'Draw Lot on Map';
+    document.getElementById('addLotDrawBtn').style.background = '#2e7d32';
+    document.getElementById('addLotModal').style.display = 'flex';
+}
+
+function closeAddLotModal() {
+    addLotDrawing = false;
+    addLotPoints  = [];
+    addLotPreviewLG.clearLayers();
+    if (addLotFinalLayer) { map.removeLayer(addLotFinalLayer); addLotFinalLayer = null; }
+    map.getContainer().style.cursor = '';
+    document.getElementById('addLotModal').style.display = 'none';
+}
+
+function startAddLotDraw() {
+    if (addLotDrawing) {
+        // Cancel
+        addLotDrawing = false;
+        addLotPoints  = [];
+        addLotPreviewLG.clearLayers();
+        map.getContainer().style.cursor = '';
+        document.getElementById('addLotDrawBtnText').textContent = 'Draw Lot on Map';
+        document.getElementById('addLotDrawBtn').style.background = '#2e7d32';
+        return;
+    }
+    addLotDrawing = true;
+    addLotPoints  = [];
+    if (addLotFinalLayer) { map.removeLayer(addLotFinalLayer); addLotFinalLayer = null; }
+    addLotPreviewLG.clearLayers();
+    map.getContainer().style.cursor = 'crosshair';
+    document.getElementById('addLotDrawBtnText').textContent = 'Cancel Drawing';
+    document.getElementById('addLotDrawBtn').style.background = '#e53935';
+    document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-hand-pointer"></i> Click points on the map. Double-click to finish.';
+    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points. Double-click to close.';
+    document.getElementById('mapHint').classList.remove('hide');
+}
+
+// Hook into map click/dblclick for add-lot mode
+map.on('click', function(e) {
+    if (!addLotDrawing) return;
+    addLotPoints.push(e.latlng);
+    // Preview
+    addLotPreviewLG.clearLayers();
+    addLotPoints.forEach(p => L.circleMarker(p, { radius:4, color:'#2e7d32', fillColor:'#2e7d32', fillOpacity:1 }).addTo(addLotPreviewLG));
+    if (addLotPoints.length >= 2) L.polyline(addLotPoints, { color:'#2e7d32', dashArray:'5,4' }).addTo(addLotPreviewLG);
+    if (addLotPoints.length >= 3) L.polyline([addLotPoints[addLotPoints.length-1], addLotPoints[0]], { color:'#2e7d32', dashArray:'3,4', opacity:0.5 }).addTo(addLotPreviewLG);
+});
+
+map.on('dblclick', async function(e) {
+    if (!addLotDrawing) return;
+    if (addLotPoints.length > 0) addLotPoints.pop();
+    if (addLotPoints.length < 3) { alert('Need at least 3 points.'); return; }
+    L.DomEvent.stop(e);
+
+    addLotDrawing = false;
+    map.getContainer().style.cursor = '';
+    addLotPreviewLG.clearLayers();
+
+    const latlngs = [...addLotPoints];
+    const coords = latlngs.map(ll => [ll.lat, ll.lng]);
+
+    // Check overlaps BEFORE drawing the polygon
+    const overlaps = await checkPolygonOverlap(coords);
+    if (overlaps.length > 0) {
+        const overlapMsg = overlaps.map(o => `Lot ${o.lot_number} (${o.lsn})`).join(', ');
+        addLotPoints = [];
+        addLotFinalCoords = null;
+        document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-ban" style="color:#e53935"></i> <strong>Overlap detected!</strong> Cannot draw here — overlaps with: ' + overlapMsg + '. Please redraw in a different location.';
+        document.getElementById('addLotDrawBtnText').textContent = 'Draw Lot on Map';
+        document.getElementById('addLotDrawBtn').style.background = '#2e7d32';
+        document.getElementById('addLotAreaDisplay').style.display = 'none';
+        document.getElementById('addLotOverlapWarning').style.display = 'none';
+        document.getElementById('mapHint').classList.add('hide');
+        return;
+    }
+
+    // No overlap — show the polygon
+    addLotFinalCoords = coords;
+    const area = polygonAreaSqm(latlngs);
+    addLotFinalLayer = L.polygon(latlngs, { color:'#2e7d32', fillColor:'#2e7d32', fillOpacity:0.3, weight:2 }).addTo(map);
+    document.getElementById('addLotDrawBtnText').textContent = 'Redraw';
+    document.getElementById('addLotDrawBtn').style.background = '#1976d2';
+    document.getElementById('addLotAreaDisplay').textContent = `Area: ${Math.round(area).toLocaleString()} sqm (${(area/10000).toFixed(4)} ha)`;
+    document.getElementById('addLotAreaDisplay').style.display = 'block';
+    document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32"></i> Lot drawn! Fill in owner and save.';
+    document.getElementById('addLotOverlapWarning').style.display = 'none';
+    document.getElementById('mapHint').classList.add('hide');
+});
+
+async function saveAddLot() {
+    const owner = document.getElementById('addLotOwner').value.trim();
+    const notes = document.getElementById('addLotNotes').value.trim();
+    if (!owner) { alert('Please enter an owner name.'); return; }
+    if (!addLotFinalCoords) { alert('Please draw the lot on the map first.'); return; }
+
+    // Defense check: verify no overlaps before saving
+    const checkOverlaps = await checkPolygonOverlap(addLotFinalCoords);
+    if (checkOverlaps.length > 0) {
+        alert('Overlap detected! This lot overlaps with existing plots and cannot be saved.');
+        return;
+    }
+
+    const area = polygonAreaSqm(addLotPoints);
+    try {
+        const res = await apiFetch(`/api/surveys/${addLotSurveyId}/add-lot`, 'POST', {
+            owner_name: owner,
+            polygon:    addLotFinalCoords,
+            area:       Math.round(area * 100) / 100,
+            notes,
+        });
+        if (res.success) {
+            closeAddLotModal();
+            await loadSurveys();
+            showAlert('success', 'New lot added to survey.');
+            showSurveyDetail(res.survey);
+            switchTab('surveys');
+        }
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// DIVIDE LOT
+// ══════════════════════════════════════════════════════════════
+let divideLotId     = null;
+let divideDrawingA  = false;
+let divideDrawingB  = false;
+let dividePointsA   = [];
+let dividePointsB   = [];
+let divideLayerA    = null;
+let divideLayerB    = null;
+let dividePreviewLG = L.layerGroup().addTo(map);
+
+function openDivideLotModal(lotId) {
+    divideLotId    = lotId;
+    dividePointsA  = [];
+    dividePointsB  = [];
+    divideLayerA   = null;
+    divideLayerB   = null;
+    divideDrawingA = false;
+    divideDrawingB = false;
+    dividePreviewLG.clearLayers();
+    document.getElementById('divideLotId').value  = lotId;
+    document.getElementById('divideOwnerA').value = '';
+    document.getElementById('divideOwnerB').value = '';
+    document.getElementById('divideAreaA').textContent = '';
+    document.getElementById('divideAreaB').textContent = '';
+    document.getElementById('divideDrawBBtn').disabled = true;
+    document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-draw-polygon"></i> Click <strong>Draw Part A</strong> to trace the first half. Double-click to finish, then draw Part B.';
+    document.getElementById('divideLotModal').style.display = 'flex';
+}
+
+function closeDivideLotModal() {
+    divideDrawingA = false; divideDrawingB = false;
+    dividePreviewLG.clearLayers();
+    if (divideLayerA) { map.removeLayer(divideLayerA); divideLayerA = null; }
+    if (divideLayerB) { map.removeLayer(divideLayerB); divideLayerB = null; }
+    map.getContainer().style.cursor = '';
+    document.getElementById('divideLotModal').style.display = 'none';
+}
+
+function startDivideDrawA() {
+    divideDrawingA = true; divideDrawingB = false;
+    dividePointsA  = [];
+    dividePreviewLG.clearLayers();
+    if (divideLayerA) { map.removeLayer(divideLayerA); divideLayerA = null; }
+    map.getContainer().style.cursor = 'crosshair';
+    document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-hand-pointer"></i> Drawing Part A — click points, double-click to finish.';
+    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Part A: click points, double-click to finish.';
+    document.getElementById('mapHint').classList.remove('hide');
+}
+
+function startDivideDrawB() {
+    divideDrawingB = true; divideDrawingA = false;
+    dividePointsB  = [];
+    dividePreviewLG.clearLayers();
+    if (divideLayerB) { map.removeLayer(divideLayerB); divideLayerB = null; }
+    map.getContainer().style.cursor = 'crosshair';
+    document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-hand-pointer"></i> Drawing Part B — click points, double-click to finish.';
+    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Part B: click points, double-click to finish.';
+    document.getElementById('mapHint').classList.remove('hide');
+}
+
+map.on('click', function(e) {
+    if (divideDrawingA) {
+        dividePointsA.push(e.latlng);
+        dividePreviewLG.clearLayers();
+        if (dividePointsA.length >= 2) L.polyline(dividePointsA, { color:'#1976d2', dashArray:'5,4' }).addTo(dividePreviewLG);
+    } else if (divideDrawingB) {
+        dividePointsB.push(e.latlng);
+        dividePreviewLG.clearLayers();
+        if (dividePointsB.length >= 2) L.polyline(dividePointsB, { color:'#e53935', dashArray:'5,4' }).addTo(dividePreviewLG);
+    }
+});
+
+map.on('dblclick', function(e) {
+    L.DomEvent.stop(e);
+    if (divideDrawingA) {
+        if (dividePointsA.length > 0) dividePointsA.pop();
+        if (dividePointsA.length < 3) { alert('Need at least 3 points for Part A.'); return; }
+        divideDrawingA = false;
+        dividePreviewLG.clearLayers();
+        map.getContainer().style.cursor = '';
+        const area = polygonAreaSqm(dividePointsA);
+        divideLayerA = L.polygon(dividePointsA, { color:'#1976d2', fillColor:'#1976d2', fillOpacity:0.3, weight:2 }).addTo(map);
+        document.getElementById('divideAreaA').textContent = `${Math.round(area).toLocaleString()} sqm`;
+        document.getElementById('divideDrawBBtn').disabled = false;
+        document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#1976d2"></i> Part A drawn! Now click <strong>Draw Part B</strong>.';
+        document.getElementById('mapHint').classList.add('hide');
+    } else if (divideDrawingB) {
+        if (dividePointsB.length > 0) dividePointsB.pop();
+        if (dividePointsB.length < 3) { alert('Need at least 3 points for Part B.'); return; }
+        divideDrawingB = false;
+        dividePreviewLG.clearLayers();
+        map.getContainer().style.cursor = '';
+        const area = polygonAreaSqm(dividePointsB);
+        divideLayerB = L.polygon(dividePointsB, { color:'#e53935', fillColor:'#e53935', fillOpacity:0.3, weight:2 }).addTo(map);
+        document.getElementById('divideAreaB').textContent = `${Math.round(area).toLocaleString()} sqm`;
+        document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32"></i> Both parts drawn! Enter owners and save.';
+        document.getElementById('mapHint').classList.add('hide');
+    }
+});
+
+async function saveDivideLot() {
+    const ownerA = document.getElementById('divideOwnerA').value.trim();
+    const ownerB = document.getElementById('divideOwnerB').value.trim();
+    if (!ownerA || !ownerB) { alert('Please enter owners for both parts.'); return; }
+    if (dividePointsA.length < 3 || dividePointsB.length < 3) { alert('Please draw both parts of the lot.'); return; }
+
+    // Client-side overlap check for both parts (exclude the lot being divided)
+    const polyA = dividePointsA.map(ll => [ll.lat, ll.lng]);
+    const polyB = dividePointsB.map(ll => [ll.lat, ll.lng]);
+    const overlapsA = await checkPolygonOverlap(polyA, divideLotId);
+    if (overlapsA.length > 0) {
+        alert('Overlap detected! Part A overlaps with existing lots: ' + overlapsA.map(o => `Lot ${o.lot_number} (${o.lsn})`).join(', ') + '.');
+        return;
+    }
+    const overlapsB = await checkPolygonOverlap(polyB, divideLotId);
+    if (overlapsB.length > 0) {
+        alert('Overlap detected! Part B overlaps with existing lots: ' + overlapsB.map(o => `Lot ${o.lot_number} (${o.lsn})`).join(', ') + '.');
+        return;
+    }
+
+    try {
+        const res = await apiFetch(`/api/lots/${divideLotId}/divide`, 'POST', {
+            polygon_a: polyA,
+            polygon_b: polyB,
+            area_a:    Math.round(polygonAreaSqm(dividePointsA) * 100) / 100,
+            area_b:    Math.round(polygonAreaSqm(dividePointsB) * 100) / 100,
+            owner_a:   ownerA,
+            owner_b:   ownerB,
+        });
+        if (res.success) {
+            closeDivideLotModal();
+            await loadSurveys();
+            showAlert('success', 'Lot divided successfully.');
+        }
+    } catch (e) { alert('Error: ' + e.message); }
 }
 
 // ── Boot ─────────────────────────────────────────────────────

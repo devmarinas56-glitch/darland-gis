@@ -21,6 +21,8 @@ class LandSurveyController extends Controller
         $validated = $request->validate([
             'lsn'            => ['required', 'string', 'unique:land_surveys,lsn'],
             'original_owner' => ['required', 'string'],
+            'municipality'   => ['nullable', 'string'],
+            'date_registered'=> ['nullable', 'date'],
             'total_area'     => ['nullable', 'numeric', 'min:1'],
             'center_lat'     => ['nullable', 'numeric'],
             'center_lng'     => ['nullable', 'numeric'],
@@ -48,9 +50,30 @@ class LandSurveyController extends Controller
             $centerLng = $validated['center_lng'];
         }
 
+        // Server-side overlap check for draw mode lots
+        if ($isDrawMode) {
+            $existingLots = SurveyLot::with('survey')->get();
+            foreach ($validated['lots'] as $lotData) {
+                if (!empty($lotData['polygon'])) {
+                    foreach ($existingLots as $existing) {
+                        foreach ($existing->parsed_polygons as $existingPoly) {
+                            if ($this->polygonsOverlap($lotData['polygon'], $existingPoly)) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Overlap detected! Lot {$lotData['lot_number']} overlaps with existing Lot {$existing->lot_number} ({$existing->survey->lsn}). Cannot save overlapping plots.",
+                                ], 422);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         $survey = LandSurvey::create([
             'lsn'            => $validated['lsn'],
             'original_owner' => $validated['original_owner'],
+            'municipality'   => $validated['municipality'] ?? null,
+            'date_registered'=> $validated['date_registered'] ?? null,
             'total_area'     => round($totalArea, 2),
             'center_lat'     => $centerLat,
             'center_lng'     => $centerLng,
@@ -126,23 +149,211 @@ class LandSurveyController extends Controller
             'lot_number' => ['required', 'integer', 'min:1'],
             'owner_name' => ['required', 'string'],
             'notes'      => ['nullable', 'string'],
+            'polygon'    => ['nullable', 'array'],  // optional geometry update
+            'area'       => ['nullable', 'numeric'],
         ]);
-        $lot->update($validated);
+
+        $update = [
+            'lot_number' => $validated['lot_number'],
+            'owner_name' => $validated['owner_name'],
+            'notes'      => $validated['notes'] ?? null,
+        ];
+
+        // Update geometry if provided
+        if (!empty($validated['polygon'])) {
+            $update['polygons'] = json_encode([$validated['polygon']]);
+            if (!empty($validated['area'])) {
+                $update['area'] = round(floatval($validated['area']), 2);
+            }
+        }
+
+        $lot->update($update);
+
+        // Recalculate survey total_area from all lots
+        $survey = $lot->survey;
+        $survey->total_area = round($survey->lots()->sum('area'), 2);
+        $survey->lot_count  = $survey->lots()->count();
+        $survey->save();
+
         return response()->json(['success' => true, 'lot' => $lot]);
     }
 
-    // ── Add extra rectangle (bump) to a lot ─────────────────────
-    public function addPolygon(Request $request, SurveyLot $lot)
+    // ── Add a new lot to existing survey ─────────────────────────
+    public function addLotToSurvey(Request $request, LandSurvey $survey)
     {
         $validated = $request->validate([
-            'polygon' => ['required', 'array'], // [[lat,lng],[lat,lng],...]
+            'owner_name' => ['required', 'string'],
+            'polygon'    => ['required', 'array'],
+            'area'       => ['required', 'numeric', 'min:0'],
+            'notes'      => ['nullable', 'string'],
         ]);
 
-        $polygons = $lot->parsed_polygons;
-        $polygons[] = $validated['polygon'];
-        $lot->update(['polygons' => json_encode($polygons)]);
+        // Server-side overlap check
+        $newPoly = $validated['polygon'];
+        $lots = SurveyLot::with('survey')->get();
+        foreach ($lots as $lot) {
+            foreach ($lot->parsed_polygons as $existingPoly) {
+                if ($this->polygonsOverlap($newPoly, $existingPoly)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Overlap detected! This lot overlaps with Lot {$lot->lot_number} ({$lot->survey->lsn}). Cannot add overlapping lot.",
+                    ], 422);
+                }
+            }
+        }
 
-        return response()->json(['success' => true, 'lot' => $lot]);
+        $nextLotNumber = ($survey->lots()->max('lot_number') ?? 0) + 1;
+
+        $lot = SurveyLot::create([
+            'land_survey_id' => $survey->id,
+            'lot_number'     => $nextLotNumber,
+            'owner_name'     => $validated['owner_name'],
+            'area'           => round(floatval($validated['area']), 2),
+            'polygons'       => json_encode([$validated['polygon']]),
+            'notes'          => $validated['notes'] ?? null,
+        ]);
+
+        // Recalculate survey totals
+        $survey->total_area = round($survey->lots()->sum('area'), 2);
+        $survey->lot_count  = $survey->lots()->count();
+        $survey->save();
+
+        return response()->json(['success' => true, 'lot' => $lot, 'survey' => $survey->load('lots')]);
+    }
+
+    // ── Divide a lot into two ─────────────────────────────────────
+    public function divideLot(Request $request, SurveyLot $lot)
+    {
+        $validated = $request->validate([
+            'polygon_a'   => ['required', 'array'],  // first half [[lat,lng],...]
+            'polygon_b'   => ['required', 'array'],  // second half
+            'area_a'      => ['required', 'numeric', 'min:0'],
+            'area_b'      => ['required', 'numeric', 'min:0'],
+            'owner_a'     => ['required', 'string'],
+            'owner_b'     => ['required', 'string'],
+        ]);
+
+        $survey       = $lot->survey;
+        $oldLotNumber = $lot->lot_number;
+
+        // Server-side overlap check for both divided parts
+        $existingLots = SurveyLot::with('survey')->where('id', '!=', $lot->id)->get();
+        foreach (['polygon_a' => 'Part A', 'polygon_b' => 'Part B'] as $polyKey => $label) {
+            foreach ($existingLots as $existing) {
+                foreach ($existing->parsed_polygons as $existingPoly) {
+                    if ($this->polygonsOverlap($validated[$polyKey], $existingPoly)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Overlap detected! {$label} overlaps with existing Lot {$existing->lot_number} ({$existing->survey->lsn}). Cannot divide into overlapping plots.",
+                        ], 422);
+                    }
+                }
+            }
+        }
+
+        // Update the original lot to be polygon A
+        $lot->update([
+            'polygons'   => json_encode([$validated['polygon_a']]),
+            'area'       => round(floatval($validated['area_a']), 2),
+            'owner_name' => $validated['owner_a'],
+        ]);
+
+        // Create the new lot for polygon B
+        $nextNum = ($survey->lots()->max('lot_number') ?? 0) + 1;
+        SurveyLot::create([
+            'land_survey_id' => $survey->id,
+            'lot_number'     => $nextNum,
+            'owner_name'     => $validated['owner_b'],
+            'area'           => round(floatval($validated['area_b']), 2),
+            'polygons'       => json_encode([$validated['polygon_b']]),
+            'notes'          => "Divided from Lot {$oldLotNumber}",
+        ]);
+
+        // Recalculate survey totals
+        $survey->total_area = round($survey->lots()->sum('area'), 2);
+        $survey->lot_count  = $survey->lots()->count();
+        $survey->save();
+
+        return response()->json(['success' => true, 'survey' => $survey->load('lots')]);
+    }
+
+    // ── Check for overlapping polygons ────────────────────────────
+    public function checkOverlap(Request $request)
+    {
+        $validated = $request->validate([
+            'polygon'     => ['required', 'array'],
+            'exclude_lot' => ['nullable', 'integer'],
+        ]);
+
+        $newPoly    = $validated['polygon'];
+        $excludeLot = $validated['exclude_lot'] ?? null;
+
+        $overlapping = [];
+        $lots = SurveyLot::with('survey')
+            ->when($excludeLot, fn($q) => $q->where('id', '!=', $excludeLot))
+            ->get();
+
+        foreach ($lots as $lot) {
+            foreach ($lot->parsed_polygons as $existingPoly) {
+                if ($this->polygonsOverlap($newPoly, $existingPoly)) {
+                    $overlapping[] = [
+                        'lot_id'     => $lot->id,
+                        'lot_number' => $lot->lot_number,
+                        'lsn'        => $lot->survey->lsn ?? '',
+                        'owner'      => $lot->owner_name,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        return response()->json(['overlaps' => $overlapping]);
+    }
+
+    // ── Simple AABB overlap test (fast pre-check) ─────────────────
+    private function polygonsOverlap(array $polyA, array $polyB): bool
+    {
+        if (empty($polyA) || empty($polyB)) return false;
+
+        $latsA = array_column($polyA, 0);
+        $lngsA = array_column($polyA, 1);
+        $latsB = array_column($polyB, 0);
+        $lngsB = array_column($polyB, 1);
+
+        $minLatA = min($latsA); $maxLatA = max($latsA);
+        $minLngA = min($lngsA); $maxLngA = max($lngsA);
+        $minLatB = min($latsB); $maxLatB = max($latsB);
+        $minLngB = min($lngsB); $maxLngB = max($lngsB);
+
+        // AABB no-overlap check
+        if ($maxLatA < $minLatB || $minLatA > $maxLatB) return false;
+        if ($maxLngA < $minLngB || $minLngA > $maxLngB) return false;
+
+        // Point-in-polygon check (centroid of A inside B or vice versa)
+        $centLat = ($minLatA + $maxLatA) / 2;
+        $centLng = ($minLngA + $maxLngA) / 2;
+        if ($this->pointInPolygon($centLat, $centLng, $polyB)) return true;
+
+        $centLat = ($minLatB + $maxLatB) / 2;
+        $centLng = ($minLngB + $maxLngB) / 2;
+        if ($this->pointInPolygon($centLat, $centLng, $polyA)) return true;
+
+        return false;
+    }
+
+    private function pointInPolygon(float $lat, float $lng, array $polygon): bool
+    {
+        $n = count($polygon);
+        $inside = false;
+        for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
+            $xi = $polygon[$i][0]; $yi = $polygon[$i][1];
+            $xj = $polygon[$j][0]; $yj = $polygon[$j][1];
+            if ((($yi > $lng) !== ($yj > $lng)) &&
+                ($lat < ($xj - $xi) * ($lng - $yi) / ($yj - $yi) + $xi)) {
+                $inside = !$inside;
+            }
+        }
+        return $inside;
     }
 
     // ── Delete a lot ─────────────────────────────────────────────

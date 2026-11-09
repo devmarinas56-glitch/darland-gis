@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class LandSurvey extends Model
 {
     protected $fillable = [
-        'lsn', 'original_owner', 'total_area',
-        'center_lat', 'center_lng', 'lot_count',
+        'lsn', 'original_owner', 'municipality', 'date_registered',
+        'total_area', 'center_lat', 'center_lng', 'lot_count',
         'notes', 'created_by',
     ];
 
