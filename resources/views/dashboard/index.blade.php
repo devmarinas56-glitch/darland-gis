@@ -233,7 +233,7 @@
                     <div class="card-body">
                         @php
                             $maxLots = $lotsPerMonth->max('lot_count') ?: 1;
-                            $lotMonths = $lotsPerMonth->takeLast(6);
+                            $lotMonths = $lotsPerMonth->slice(-6);
                         @endphp
                         @if($lotMonths->isEmpty())
                             <div style="text-align:center;color:#bbb;padding:24px;font-size:13px">No data yet</div>
@@ -262,7 +262,7 @@
                     <div class="card-body">
                         @php
                             $maxSurv = $surveysByMonth->max('survey_count') ?: 1;
-                            $survMonths = $surveysByMonth->takeLast(6);
+                            $survMonths = $surveysByMonth->slice(-6);
                         @endphp
                         @if($survMonths->isEmpty())
                             <div style="text-align:center;color:#bbb;padding:24px;font-size:13px">No data yet</div>
