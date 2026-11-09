@@ -16,6 +16,12 @@ class SurveyLot extends Model
         return $this->belongsTo(LandSurvey::class, 'land_survey_id');
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(SurveyAttachment::class, 'survey_lot_id')
+                    ->orderBy('created_at');
+    }
+
     public function getParsedPolygonsAttribute(): array
     {
         return json_decode($this->polygons ?? '[]', true) ?: [];

@@ -256,6 +256,36 @@
         .leaflet-popup-content .muni-popup-name { font-size: 13px; font-weight: 700; color: #1a2744; }
         .leaflet-popup-content .muni-popup-type { font-size: 11px; color: #888; margin-top: 2px; }
 
+        /* ── Attachment widget ── */
+        .attach-section { margin-top: 12px; }
+        .attach-title { font-size: 11px; font-weight: 700; color: #1a2744; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .attach-title .attach-count { background: #e8edf5; color: #1a2744; border-radius: 10px; padding: 1px 7px; font-size: 9.5px; font-weight: 700; }
+        .attach-drop {
+            border: 1.5px dashed #c8d6f0; border-radius: 8px; padding: 12px 10px;
+            text-align: center; cursor: pointer; transition: all 0.15s; background: #f8faff;
+        }
+        .attach-drop:hover, .attach-drop.dragover { border-color: #1a2744; background: #f0f4ff; }
+        .attach-drop-text { font-size: 11.5px; color: #aaa; }
+        .attach-drop input[type=file] { display: none; }
+        .attach-list { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+        .attach-item {
+            display: flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid #eee; border-radius: 7px;
+            padding: 6px 10px; font-size: 12px;
+        }
+        .attach-icon { font-size: 14px; flex-shrink: 0; }
+        .attach-icon.pdf   { color: #e53935; }
+        .attach-icon.image { color: #1976d2; }
+        .attach-icon.doc   { color: #2979ff; }
+        .attach-icon.xls   { color: #2e7d32; }
+        .attach-icon.file  { color: #888; }
+        .attach-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; color: #333; }
+        .attach-meta { font-size: 10.5px; color: #bbb; white-space: nowrap; }
+        .attach-btn { background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 4px; font-size: 12px; color: #bbb; transition: all 0.15s; }
+        .attach-btn:hover { color: #1a2744; background: #f0f4ff; }
+        .attach-btn.del:hover { color: #e53935; background: #ffebee; }
+        .attach-uploading { font-size: 11.5px; color: #888; text-align: center; padding: 8px; }
+
         /* ── Custom barangay pins ── */
         .brgy-pin-marker {
             display: flex; align-items: center; justify-content: center;
@@ -664,12 +694,34 @@
 
 <!-- Edit Lot Modal -->
 <div id="editLotModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
-    <div style="background:white;border-radius:14px;padding:26px;width:340px;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+    <div style="background:white;border-radius:14px;padding:26px;width:380px;max-height:88vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
         <h3 style="font-size:15px;font-weight:700;color:#1a2744;margin-bottom:16px"><i class="fas fa-pencil-alt" style="margin-right:6px"></i>Edit Lot</h3>
         <input type="hidden" id="editLotId">
         <div class="form-row"><label class="form-label">Lot Number</label><input type="number" id="editLotNumber" class="form-input" min="1"></div>
         <div class="form-row"><label class="form-label">Owner Name</label><input type="text" id="editOwnerName" class="form-input"></div>
         <div class="form-row"><label class="form-label">Notes</label><input type="text" id="editLotNotes" class="form-input" placeholder="Optional"></div>
+
+        <!-- Lot attachments -->
+        <div class="attach-section" id="lotAttachSection">
+            <div class="attach-title">
+                <i class="fas fa-paperclip"></i> Documents &amp; Photos
+                <span class="attach-count" id="lotAttachCount">0</span>
+            </div>
+            <div class="attach-list" id="lotAttachList"></div>
+            @if(auth()->user()->role === 'admin')
+            <div class="attach-drop" id="lotAttachDrop"
+                 onclick="document.getElementById('lotAttachInput').click()"
+                 ondragover="event.preventDefault();this.classList.add('dragover')"
+                 ondragleave="this.classList.remove('dragover')"
+                 ondrop="handleLotAttachDrop(event)">
+                <div class="attach-drop-text"><i class="fas fa-cloud-upload-alt" style="margin-right:5px"></i>Click or drag files to attach</div>
+                <input type="file" id="lotAttachInput" multiple
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp"
+                       onchange="uploadLotAttachments(this.files)">
+            </div>
+            @endif
+        </div>
+
         <div style="display:flex;gap:10px;margin-top:16px">
             <button onclick="closeEditModal()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
             <button onclick="saveLotEdit()"    style="flex:1;padding:9px;background:#1a2744;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700">Save</button>
@@ -1395,7 +1447,10 @@ function renderSurveyOnMap(survey) {
 function openLotPopup(lot, layer) {
     const areaHa  = (lot.area / 10000).toFixed(4);
     const editBtn = isAdmin
-        ? `<button class="popup-edit-btn" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')">Edit Lot</button>`
+        ? `<button class="popup-edit-btn" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')"><i class="fas fa-pencil-alt"></i> Edit Lot</button>`
+        : '';
+    const attBadge = (lot.attachment_count > 0)
+        ? `<div class="popup-row"><i class="fas fa-paperclip" style="color:#1a2744;font-size:10px"></i> <span>${lot.attachment_count} attachment${lot.attachment_count>1?'s':''}</span></div>`
         : '';
     const divideBtn = isAdmin
         ? `<button class="popup-edit-btn" style="background:#e53935;margin-top:4px" onclick="map.closePopup();openDivideLotModal(${lot.id})"><i class="fas fa-cut"></i> Divide Lot</button>`
@@ -1408,6 +1463,7 @@ function openLotPopup(lot, layer) {
             <div class="popup-row">Area: <span>${Number(lot.area).toLocaleString()} sqm</span></div>
             <div class="popup-row">Area: <span>${areaHa} ha</span></div>
             ${lot.notes ? `<div class="popup-row">Notes: <span>${lot.notes}</span></div>` : ''}
+            ${attBadge}
             ${editBtn}
             ${divideBtn}
         `)
@@ -1421,6 +1477,7 @@ function openEditModal(lotId, lotNum, ownerName, notes) {
     document.getElementById('editOwnerName').value = ownerName;
     document.getElementById('editLotNotes').value = notes;
     document.getElementById('editLotModal').style.display = 'flex';
+    loadLotAttachments(lotId);
 }
 function closeEditModal() { document.getElementById('editLotModal').style.display = 'none'; }
 
@@ -1508,11 +1565,34 @@ function showSurveyDetail(survey) {
             <span class="lot-list-num">Lot ${lot.lot_number}</span>
             <span class="lot-list-owner">${lot.owner_name}</span>
             <span class="lot-list-area">${Number(lot.area).toLocaleString()} sqm</span>
+            ${lot.attachment_count > 0 ? `<span style="font-size:9.5px;background:#e8edf5;color:#1a2744;border-radius:8px;padding:1px 6px;margin-right:2px"><i class="fas fa-paperclip"></i> ${lot.attachment_count}</span>` : ''}
             ${isAdmin ? `<button class="btn-sm btn-edit-sm" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')"><i class="fas fa-pencil-alt"></i></button>` : ''}
         </div>`).join('')}
+        <!-- Survey-level attachments -->
+        <div class="attach-section" id="surveyAttachSection" style="margin-top:14px">
+            <div class="attach-title">
+                <i class="fas fa-paperclip"></i> Survey Documents &amp; Photos
+                <span class="attach-count" id="surveyAttachCount">…</span>
+            </div>
+            <div class="attach-list" id="surveyAttachList"><div class="attach-uploading">Loading…</div></div>
+            ${isAdmin ? `
+            <div class="attach-drop" id="surveyAttachDrop"
+                 onclick="document.getElementById('surveyAttachInput').click()"
+                 ondragover="event.preventDefault();this.classList.add('dragover')"
+                 ondragleave="this.classList.remove('dragover')"
+                 ondrop="handleSurveyAttachDrop(event)">
+                <div class="attach-drop-text"><i class="fas fa-cloud-upload-alt" style="margin-right:5px"></i>Click or drag files to attach to this survey</div>
+            </div>
+            <input type="file" id="surveyAttachInput" multiple style="display:none"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp"
+                   onchange="uploadSurveyAttachments(this.files)">
+            ` : ''}
+        </div>
         ${isAdmin ? `<button class="btn-primary" style="margin-top:10px;width:100%" onclick="openAddLotModal(${survey.id})"><i class="fas fa-plus-circle"></i> Add Lot to Survey</button>` : ''}
         ${isAdmin ? `<button class="btn-secondary" style="margin-top:8px" onclick="deleteSurvey(${survey.id},'${escJs(survey.lsn)}')"><i class="fas fa-trash" style="color:#e53935"></i> Delete Survey</button>` : ''}
     `;
+    // Load survey attachments after rendering
+    loadSurveyAttachments(survey.id);
 }
 
 async function deleteSurvey(id, lsn) {
@@ -1908,6 +1988,139 @@ async function saveDivideLot() {
             showAlert('success', 'Lot divided successfully.');
         }
     } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ATTACHMENTS (surveys & lots)
+// ══════════════════════════════════════════════════════════════
+
+const ATTACH_ICONS = {
+    pdf: 'fa-file-pdf',
+    image: 'fa-file-image',
+    doc: 'fa-file-word',
+    xls: 'fa-file-excel',
+    file: 'fa-file',
+};
+
+function attachIcon(fileType) {
+    return ATTACH_ICONS[fileType] || 'fa-file';
+}
+
+function renderAttachList(listEl, countEl, attachments) {
+    if (countEl) countEl.textContent = attachments.length;
+    if (!listEl) return;
+    if (attachments.length === 0) {
+        listEl.innerHTML = '<div style="font-size:11.5px;color:#bbb;padding:6px 2px">No attachments yet.</div>';
+        return;
+    }
+    listEl.innerHTML = attachments.map(a => `
+        <div class="attach-item" id="att-${a.id}">
+            <i class="fas ${attachIcon(a.file_type)} attach-icon ${a.file_type}"></i>
+            <span class="attach-name" title="${escJs(a.name)}">${a.name}</span>
+            <span class="attach-meta">${a.size_label}</span>
+            <a href="/api/attachments/${a.id}/download" target="_blank" class="attach-btn" title="View/Download"><i class="fas fa-download"></i></a>
+            ${isAdmin ? `<button class="attach-btn del" title="Delete" onclick="deleteAttachment(${a.id})"><i class="fas fa-times"></i></button>` : ''}
+        </div>
+    `).join('');
+}
+
+// ── Survey-level attachments ──────────────────────────────────
+let currentSurveyId = null;
+
+async function loadSurveyAttachments(surveyId) {
+    currentSurveyId = surveyId;
+    try {
+        const res = await apiFetch(`/api/surveys/${surveyId}/attachments`);
+        renderAttachList(
+            document.getElementById('surveyAttachList'),
+            document.getElementById('surveyAttachCount'),
+            res.attachments
+        );
+    } catch(e) {
+        const el = document.getElementById('surveyAttachList');
+        if (el) el.innerHTML = '<div class="attach-uploading" style="color:#e53935">Failed to load.</div>';
+    }
+}
+
+function handleSurveyAttachDrop(e) {
+    e.preventDefault();
+    document.getElementById('surveyAttachDrop')?.classList.remove('dragover');
+    uploadSurveyAttachments(e.dataTransfer.files);
+}
+
+async function uploadSurveyAttachments(files) {
+    if (!currentSurveyId || !files || files.length === 0) return;
+    const listEl  = document.getElementById('surveyAttachList');
+    const countEl = document.getElementById('surveyAttachCount');
+    if (listEl) listEl.innerHTML += '<div class="attach-uploading"><i class="fas fa-spinner fa-spin"></i> Uploading…</div>';
+
+    for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('_token', CSRF);
+        try {
+            await fetch(`/api/surveys/${currentSurveyId}/attachments`, { method: 'POST', body: fd });
+        } catch(e) { /* continue */ }
+    }
+    // Reset input
+    const inp = document.getElementById('surveyAttachInput');
+    if (inp) inp.value = '';
+    await loadSurveyAttachments(currentSurveyId);
+}
+
+// ── Lot-level attachments ─────────────────────────────────────
+let currentLotId = null;
+
+async function loadLotAttachments(lotId) {
+    currentLotId = lotId;
+    try {
+        const res = await apiFetch(`/api/lots/${lotId}/attachments`);
+        renderAttachList(
+            document.getElementById('lotAttachList'),
+            document.getElementById('lotAttachCount'),
+            res.attachments
+        );
+    } catch(e) {
+        const el = document.getElementById('lotAttachList');
+        if (el) el.innerHTML = '<div class="attach-uploading" style="color:#e53935">Failed to load.</div>';
+    }
+}
+
+function handleLotAttachDrop(e) {
+    e.preventDefault();
+    document.getElementById('lotAttachDrop')?.classList.remove('dragover');
+    uploadLotAttachments(e.dataTransfer.files);
+}
+
+async function uploadLotAttachments(files) {
+    if (!currentLotId || !files || files.length === 0) return;
+    const listEl  = document.getElementById('lotAttachList');
+    const countEl = document.getElementById('lotAttachCount');
+    if (listEl) listEl.innerHTML += '<div class="attach-uploading"><i class="fas fa-spinner fa-spin"></i> Uploading…</div>';
+
+    for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('_token', CSRF);
+        try {
+            await fetch(`/api/lots/${currentLotId}/attachments`, { method: 'POST', body: fd });
+        } catch(e) { /* continue */ }
+    }
+    const inp = document.getElementById('lotAttachInput');
+    if (inp) inp.value = '';
+    await loadLotAttachments(currentLotId);
+}
+
+// ── Delete an attachment ──────────────────────────────────────
+async function deleteAttachment(id) {
+    if (!confirm('Delete this attachment?')) return;
+    try {
+        await apiFetch(`/api/attachments/${id}`, 'DELETE');
+        document.getElementById(`att-${id}`)?.remove();
+        // Refresh counts
+        if (currentLotId)    loadLotAttachments(currentLotId);
+        if (currentSurveyId) loadSurveyAttachments(currentSurveyId);
+    } catch(e) { alert('Could not delete: ' + e.message); }
 }
 
 // ══════════════════════════════════════════════════════════════

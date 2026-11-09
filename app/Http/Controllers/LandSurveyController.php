@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LandSurvey;
 use App\Models\SurveyLot;
+use App\Models\SurveyAttachment;
 use Illuminate\Http\Request;
 
 class LandSurveyController extends Controller
@@ -366,7 +367,102 @@ class LandSurveyController extends Controller
     // ── API: all surveys for map ─────────────────────────────────
     public function apiSurveys()
     {
-        return response()->json(LandSurvey::with('lots')->get());
+        $surveys = LandSurvey::with(['lots', 'attachments'])->get();
+        return response()->json($surveys->map(function ($survey) {
+            $data = $survey->toArray();
+            $data['attachment_count'] = $survey->attachments->count();
+            $data['lots'] = $survey->lots->map(function ($lot) {
+                $lotData = $lot->toArray();
+                $lotData['attachment_count'] = $lot->attachments()->count();
+                return $lotData;
+            });
+            return $data;
+        }));
+    }
+
+    // ── Upload attachment (survey-level) ─────────────────────────
+    public function uploadSurveyAttachment(Request $request, LandSurvey $survey)
+    {
+        return $this->storeAttachment($request, $survey->id, null);
+    }
+
+    // ── Upload attachment (lot-level) ────────────────────────────
+    public function uploadLotAttachment(Request $request, SurveyLot $lot)
+    {
+        return $this->storeAttachment($request, $lot->land_survey_id, $lot->id);
+    }
+
+    private function storeAttachment(Request $request, int $surveyId, ?int $lotId)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'max:20480',    // 20 MB
+                       'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif,webp'],
+        ]);
+
+        $file     = $request->file('file');
+        $fileData = base64_encode(file_get_contents($file->getRealPath()));
+
+        $att = SurveyAttachment::create([
+            'land_survey_id' => $surveyId,
+            'survey_lot_id'  => $lotId,
+            'original_name'  => $file->getClientOriginalName(),
+            'mime_type'      => $file->getMimeType(),
+            'file_size'      => $file->getSize(),
+            'file_data'      => $fileData,
+            'uploaded_by'    => auth()->id(),
+        ]);
+
+        return response()->json([
+            'success'    => true,
+            'attachment' => $this->formatAttachment($att),
+        ]);
+    }
+
+    // ── List attachments for a survey (survey-level only) ────────
+    public function listSurveyAttachments(LandSurvey $survey)
+    {
+        $atts = $survey->attachments()->get();
+        return response()->json(['attachments' => $atts->map(fn($a) => $this->formatAttachment($a))]);
+    }
+
+    // ── List attachments for a lot ───────────────────────────────
+    public function listLotAttachments(SurveyLot $lot)
+    {
+        $atts = $lot->attachments()->get();
+        return response()->json(['attachments' => $atts->map(fn($a) => $this->formatAttachment($a))]);
+    }
+
+    // ── Download an attachment ───────────────────────────────────
+    public function downloadAttachment(SurveyAttachment $attachment)
+    {
+        $binary = $attachment->readBinary();
+        return response($binary, 200, [
+            'Content-Type'        => $attachment->mime_type ?? 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="' . $attachment->original_name . '"',
+            'Content-Length'      => strlen($binary),
+        ]);
+    }
+
+    // ── Delete an attachment ─────────────────────────────────────
+    public function deleteAttachment(SurveyAttachment $attachment)
+    {
+        $attachment->delete();
+        return response()->json(['success' => true]);
+    }
+
+    // ── Format attachment for JSON response ──────────────────────
+    private function formatAttachment(SurveyAttachment $att): array
+    {
+        return [
+            'id'            => $att->id,
+            'name'          => $att->original_name,
+            'mime_type'     => $att->mime_type,
+            'size_label'    => $att->file_size_label,
+            'file_type'     => $att->file_type,
+            'land_survey_id'=> $att->land_survey_id,
+            'survey_lot_id' => $att->survey_lot_id,
+            'created_at'    => $att->created_at?->format('M j, Y'),
+        ];
     }
 
     // ── Geometry: auto-generate rectangle grid ───────────────────

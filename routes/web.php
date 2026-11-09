@@ -140,6 +140,13 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/api/lots/{lot}', [LandSurveyController::class, 'destroyLot'])->name('api.lots.destroy');
     Route::post('/api/surveys/{survey}/add-lot', [LandSurveyController::class, 'addLotToSurvey'])->name('api.surveys.add-lot');
     Route::post('/api/check-overlap', [LandSurveyController::class, 'checkOverlap'])->name('api.check-overlap');
+    // Attachments
+    Route::get('/api/surveys/{survey}/attachments', [LandSurveyController::class, 'listSurveyAttachments'])->name('api.surveys.attachments');
+    Route::post('/api/surveys/{survey}/attachments', [LandSurveyController::class, 'uploadSurveyAttachment'])->name('api.surveys.attachments.upload');
+    Route::get('/api/lots/{lot}/attachments', [LandSurveyController::class, 'listLotAttachments'])->name('api.lots.attachments');
+    Route::post('/api/lots/{lot}/attachments', [LandSurveyController::class, 'uploadLotAttachment'])->name('api.lots.attachments.upload');
+    Route::get('/api/attachments/{attachment}/download', [LandSurveyController::class, 'downloadAttachment'])->name('api.attachments.download');
+    Route::delete('/api/attachments/{attachment}', [LandSurveyController::class, 'deleteAttachment'])->name('api.attachments.delete');
     // Admin user management
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');

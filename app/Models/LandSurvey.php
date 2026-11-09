@@ -17,6 +17,13 @@ class LandSurvey extends Model
         return $this->hasMany(SurveyLot::class)->orderBy('lot_number');
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(SurveyAttachment::class, 'land_survey_id')
+                    ->whereNull('survey_lot_id')
+                    ->orderBy('created_at');
+    }
+
     // Area per lot (equal division)
     public function getAreaPerLotAttribute(): float
     {
