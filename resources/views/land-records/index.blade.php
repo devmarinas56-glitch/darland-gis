@@ -255,6 +255,86 @@
         .muni-pin-marker.city { background: #2e7d32; }
         .leaflet-popup-content .muni-popup-name { font-size: 13px; font-weight: 700; color: #1a2744; }
         .leaflet-popup-content .muni-popup-type { font-size: 11px; color: #888; margin-top: 2px; }
+
+        /* ── Custom barangay pins ── */
+        .brgy-pin-marker {
+            display: flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50% 50% 50% 0;
+            background: #e53935; color: white; font-size: 8px; font-weight: 700;
+            transform: rotate(-45deg); box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+            border: 2px solid white; cursor: pointer;
+        }
+        .brgy-pin-marker span { transform: rotate(45deg); }
+
+        /* ── Pin-mode button on map ── */
+        .pin-mode-btn {
+            position: absolute; top: 56px; right: 10px; z-index: 1000;
+            padding: 0 12px; height: 38px; border-radius: 8px;
+            background: white; border: none; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 7px;
+            font-size: 12px; font-weight: 600; color: #1a2744;
+            transition: background 0.15s;
+        }
+        .pin-mode-btn:hover { background: #f0f4ff; }
+        .pin-mode-btn.active { background: #e53935; color: white; }
+        .pin-mode-btn.active:hover { background: #c62828; }
+
+        /* ── Province / Pins tab ── */
+        .province-search-wrap { position: relative; margin-bottom: 10px; }
+        .province-search-input {
+            width: 100%; padding: 8px 10px 8px 32px;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 12px; color: #333;
+            background: white;
+        }
+        .province-search-input:focus { outline: none; border-color: #1a2744; }
+        .province-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #bbb; font-size: 12px; pointer-events: none; }
+
+        .province-group { margin-bottom: 12px; }
+        .province-group-header {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 10.5px; font-weight: 700; color: #aaa; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 4px 2px 6px; cursor: pointer; user-select: none;
+        }
+        .province-group-header:hover { color: #1a2744; }
+        .province-group-header .pg-count { background: #e8edf5; color: #1a2744; border-radius: 10px; padding: 1px 7px; font-size: 9.5px; font-weight: 700; }
+        .province-group-header .pg-arrow { transition: transform 0.2s; font-size: 10px; }
+        .province-group-header.collapsed .pg-arrow { transform: rotate(-90deg); }
+        .province-group-items { display: flex; flex-direction: column; gap: 3px; }
+        .province-group.collapsed .province-group-items { display: none; }
+
+        .province-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px; background: white; border-radius: 7px;
+            cursor: pointer; font-size: 12px; color: #444;
+            border: 1px solid #f0f0f0; transition: all 0.12s;
+        }
+        .province-item:hover { background: #f0f4ff; color: #1a2744; border-color: #d0dcef; }
+        .province-item .pi-icon { font-size: 11px; color: #bbb; flex-shrink: 0; }
+        .province-item:hover .pi-icon { color: #1a2744; }
+        .province-item .pi-name { flex: 1; font-weight: 500; }
+        .province-item .pi-badge { font-size: 9.5px; color: #aaa; background: #f5f5f5; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+        .province-item .pi-badge.brgy { background: #ffeaea; color: #e53935; }
+        .province-item .pi-badge.city { background: #e8f5e9; color: #2e7d32; }
+        .province-item .pi-del { background: none; border: none; color: #ddd; cursor: pointer; font-size: 11px; padding: 2px 3px; margin-left: 2px; }
+        .province-item .pi-del:hover { color: #e53935; }
+
+        .pins-empty { text-align: center; color: #bbb; font-size: 12px; padding: 20px 0; }
+        .pins-add-hint { background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 9px 12px; font-size: 11.5px; color: #6d4c00; margin-bottom: 10px; display: none; }
+        .pins-add-hint.show { display: block; }
+
+        /* ── Add Pin Modal ── */
+        .add-pin-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999;
+            align-items: center; justify-content: center;
+        }
+        .add-pin-overlay.show { display: flex; }
+        .add-pin-modal {
+            background: white; border-radius: 14px; padding: 24px;
+            width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .add-pin-modal h3 { font-size: 14px; font-weight: 700; color: #1a2744; margin-bottom: 14px; }
+        .add-pin-coords { font-size: 11px; color: #888; background: #f5f5f5; border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; }
     </style>
 </head>
 <body>
@@ -303,6 +383,14 @@
 
             <button class="map-style-toggle" id="mapStyleToggle" onclick="toggleMapStyle()" title="Switch map style"><i class="fas fa-satellite" id="mapStyleIcon"></i></button>
             <div class="map-style-label" id="mapStyleLabel">Satellite</div>
+            @if(auth()->user()->role === 'admin')
+            <button class="pin-mode-btn" id="pinModeBtn" onclick="togglePinMode()" title="Drop a barangay pin on the map">
+                <i class="fas fa-map-pin"></i> <span id="pinModeBtnText">Add Pin</span>
+            </button>
+            <div class="pins-add-hint" id="pinAddHint">
+                <i class="fas fa-hand-pointer"></i> Click anywhere on the map to place a barangay pin. Press <strong>Esc</strong> or click <strong>Add Pin</strong> again to cancel.
+            </div>
+            @endif
             <div class="map-hint" id="mapHint"><i class="fas fa-draw-polygon"></i> Draw mode: click points to trace a lot boundary. Double-click to finish.</div>
         </div>
 
@@ -311,7 +399,8 @@
             <div class="panel-tabs">
                 <button class="tab-btn active" onclick="switchTab('ldc')"><i class="fas fa-calculator"></i> LDC</button>
                 <button class="tab-btn" onclick="switchTab('surveys')"><i class="fas fa-list"></i> Surveys</button>
-                <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-bar"></i> Stats <span class="info-tip" style="width:13px;height:13px;font-size:8px" data-tip="LDC: Create land surveys by drawing or auto-generating lots. Surveys: Browse saved surveys and their lots. Stats: View summary statistics and breakdowns.">?</span></button>
+                <button class="tab-btn" onclick="switchTab('pins')"><i class="fas fa-map-pin"></i> Pins</button>
+                <button class="tab-btn" onclick="switchTab('stats')"><i class="fas fa-chart-bar"></i> Stats</button>
             </div>
 
             <!-- ── LDC Tab ── -->
@@ -515,6 +604,22 @@
                 </div>
             </div>
 
+            <!-- ── Pins Tab ── -->
+            <div class="tab-content" id="tab-pins">
+                <!-- Province/location search -->
+                <div class="province-search-wrap">
+                    <i class="fas fa-search province-search-icon"></i>
+                    <input type="text" id="provinceSearch" class="province-search-input"
+                           placeholder="Search municipalities, cities, barangays…"
+                           oninput="filterProvinceList(this.value)" autocomplete="off">
+                </div>
+
+                <div class="pins-add-hint" id="pinsTabHint" style="display:none"></div>
+
+                <!-- Province groups list -->
+                <div id="provinceGroupList"></div>
+            </div>
+
             <!-- ── Surveys Tab ── -->
             <div class="tab-content" id="tab-surveys">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -528,6 +633,31 @@
             <div class="tab-content" id="tab-stats">
                 <div id="statsPanel"><div style="text-align:center;color:#aaa;padding:30px;font-size:13px">Loading…</div></div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Barangay Pin Modal -->
+<div class="add-pin-overlay" id="addPinOverlay">
+    <div class="add-pin-modal">
+        <h3><i class="fas fa-map-pin" style="color:#e53935;margin-right:7px"></i>Add Barangay Pin</h3>
+        <div class="add-pin-coords" id="addPinCoords">Lat: — · Lng: —</div>
+        <div class="form-row">
+            <label class="form-label">Barangay Name <span style="color:#e53935">*</span></label>
+            <input type="text" id="addPinBarangay" class="form-input" placeholder="e.g. Brgy. Anonas">
+        </div>
+        <div class="form-row">
+            <label class="form-label">Municipality / City <span style="color:#e53935">*</span></label>
+            <input type="text" id="addPinMunicipality" class="form-input" placeholder="e.g. Urdaneta City" list="muniSuggestions">
+            <datalist id="muniSuggestions"></datalist>
+        </div>
+        <div class="form-row">
+            <label class="form-label">Province</label>
+            <input type="text" id="addPinProvince" class="form-input" value="Pangasinan" placeholder="e.g. Pangasinan">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+            <button onclick="cancelAddPin()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
+            <button onclick="saveAddPin()"   style="flex:1;padding:9px;background:#e53935;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700"><i class="fas fa-map-pin"></i> Save Pin</button>
         </div>
     </div>
 </div>
@@ -733,14 +863,36 @@ function filterMuni(query) {
     const dd = document.getElementById('muniDropdown');
     const q = query.trim().toLowerCase();
     if (!q) { dd.classList.remove('show'); return; }
-    const matches = pangasinanMunis.filter(m => m.name.toLowerCase().includes(q)).slice(0, 30);
+
+    // Combine built-in municipalities + custom barangay pins
+    const customPins = loadCustomPins();
+    const customItems = customPins.map(p => ({
+        name: p.name + (p.municipality ? ' (' + p.municipality + ')' : ''),
+        realName: p.name,
+        lat:  p.lat,
+        lng:  p.lng,
+        type: 'Barangay',
+    }));
+    const allSearchable = [
+        ...pangasinanMunis.map(m => ({ name: m.name, realName: m.name, lat: m.lat, lng: m.lng, type: m.type })),
+        ...customItems,
+    ];
+
+    const matches = allSearchable.filter(m =>
+        m.name.toLowerCase().includes(q)
+    ).slice(0, 30);
+
     if (matches.length === 0) {
-        dd.innerHTML = '<div class="muni-item" style="color:#aaa;cursor:default">No municipalities found</div>';
+        dd.innerHTML = '<div class="muni-item" style="color:#aaa;cursor:default">No results found</div>';
         dd.classList.add('show');
         return;
     }
     dd.innerHTML = matches.map(m =>
-        `<div class="muni-item" onclick="flyToMuni('${m.name}')"><i class="fas fa-map-marker-alt"></i> ${m.name} <span class="muni-type">${m.type}</span></div>`
+        `<div class="muni-item" onclick="flyToMuni('${escJs(m.realName)}','${m.type==='Barangay'?'custom':''}')">
+            <i class="fas ${m.type==='Barangay'?'fa-map-pin':'fa-map-marker-alt'}" style="color:${m.type==='City'?'#2e7d32':m.type==='Barangay'?'#e53935':'#1a2744'}"></i>
+            ${m.name}
+            <span class="muni-type">${m.type}</span>
+        </div>`
     ).join('');
     dd.classList.add('show');
 }
@@ -750,11 +902,22 @@ function showMuniDropdown() {
     if (q) filterMuni(q);
 }
 
-function flyToMuni(name) {
+function flyToMuni(name, pinType) {
+    // First check custom pins
+    if (pinType === 'custom') {
+        const cm = customPinMarkers.find(x => x.name === name);
+        if (cm) {
+            map.flyTo([cm.lat, cm.lng], 17, {duration: 1.2});
+            setTimeout(() => cm.marker.openPopup(), 1200);
+            document.getElementById('muniSearch').value = name;
+            document.getElementById('muniDropdown').classList.remove('show');
+            return;
+        }
+    }
+    // Built-in municipality
     const m = pangasinanMunis.find(x => x.name === name);
     if (!m) return;
     map.flyTo([m.lat, m.lng], 15, {duration: 1.2});
-    // Open popup for this marker
     const mm = muniMarkers.find(x => x.name === name);
     if (mm) setTimeout(() => mm.marker.openPopup(), 1200);
     document.getElementById('muniSearch').value = m.name;
@@ -1385,11 +1548,12 @@ function renderStats(surveys) {
 }
 
 function switchTab(name) {
-    ['ldc','surveys','stats'].forEach((n,i) => {
+    ['ldc','surveys','pins','stats'].forEach((n,i) => {
         document.querySelectorAll('.tab-btn')[i].classList.toggle('active', n===name);
     });
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.getElementById(`tab-${name}`).classList.add('active');
+    if (name === 'pins') renderProvinceList();
 }
 
 function showAlert(type, msg) {
@@ -1746,8 +1910,269 @@ async function saveDivideLot() {
     } catch (e) { alert('Error: ' + e.message); }
 }
 
+// ══════════════════════════════════════════════════════════════
+// PROVINCE FILTER & CUSTOM BARANGAY PINS
+// ══════════════════════════════════════════════════════════════
+
+// ── localStorage key ─────────────────────────────────────────
+const CUSTOM_PINS_KEY = 'darland_custom_pins';
+
+function loadCustomPins() {
+    try { return JSON.parse(localStorage.getItem(CUSTOM_PINS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveCustomPins(pins) {
+    localStorage.setItem(CUSTOM_PINS_KEY, JSON.stringify(pins));
+}
+
+// ── Custom pin layer ──────────────────────────────────────────
+let customPinsLayer = L.layerGroup().addTo(map);
+let customPinMarkers = []; // [{id, name, municipality, province, lat, lng, marker}]
+
+function addCustomPinToMap(pin) {
+    const marker = L.marker([pin.lat, pin.lng], {
+        icon: L.divIcon({
+            className: '',
+            html: `<div class="brgy-pin-marker"><span>${pin.name.charAt(0).toUpperCase()}</span></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 20],
+            popupAnchor: [0, -22],
+        })
+    });
+    marker.bindPopup(`
+        <div class="muni-popup-name"><i class="fas fa-map-pin" style="color:#e53935;font-size:11px;margin-right:4px"></i>${pin.name}</div>
+        <div class="muni-popup-type">Barangay · ${pin.municipality}</div>
+        <div style="font-size:11px;color:#888;margin-top:3px">${pin.province}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">Lat: ${pin.lat.toFixed(5)}, Lng: ${pin.lng.toFixed(5)}</div>
+        ${isAdmin ? `<button onclick="deleteCustomPin('${pin.id}')" style="margin-top:8px;width:100%;padding:5px;background:#ffebee;color:#e53935;border:1px solid #ffcdd2;border-radius:5px;font-size:11.5px;cursor:pointer;font-weight:600"><i class='fas fa-trash'></i> Remove Pin</button>` : ''}
+    `);
+    marker.addTo(customPinsLayer);
+    customPinMarkers.push({ ...pin, marker });
+}
+
+function initCustomPins() {
+    const pins = loadCustomPins();
+    customPinsLayer.clearLayers();
+    customPinMarkers = [];
+    pins.forEach(p => addCustomPinToMap(p));
+}
+
+function deleteCustomPin(id) {
+    let pins = loadCustomPins();
+    pins = pins.filter(p => p.id !== id);
+    saveCustomPins(pins);
+    map.closePopup();
+    initCustomPins();
+    renderProvinceList();
+}
+
+// ── Populate datalist with municipality suggestions ───────────
+function populateMuniDatalist() {
+    const dl = document.getElementById('muniSuggestions');
+    if (!dl) return;
+    pangasinanMunis.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.name;
+        dl.appendChild(opt);
+    });
+}
+
+// ── Province list rendering ───────────────────────────────────
+function buildProvinceData(query = '') {
+    const q = query.trim().toLowerCase();
+
+    // Gather all items: built-in municipalities + custom pins
+    const customPins  = loadCustomPins();
+    const allItems    = [];
+
+    // Built-in Pangasinan municipalities
+    pangasinanMunis.forEach(m => {
+        allItems.push({
+            id:         'builtin_' + m.name,
+            name:       m.name,
+            province:   'Pangasinan',
+            type:       m.type,       // 'City' or 'Municipality'
+            lat:        m.lat,
+            lng:        m.lng,
+            isCustom:   false,
+        });
+    });
+
+    // Custom barangay pins
+    customPins.forEach(p => {
+        allItems.push({
+            id:         p.id,
+            name:       p.name,
+            province:   p.province || 'Pangasinan',
+            type:       'Barangay',
+            lat:        p.lat,
+            lng:        p.lng,
+            municipality: p.municipality,
+            isCustom:   true,
+        });
+    });
+
+    // Filter
+    const filtered = q
+        ? allItems.filter(i =>
+            i.name.toLowerCase().includes(q) ||
+            (i.municipality || '').toLowerCase().includes(q) ||
+            (i.province || '').toLowerCase().includes(q)
+          )
+        : allItems;
+
+    // Group by province
+    const groups = {};
+    filtered.forEach(item => {
+        const prov = item.province || 'Unknown';
+        if (!groups[prov]) groups[prov] = [];
+        groups[prov].push(item);
+    });
+
+    // Sort items within each group: Cities first, then Municipalities, then Barangays
+    const typeOrder = { 'City': 0, 'Municipality': 1, 'Barangay': 2 };
+    Object.keys(groups).forEach(prov => {
+        groups[prov].sort((a,b) => (typeOrder[a.type] ?? 3) - (typeOrder[b.type] ?? 3) || a.name.localeCompare(b.name));
+    });
+
+    return groups;
+}
+
+function renderProvinceList(query = '') {
+    const container = document.getElementById('provinceGroupList');
+    if (!container) return;
+
+    const groups = buildProvinceData(query);
+    const provinceNames = Object.keys(groups).sort();
+
+    if (provinceNames.length === 0) {
+        container.innerHTML = '<div class="pins-empty"><i class="fas fa-search" style="font-size:20px;margin-bottom:8px;display:block"></i>No results found</div>';
+        return;
+    }
+
+    container.innerHTML = provinceNames.map(prov => {
+        const items = groups[prov];
+        const total = items.length;
+        return `
+        <div class="province-group" id="pgroup-${prov.replace(/\s/g,'_')}">
+            <div class="province-group-header" onclick="toggleProvinceGroup(this)">
+                <span><i class="fas fa-map" style="margin-right:6px;font-size:10px"></i>${prov}</span>
+                <span class="pg-count">${total}</span>
+                <i class="fas fa-chevron-down pg-arrow" style="margin-left:6px"></i>
+            </div>
+            <div class="province-group-items">
+                ${items.map(item => `
+                <div class="province-item" onclick="flyToPin(${item.lat}, ${item.lng}, '${escJs(item.name)}')">
+                    <i class="fas ${item.isCustom ? 'fa-map-pin' : 'fa-map-marker-alt'} pi-icon" style="color:${item.type==='Barangay'?'#e53935':item.type==='City'?'#2e7d32':'#1a2744'}"></i>
+                    <span class="pi-name">${item.name}${item.municipality && item.type==='Barangay' ? `<span style="font-size:10px;color:#aaa;display:block;margin-top:1px">${item.municipality}</span>` : ''}</span>
+                    <span class="pi-badge ${item.type.toLowerCase()}">${item.type}</span>
+                    ${item.isCustom && isAdmin ? `<button class="pi-del" onclick="event.stopPropagation();deleteCustomPin('${item.id}')" title="Remove pin"><i class="fas fa-times"></i></button>` : ''}
+                </div>`).join('')}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterProvinceList(query) {
+    renderProvinceList(query);
+}
+
+function toggleProvinceGroup(headerEl) {
+    headerEl.parentElement.classList.toggle('collapsed');
+    headerEl.classList.toggle('collapsed');
+}
+
+function flyToPin(lat, lng, name) {
+    map.flyTo([lat, lng], 15, { duration: 1.2 });
+    // Also open the matching marker popup
+    const mm = muniMarkers.find(x => x.name === name);
+    if (mm) setTimeout(() => mm.marker.openPopup(), 1200);
+    const cm = customPinMarkers.find(x => x.name === name);
+    if (cm) setTimeout(() => cm.marker.openPopup(), 1200);
+}
+
+// ── Pin Mode (admin only) ─────────────────────────────────────
+let pinModeActive = false;
+let pendingPinLatLng = null;
+
+function togglePinMode() {
+    pinModeActive = !pinModeActive;
+    const btn  = document.getElementById('pinModeBtn');
+    const hint = document.getElementById('pinAddHint');
+    if (!btn) return;
+    if (pinModeActive) {
+        btn.classList.add('active');
+        document.getElementById('pinModeBtnText').textContent = 'Cancel Pin';
+        map.getContainer().style.cursor = 'crosshair';
+        if (hint) { hint.style.display = 'block'; }
+    } else {
+        btn.classList.remove('active');
+        document.getElementById('pinModeBtnText').textContent = 'Add Pin';
+        map.getContainer().style.cursor = '';
+        if (hint) { hint.style.display = 'none'; }
+    }
+}
+
+// Hook into map click for pin placement
+map.on('click', function(e) {
+    if (!pinModeActive) return;
+    pendingPinLatLng = e.latlng;
+    document.getElementById('addPinCoords').textContent = `Lat: ${e.latlng.lat.toFixed(6)} · Lng: ${e.latlng.lng.toFixed(6)}`;
+    document.getElementById('addPinBarangay').value    = '';
+    document.getElementById('addPinMunicipality').value = '';
+    document.getElementById('addPinProvince').value    = 'Pangasinan';
+    document.getElementById('addPinOverlay').classList.add('show');
+    togglePinMode(); // exit pin mode after placing
+});
+
+// Escape key cancels pin mode
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && pinModeActive) togglePinMode();
+});
+
+function cancelAddPin() {
+    document.getElementById('addPinOverlay').classList.remove('show');
+    pendingPinLatLng = null;
+}
+
+function saveAddPin() {
+    const name  = document.getElementById('addPinBarangay').value.trim();
+    const muni  = document.getElementById('addPinMunicipality').value.trim();
+    const prov  = document.getElementById('addPinProvince').value.trim() || 'Pangasinan';
+    if (!name)  { alert('Please enter a barangay name.');         return; }
+    if (!muni)  { alert('Please enter the municipality/city.');   return; }
+    if (!pendingPinLatLng) return;
+
+    const pin = {
+        id:           'brgy_' + Date.now(),
+        name,
+        municipality: muni,
+        province:     prov,
+        lat:          pendingPinLatLng.lat,
+        lng:          pendingPinLatLng.lng,
+    };
+
+    const pins = loadCustomPins();
+    pins.push(pin);
+    saveCustomPins(pins);
+
+    addCustomPinToMap(pin);
+    cancelAddPin();
+    renderProvinceList(document.getElementById('provinceSearch')?.value || '');
+
+    // Also update the search input to show the new pin's municipality
+    filterMuni(muni);
+    showAlert('success', `Barangay pin "${name}" added to ${muni}.`);
+
+    // Switch to Pins tab to show it
+    switchTab('pins');
+}
+
+// ── Boot: init custom pins & datalist ────────────────────────
+
 // ── Boot ─────────────────────────────────────────────────────
 setTimeout(() => document.getElementById('mapHint').classList.add('hide'), 5000);
+populateMuniDatalist();
+initCustomPins();
 loadSurveys();
 </script>
 </body>
