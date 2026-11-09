@@ -94,22 +94,58 @@ Route::get('/logout', [LoginController::class, 'logout']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function() {
-        $surveys     = \App\Models\LandSurvey::with('lots')->orderBy('lsn')->get();
-        $totalLots   = \App\Models\SurveyLot::count();
+        $surveys      = \App\Models\LandSurvey::with('lots')->orderBy('lsn')->get();
+        $totalLots    = \App\Models\SurveyLot::count();
         $totalSurveys = $surveys->count();
-        $totalArea   = \App\Models\SurveyLot::sum('area');
+        $totalAreaSqm = \App\Models\SurveyLot::sum('area');
+        $totalAreaHa  = round($totalAreaSqm / 10000, 4);
 
-        // Surveys per municipality
-        $byMunicipality = \App\Models\LandSurvey::selectRaw("COALESCE(NULLIF(municipality, ''), 'Unknown') as municipality, count(*) as count")
-            ->groupByRaw("COALESCE(NULLIF(municipality, ''), 'Unknown')")
-            ->orderByDesc('count')
-            ->limit(10)
-            ->get();
+        // Surveys per municipality (top 10)
+        $byMunicipality = \App\Models\LandSurvey::selectRaw(
+            "COALESCE(NULLIF(municipality, ''), 'Unknown') as municipality, count(*) as count"
+        )->groupByRaw("COALESCE(NULLIF(municipality, ''), 'Unknown')")
+         ->orderByDesc('count')->limit(10)->get();
+
+        // All plot owners (from survey_lots), with their lot count and total area
+        $plotOwners = \App\Models\SurveyLot::selectRaw(
+            'owner_name, count(*) as lot_count, sum(area) as total_area'
+        )->groupBy('owner_name')
+         ->orderByDesc('lot_count')
+         ->limit(50)
+         ->get();
+
+        // All survey records with their lot list for the full table
+        $allSurveys = $surveys;
+
+        // Lots added per month (last 12 months)
+        $lotsPerMonth = \App\Models\SurveyLot::selectRaw(
+            "TO_CHAR(created_at, 'Mon YYYY') as month_label,
+             DATE_TRUNC('month', created_at) as month_start,
+             count(*) as lot_count"
+        )->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+         ->groupByRaw("TO_CHAR(created_at, 'Mon YYYY'), DATE_TRUNC('month', created_at)")
+         ->orderBy('month_start')
+         ->get();
+
+        // Surveys by date registered
+        $surveysByMonth = \App\Models\LandSurvey::selectRaw(
+            "TO_CHAR(created_at, 'Mon YYYY') as month_label,
+             DATE_TRUNC('month', created_at) as month_start,
+             count(*) as survey_count"
+        )->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+         ->groupByRaw("TO_CHAR(created_at, 'Mon YYYY'), DATE_TRUNC('month', created_at)")
+         ->orderBy('month_start')
+         ->get();
+
+        // Attachment count
+        $totalAttachments = \App\Models\SurveyAttachment::count();
 
         $recentSurveys = $surveys->take(10);
 
         return view('dashboard.index', compact(
-            'totalLots', 'totalSurveys', 'totalArea', 'byMunicipality', 'recentSurveys'
+            'totalLots', 'totalSurveys', 'totalAreaSqm', 'totalAreaHa',
+            'byMunicipality', 'plotOwners', 'allSurveys', 'recentSurveys',
+            'lotsPerMonth', 'surveysByMonth', 'totalAttachments'
         ));
     })->name('dashboard');
     // Submit Report & My Reports
