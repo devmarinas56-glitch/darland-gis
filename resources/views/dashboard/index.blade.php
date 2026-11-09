@@ -129,6 +129,19 @@
         .tab-pill { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid #e0e0e0; background: white; color: #666; transition: all 0.15s; }
         .tab-pill.active { background: #1a2744; color: white; border-color: #1a2744; }
 
+        /* ── Sort buttons ── */
+        .sort-btn {
+            padding: 4px 10px; border-radius: 6px; border: 1.5px solid #e0e0e0;
+            background: white; color: #666; font-size: 11px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 4px;
+            transition: all 0.15s;
+        }
+        .sort-btn:hover { border-color: #1a2744; color: #1a2744; }
+        .sort-btn.active { background: #1a2744; color: white; border-color: #1a2744; }
+
+        /* ── Highlight match ── */
+        mark { background: #fff176; color: #333; border-radius: 2px; padding: 0 1px; }
+
         /* ── Responsive ── */
         @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 900px)  { .two-col, .three-col { grid-template-columns: 1fr; } }
@@ -299,35 +312,63 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title"><i class="fas fa-users" style="color:#1a2744;margin-right:7px"></i>Plot Owners</div>
-                        <span class="card-badge">{{ $plotOwners->count() }} owners</span>
+                        <span class="card-badge" id="ownerCountBadge">{{ $plotOwners->count() }} owners</span>
                     </div>
-                    <div class="search-row">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search owners…" id="ownerSearch" oninput="filterOwners(this.value)">
+
+                    <!-- Search + sort controls -->
+                    <div style="padding:10px 14px;border-bottom:1px solid #f0f0f0;background:#fafafa;display:flex;flex-direction:column;gap:8px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div style="flex:1;display:flex;align-items:center;gap:8px;background:white;border:1.5px solid #ddd;border-radius:8px;padding:7px 12px;transition:border-color 0.15s" id="ownerSearchBox">
+                                <i class="fas fa-search" style="color:#bbb;font-size:12px;flex-shrink:0"></i>
+                                <input type="text" placeholder="Type owner name to filter…" id="ownerSearch"
+                                       oninput="filterOwners(this.value)"
+                                       autocomplete="off"
+                                       style="border:none;outline:none;font-size:13px;color:#333;width:100%;background:none">
+                                <button id="ownerClearBtn" onclick="clearOwnerSearch()" title="Clear"
+                                        style="display:none;background:none;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 2px">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Sort buttons -->
+                        <div style="display:flex;gap:6px;align-items:center">
+                            <span style="font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.3px">Sort:</span>
+                            <button class="sort-btn active" id="sortLots" onclick="sortOwners('lots')" title="Sort by lot count">
+                                <i class="fas fa-draw-polygon"></i> Lots
+                            </button>
+                            <button class="sort-btn" id="sortArea" onclick="sortOwners('area')" title="Sort by area">
+                                <i class="fas fa-ruler-combined"></i> Area
+                            </button>
+                            <button class="sort-btn" id="sortName" onclick="sortOwners('name')" title="Sort alphabetically">
+                                <i class="fas fa-sort-alpha-down"></i> Name
+                            </button>
+                            <span id="ownerMatchCount" style="margin-left:auto;font-size:11px;color:#aaa"></span>
+                        </div>
                     </div>
+
                     @php $maxOwnerArea = $plotOwners->max('total_area') ?: 1; @endphp
-                    <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+                    <div style="overflow-x:auto;max-height:420px;overflow-y:auto" id="ownerTableWrap">
                         <table class="owner-table" id="ownerTable">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th style="width:36px">#</th>
                                     <th>Owner</th>
-                                    <th>Lots</th>
+                                    <th style="width:54px">Lots</th>
                                     <th>Area (ha)</th>
                                 </tr>
                             </thead>
                             <tbody id="ownerTableBody">
                                 @forelse($plotOwners as $i => $owner)
-                                <tr data-search="{{ strtolower($owner->owner_name) }}">
-                                    <td>
-                                        <div class="rank-badge {{ $i < 3 ? 'top' : '' }}">{{ $i+1 }}</div>
+                                <tr data-search="{{ strtolower($owner->owner_name) }}"
+                                    data-lots="{{ $owner->lot_count }}"
+                                    data-area="{{ $owner->total_area }}"
+                                    data-name="{{ strtolower($owner->owner_name) }}"
+                                    data-rank="{{ $i }}">
+                                    <td><div class="rank-badge {{ $i < 3 ? 'top' : '' }}" id="rank-{{ $i }}">{{ $i+1 }}</div></td>
+                                    <td style="max-width:160px">
+                                        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:#333" title="{{ $owner->owner_name }}" class="owner-name-cell">{{ $owner->owner_name }}</div>
                                     </td>
-                                    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ $owner->owner_name }}">
-                                        {{ $owner->owner_name }}
-                                    </td>
-                                    <td>
-                                        <span class="lot-chip">{{ $owner->lot_count }}</span>
-                                    </td>
+                                    <td><span class="lot-chip">{{ $owner->lot_count }}</span></td>
                                     <td>
                                         <div class="owner-area-bar">
                                             <div class="owner-track">
@@ -342,6 +383,10 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        <div id="ownerNoResult" style="display:none;text-align:center;padding:28px;color:#bbb;font-size:13px">
+                            <i class="fas fa-search" style="font-size:22px;margin-bottom:8px;display:block"></i>
+                            No owners match "<span id="ownerNoResultQuery"></span>"
+                        </div>
                     </div>
                 </div>
 
@@ -450,21 +495,146 @@
     </div><!-- /main-content -->
 
     <script>
-        // ── Owner table filter ──────────────────────────────────
+        // ── Owner filter & sort ────────────────────────────────────
+        let ownerSortMode = 'lots';   // 'lots' | 'area' | 'name'
+        let ownerSortAsc  = {'lots':false, 'area':false, 'name':true};
+
         function filterOwners(q) {
-            q = q.toLowerCase();
-            document.querySelectorAll('#ownerTableBody tr[data-search]').forEach(row => {
-                row.style.display = !q || row.dataset.search.includes(q) ? '' : 'none';
+            q = q.trim();
+            const lq = q.toLowerCase();
+            const rows = Array.from(document.querySelectorAll('#ownerTableBody tr[data-search]'));
+            let visible = 0;
+
+            rows.forEach(row => {
+                const name = row.dataset.search;
+                const match = !lq || name.includes(lq);
+                row.style.display = match ? '' : 'none';
+                if (match) {
+                    visible++;
+                    // Highlight matching text
+                    const cell = row.querySelector('.owner-name-cell');
+                    if (cell) {
+                        const original = cell.getAttribute('title') || cell.textContent;
+                        if (lq) {
+                            const idx = original.toLowerCase().indexOf(lq);
+                            if (idx >= 0) {
+                                cell.innerHTML =
+                                    escHtml(original.slice(0, idx)) +
+                                    '<mark>' + escHtml(original.slice(idx, idx + lq.length)) + '</mark>' +
+                                    escHtml(original.slice(idx + lq.length));
+                            } else {
+                                cell.textContent = original;
+                            }
+                        } else {
+                            cell.textContent = original;
+                        }
+                    }
+                }
             });
+
+            // Show/hide no-result state
+            const noResult = document.getElementById('ownerNoResult');
+            const table    = document.getElementById('ownerTable');
+            if (q && visible === 0) {
+                table.style.display = 'none';
+                noResult.style.display = 'block';
+                document.getElementById('ownerNoResultQuery').textContent = q;
+            } else {
+                table.style.display = '';
+                noResult.style.display = 'none';
+            }
+
+            // Match count
+            const total = rows.length;
+            document.getElementById('ownerMatchCount').textContent = q
+                ? (visible === total ? '' : `${visible} of ${total}`)
+                : '';
+
+            // Clear button visibility
+            document.getElementById('ownerClearBtn').style.display = q ? 'inline' : 'none';
+
+            // Update badge
+            document.getElementById('ownerCountBadge').textContent =
+                q ? `${visible} of ${total}` : `${total} owners`;
+
+            // Update search box border
+            const box = document.getElementById('ownerSearchBox');
+            box.style.borderColor = q ? '#1a2744' : '#ddd';
+        }
+
+        function clearOwnerSearch() {
+            document.getElementById('ownerSearch').value = '';
+            filterOwners('');
+            document.getElementById('ownerSearch').focus();
+        }
+
+        function sortOwners(mode) {
+            // Toggle direction if same mode clicked
+            if (ownerSortMode === mode) {
+                ownerSortAsc[mode] = !ownerSortAsc[mode];
+            } else {
+                ownerSortMode = mode;
+            }
+
+            // Update button styles
+            ['lots','area','name'].forEach(m => {
+                const btn = document.getElementById('sort' + m.charAt(0).toUpperCase() + m.slice(1));
+                if (btn) btn.classList.toggle('active', m === ownerSortMode);
+            });
+
+            const tbody = document.getElementById('ownerTableBody');
+            const rows  = Array.from(tbody.querySelectorAll('tr[data-search]'));
+            const asc   = ownerSortAsc[mode];
+
+            rows.sort((a, b) => {
+                if (mode === 'lots') {
+                    const diff = parseInt(a.dataset.lots) - parseInt(b.dataset.lots);
+                    return asc ? diff : -diff;
+                }
+                if (mode === 'area') {
+                    const diff = parseFloat(a.dataset.area) - parseFloat(b.dataset.area);
+                    return asc ? diff : -diff;
+                }
+                if (mode === 'name') {
+                    const diff = a.dataset.name.localeCompare(b.dataset.name);
+                    return asc ? diff : -diff;
+                }
+                return 0;
+            });
+
+            // Re-append in sorted order and fix rank badges
+            rows.forEach((row, i) => {
+                tbody.appendChild(row);
+                const badge = row.querySelector('.rank-badge');
+                if (badge) {
+                    badge.textContent = i + 1;
+                    badge.classList.toggle('top', i < 3);
+                }
+            });
+        }
+
+        function escHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
         // ── Survey table filter ─────────────────────────────────
         function filterSurveys(q) {
             q = q.toLowerCase();
+            let visible = 0;
             document.querySelectorAll('#surveyTableBody tr[data-search]').forEach(row => {
-                row.style.display = !q || row.dataset.search.includes(q) ? '' : 'none';
+                const match = !q || row.dataset.search.includes(q);
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
             });
         }
+
+        // ── Focus highlight on search box ───────────────────────
+        document.getElementById('ownerSearch').addEventListener('focus', function() {
+            document.getElementById('ownerSearchBox').style.borderColor = '#1a2744';
+        });
+        document.getElementById('ownerSearch').addEventListener('blur', function() {
+            if (!this.value) document.getElementById('ownerSearchBox').style.borderColor = '#ddd';
+        });
     </script>
 </body>
 </html>
