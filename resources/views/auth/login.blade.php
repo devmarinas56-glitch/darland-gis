@@ -207,7 +207,9 @@
         </div>
 
         <div class="bottom-links">
-            <a href="#">Back to Home</a>
+            <a href="{{ route('monitoring.login') }}" style="display:inline-flex;align-items:center;gap:5px;color:#888;font-size:12px;text-decoration:none">
+                <i class="fas fa-eye" style="font-size:11px"></i> Monitoring Portal
+            </a>
         </div>
     </div>
 

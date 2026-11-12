@@ -12,10 +12,12 @@ class GisUserSeeder extends Seeder
     {
         $users = [
             // GIS accounts
-            ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin', 'role' => 'admin', 'password' => 'admin123'],
-            ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff', 'role' => 'user',  'password' => 'gis123'],
+            ['email' => 'gisadmin@dar.gov.ph',    'name' => 'GIS Administrator', 'username' => 'gisadmin',    'role' => 'admin',      'password' => 'admin123'],
+            ['email' => 'gis@dar.gov.ph',          'name' => 'GIS Staff',         'username' => 'gisstaff',    'role' => 'user',       'password' => 'gis123'],
+            // Monitoring portal account
+            ['email' => 'monitoring@dar.gov.ph',   'name' => 'Monitoring User',   'username' => 'monitoring',  'role' => 'monitoring', 'password' => 'monitor123'],
             // FMS mirror accounts (role=fms triggers redirect to FMS app)
-            ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Administrator', 'username' => 'fmsadmin', 'role' => 'fms',   'password' => 'admin123'],
+            ['email' => 'admin@dar.gov.ph',        'name' => 'FMS Administrator', 'username' => 'fmsadmin',    'role' => 'fms',        'password' => 'admin123'],
         ];
 
         foreach ($users as $u) {

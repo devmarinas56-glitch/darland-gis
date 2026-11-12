@@ -34,6 +34,11 @@ class LoginController extends Controller
                 return redirect('https://dar-file-management-system.onrender.com/login');
             }
 
+            // Monitoring role → redirect to monitoring portal
+            if ($user->role === 'monitoring') {
+                return redirect()->route('monitoring.map');
+            }
+
             // GIS users (admin, user) → stay here
             return redirect('/dashboard');
         }

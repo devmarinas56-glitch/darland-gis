@@ -89,6 +89,14 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/logout', [LoginController::class, 'logout']);
+
+// ── Monitoring portal (separate login/session guard) ─────────
+Route::get('/monitoring/login',  [\App\Http\Controllers\MonitoringController::class, 'showLogin'])->name('monitoring.login');
+Route::post('/monitoring/login', [\App\Http\Controllers\MonitoringController::class, 'login'])->name('monitoring.login.post');
+Route::get('/monitoring/logout', [\App\Http\Controllers\MonitoringController::class, 'logout'])->name('monitoring.logout');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/monitoring', [\App\Http\Controllers\MonitoringController::class, 'map'])->name('monitoring.map');
+});
 // Registration disabled — admin creates accounts
 // Route::get('/register', ...)
 
@@ -310,6 +318,9 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
             // ── Land GIS accounts ──────────────────────────────────
             ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin',   'role' => 'admin', 'password' => 'admin123'],
             ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff',   'role' => 'user',  'password' => 'gis123'],
+
+            // ── Monitoring account ─────────────────────────────────
+            ['email' => 'monitoring@dar.gov.ph', 'name' => 'Monitoring User', 'username' => 'monitoring', 'role' => 'monitoring', 'password' => 'monitor123'],
 
             // ── File Management mirror accounts (role=fms → redirect) ──
             ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Admin',         'username' => 'fmsadmin',   'role' => 'fms',   'password' => 'admin123'],
