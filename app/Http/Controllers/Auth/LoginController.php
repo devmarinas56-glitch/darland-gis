@@ -36,7 +36,7 @@ class LoginController extends Controller
 
             // Monitoring role → redirect to monitoring portal
             if ($user->role === 'monitoring') {
-                return redirect()->route('monitoring.map');
+                return redirect()->route('monitoring.overview');
             }
 
             // GIS users (admin, user) → stay here

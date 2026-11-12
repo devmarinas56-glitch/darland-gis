@@ -94,8 +94,11 @@ Route::get('/logout', [LoginController::class, 'logout']);
 Route::get('/monitoring/login',  [\App\Http\Controllers\MonitoringController::class, 'showLogin'])->name('monitoring.login');
 Route::post('/monitoring/login', [\App\Http\Controllers\MonitoringController::class, 'login'])->name('monitoring.login.post');
 Route::get('/monitoring/logout', [\App\Http\Controllers\MonitoringController::class, 'logout'])->name('monitoring.logout');
-Route::middleware(['auth'])->group(function () {
-    Route::get('/monitoring', [\App\Http\Controllers\MonitoringController::class, 'map'])->name('monitoring.map');
+Route::middleware(['auth'])->prefix('monitoring')->name('monitoring.')->group(function () {
+    Route::get('/',          [\App\Http\Controllers\MonitoringController::class, 'overview'])->name('overview');
+    Route::get('/parcels',   [\App\Http\Controllers\MonitoringController::class, 'parcels'])->name('parcels');
+    Route::get('/activity',  [\App\Http\Controllers\MonitoringController::class, 'activity'])->name('activity');
+    Route::get('/reports',   [\App\Http\Controllers\MonitoringController::class, 'reports'])->name('reports');
 });
 // Registration disabled — admin creates accounts
 // Route::get('/register', ...)
