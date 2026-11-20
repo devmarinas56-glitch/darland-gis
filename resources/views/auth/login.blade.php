@@ -4,274 +4,287 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - DAR</title>
+    <title>Login — DAR Pangasinan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; background: #f5f5f5; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html,body { height:100%; font-family:'Segoe UI',Tahoma,sans-serif; }
 
-        .login-wrapper {
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 24px rgba(0,0,0,0.13);
-            width: 100%;
-            max-width: 400px;
-            padding: 44px 38px 36px;
-            text-align: center;
+        body {
+            display:flex; align-items:stretch; min-height:100vh;
+            background:#f5f7fa;
         }
 
-        .logo-wrap { margin-bottom: 12px; }
-        .logo-wrap img { width: 90px; height: 90px; object-fit: contain; }
-
-        .app-name {
-            font-size: 28px;
-            font-weight: 900;
-            color: #1a2e52;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 2px;
+        /* ── Left branding panel ── */
+        .brand-panel {
+            width:420px; flex-shrink:0;
+            background:linear-gradient(160deg,#1a3d1a 0%,#2d6e2d 60%,#1a2744 100%);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding:60px 48px; text-align:center;
         }
+        .brand-panel img { width:100px; height:100px; object-fit:contain; margin-bottom:24px; }
+        .brand-panel .title { font-size:28px; font-weight:900; color:white; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+        .brand-panel .subtitle { font-size:12px; font-weight:600; color:rgba(255,255,255,0.65); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:36px; }
+        .brand-divider { width:40px; height:3px; background:rgba(255,255,255,0.3); border-radius:2px; margin:0 auto 32px; }
 
-        .app-subtitle {
-            font-size: 10px;
-            font-weight: 600;
-            color: #555;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
+        .brand-system { display:flex; flex-direction:column; gap:12px; width:100%; }
+        .brand-sys-item {
+            display:flex; align-items:center; gap:12px; padding:12px 16px;
+            background:rgba(255,255,255,0.08); border-radius:10px;
+            border:1px solid rgba(255,255,255,0.12);
         }
+        .brand-sys-item i { font-size:18px; color:rgba(255,255,255,0.7); width:22px; }
+        .brand-sys-name { font-size:13px; font-weight:700; color:white; }
+        .brand-sys-desc { font-size:11px; color:rgba(255,255,255,0.5); }
 
-        .card-inner {
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 28px 26px;
-            text-align: left;
+        /* ── Right login panel ── */
+        .login-panel {
+            flex:1; display:flex; align-items:center; justify-content:center;
+            padding:40px 24px;
         }
+        .login-box { width:100%; max-width:400px; }
 
-        .welcome-title { font-size: 18px; font-weight: 700; color: #1a2e52; margin-bottom: 4px; }
-        .welcome-sub { font-size: 12.5px; color: #888; margin-bottom: 24px; }
+        .login-welcome { font-size:24px; font-weight:800; color:#1a2744; margin-bottom:4px; }
+        .login-sub { font-size:13px; color:#888; margin-bottom:32px; }
 
-        /* System buttons */
-        .system-btns {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 24px;
+        /* Role indicator — auto-detected from email */
+        .role-indicator {
+            display:none; align-items:center; gap:10px;
+            padding:10px 14px; border-radius:9px; margin-bottom:16px;
+            font-size:12.5px; font-weight:600;
         }
+        .role-indicator.gis   { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; display:flex; }
+        .role-indicator.fms   { background:#e3f2fd; color:#1565c0; border:1px solid #bbdefb; display:flex; }
+        .role-indicator.mon   { background:#f3e5f5; color:#6a1b9a; border:1px solid #e1bee7; display:flex; }
+        .role-indicator i { font-size:14px; }
 
-        .sys-btn {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 14px 10px;
-            background: white;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
+        .field { margin-bottom:16px; }
+        .field label { font-size:12px; font-weight:600; color:#555; display:block; margin-bottom:6px; }
+        .input-wrap { position:relative; }
+        .input-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:#bbb; font-size:14px; pointer-events:none; }
+        .field input {
+            width:100%; padding:12px 42px;
+            border:1.5px solid #e0e0e0; border-radius:9px;
+            font-size:13.5px; color:#333; background:#fafafa;
+            transition:border-color 0.2s, background 0.2s;
         }
-
-        .sys-btn:hover { border-color: #2d7a2d; background: #f0fdf4; }
-        .sys-btn.active { border-color: #2d7a2d; background: #f0fdf4; }
-
-        .sys-btn i { font-size: 24px; color: #2d7a2d; }
-        .sys-btn-label { font-size: 12.5px; font-weight: 700; color: #1a2e52; }
-        .sys-btn-sub { font-size: 10px; color: #888; }
-
-        /* Divider */
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            color: #ccc;
-            font-size: 12px;
-        }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e8e8e8;
-        }
-
-        /* Inputs */
-        .input-wrap { position: relative; margin-bottom: 14px; }
-        .input-wrap i.icon {
-            position: absolute; left: 12px; top: 50%;
-            transform: translateY(-50%); color: #bbb; font-size: 14px;
-        }
-        .input-wrap input {
-            width: 100%; padding: 12px 36px;
-            border: 1px solid #ddd; border-radius: 5px;
-            font-size: 13.5px; color: #333; background: #fafafa;
-            transition: border-color 0.2s;
-        }
-        .input-wrap input:focus { outline: none; border-color: #2d7a2d; background: white; }
-        .input-wrap input::placeholder { color: #bbb; }
-
-        .eye-toggle {
-            position: absolute; right: 12px; top: 50%;
-            transform: translateY(-50%); color: #bbb;
-            cursor: pointer; font-size: 14px;
-        }
-
-        .forgot-row { margin-bottom: 18px; }
-        .forgot-row a { font-size: 12px; color: #666; text-decoration: none; }
-        .forgot-row a:hover { color: #2d7a2d; }
+        .field input:focus { outline:none; border-color:#2d7a2d; background:white; }
+        .field input::placeholder { color:#bbb; }
+        .pw-toggle { position:absolute; right:13px; top:50%; transform:translateY(-50%); color:#bbb; cursor:pointer; font-size:14px; border:none; background:none; padding:2px; }
+        .pw-toggle:hover { color:#555; }
 
         .login-btn {
-            width: 100%; padding: 13px;
-            background: #2d7a2d; color: white;
-            border: none; border-radius: 5px;
-            font-size: 14px; font-weight: 700;
-            letter-spacing: 1px; cursor: pointer;
-            transition: background 0.2s; text-transform: uppercase;
+            width:100%; padding:14px;
+            background:#1a3d1a; color:white;
+            border:none; border-radius:9px;
+            font-size:14px; font-weight:700; letter-spacing:0.5px;
+            cursor:pointer; transition:background 0.2s;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            margin-top:4px;
         }
-        .login-btn:hover { background: #1e5e1e; }
-        .login-btn:disabled { background: #aaa; cursor: not-allowed; }
+        .login-btn:hover { background:#245c24; }
+        .login-btn:disabled { background:#aaa; cursor:not-allowed; }
 
         .alert-error {
-            background: #fff1f2; color: #c62828;
-            border: 1px solid #fca5a5; border-radius: 5px;
-            padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px;
+            background:#fff1f2; color:#c62828;
+            border:1px solid #fca5a5; border-radius:8px;
+            padding:11px 14px; font-size:12.5px; margin-bottom:18px;
+            display:flex; align-items:flex-start; gap:8px;
         }
 
-        .bottom-links { margin-top: 18px; text-align: center; }
-        .bottom-links a { font-size: 12px; color: #aaa; text-decoration: none; }
+        @if(session('locked_until'))
+        .lock-banner { /* handled inline */ }
+        @endif
+
+        .lock-banner {
+            background:#fff8e1; border:1px solid #ffe082; border-radius:8px;
+            padding:11px 14px; font-size:12.5px; margin-bottom:18px;
+            display:flex; align-items:center; gap:8px; color:#5d4037;
+        }
+        .lock-countdown { font-weight:700; color:#e65100; }
+
+        .login-footer { text-align:center; margin-top:28px; }
+        .login-footer a { font-size:12px; color:#aaa; text-decoration:none; display:inline-flex; align-items:center; gap:5px; }
+        .login-footer a:hover { color:#1a3d1a; }
+
+        /* Responsive — stack on mobile */
+        @media(max-width:720px) {
+            body { flex-direction:column; }
+            .brand-panel { width:100%; padding:40px 28px 32px; }
+            .brand-panel img { width:72px; height:72px; }
+            .brand-panel .title { font-size:22px; }
+            .brand-system { display:none; }
+        }
     </style>
 </head>
 <body>
-    <div class="login-wrapper">
 
-        <div class="logo-wrap">
-            <img src="{{ asset('images/Darlandicon.png') }}" alt="DAR Logo">
-        </div>
-        <div class="app-name">DAR PANGASINAN</div>
-        <div class="app-subtitle">Department of Agrarian Reform</div>
-
-        <div class="card-inner">
-            <div class="welcome-title">Welcome Back!</div>
-            <div class="welcome-sub">Select a system to continue</div>
-
-            {{-- System buttons --}}
-            <div class="system-btns">
-                <button class="sys-btn" id="btn-gis" onclick="selectSystem('gis')">
-                    <i class="fas fa-map"></i>
-                    <div class="sys-btn-label">Land GIS</div>
-                    <div class="sys-btn-sub">Geographic System</div>
-                </button>
-                <button class="sys-btn" id="btn-fms" onclick="selectSystem('fms')">
-                    <i class="fas fa-folder-open"></i>
-                    <div class="sys-btn-label">File Management</div>
-                    <div class="sys-btn-sub">Document System</div>
-                </button>
+    <!-- Left branding -->
+    <div class="brand-panel">
+        <img src="{{ asset('images/Darlandicon.png') }}" alt="DAR">
+        <div class="title">DAR</div>
+        <div class="subtitle">Pangasinan — Integrated Portal</div>
+        <div class="brand-divider"></div>
+        <div class="brand-system">
+            <div class="brand-sys-item">
+                <i class="fas fa-map-marked-alt"></i>
+                <div>
+                    <div class="brand-sys-name">Land GIS</div>
+                    <div class="brand-sys-desc">Geospatial land records & surveys</div>
+                </div>
             </div>
+            <div class="brand-sys-item">
+                <i class="fas fa-folder-open"></i>
+                <div>
+                    <div class="brand-sys-name">File Management</div>
+                    <div class="brand-sys-desc">Documents & accomplishment reports</div>
+                </div>
+            </div>
+            <div class="brand-sys-item">
+                <i class="fas fa-eye"></i>
+                <div>
+                    <div class="brand-sys-name">Monitoring Portal</div>
+                    <div class="brand-sys-desc">Read-only oversight for DAR Heads</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="divider">or sign in with your account</div>
+    <!-- Right login -->
+    <div class="login-panel">
+        <div class="login-box">
+
+            <div class="login-welcome">Welcome Back</div>
+            <div class="login-sub">Sign in to access the DAR Pangasinan system</div>
+
+            @if(session('locked_until'))
+            <div class="lock-banner">
+                <i class="fas fa-lock" style="color:#e65100"></i>
+                Account temporarily locked. Try again in
+                <span class="lock-countdown" id="countdown">—</span>
+            </div>
+            @endif
 
             @if($errors->any())
-                <div class="alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    {{ $errors->first() }}
-                </div>
+            <div class="alert-error">
+                <i class="fas fa-exclamation-circle" style="flex-shrink:0;margin-top:1px"></i>
+                <span>{{ $errors->first() }}</span>
+            </div>
             @endif
+
+            <!-- Auto-detected role indicator -->
+            <div class="role-indicator" id="roleIndicator">
+                <i id="roleIcon"></i>
+                <span id="roleText"></span>
+            </div>
 
             <form method="POST" action="{{ route('login') }}" id="loginForm">
                 @csrf
-                <input type="hidden" name="system" id="systemField" value="">
 
-                <div class="input-wrap">
-                    <i class="fas fa-envelope icon"></i>
-                    <input type="email" name="email" id="emailInput"
-                           placeholder="Email address"
-                           value="{{ old('email') }}" required>
+                <div class="field">
+                    <label>Email Address</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" name="email" id="emailInput"
+                               placeholder="your@dar.gov.ph"
+                               value="{{ old('email') }}"
+                               oninput="detectRole(this.value)"
+                               autocomplete="email" required>
+                    </div>
                 </div>
 
-                <div class="input-wrap">
-                    <i class="fas fa-lock icon"></i>
-                    <input type="password" name="password" id="password"
-                           placeholder="Password" required>
-                    <i class="fas fa-eye eye-toggle" id="eyeToggle" onclick="togglePw()"></i>
+                <div class="field">
+                    <label>Password</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" name="password" id="pwInput"
+                               placeholder="••••••••"
+                               autocomplete="current-password" required>
+                        <button type="button" class="pw-toggle" onclick="togglePw()" tabindex="-1">
+                            <i class="fas fa-eye" id="pwEye"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="forgot-row">
-                    <a href="#">Forgot Password?</a>
-                </div>
-
-                <button type="submit" class="login-btn" id="loginBtn">LOG IN</button>
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
             </form>
-        </div>
 
-        <div class="bottom-links">
-            <a href="{{ route('monitoring.login') }}" style="display:inline-flex;align-items:center;gap:5px;color:#888;font-size:12px;text-decoration:none">
-                <i class="fas fa-eye" style="font-size:11px"></i> Monitoring Portal
-            </a>
+            <div class="login-footer">
+                <a href="{{ route('monitoring.login') }}">
+                    <i class="fas fa-eye"></i> Monitoring Portal (DAR Heads)
+                </a>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // Pre-select system based on email domain if typed
-        document.getElementById('emailInput').addEventListener('input', function() {
-            const email = this.value.toLowerCase();
-            if (email.includes('gis@') || email.includes('gisadmin@')) {
-                setActive('gis');
-            } else if (email.length > 3) {
-                setActive('fms');
-            }
-        });
+        // ── Role detection from email ────────────────────────────
+        const roleMap = {
+            'gisadmin@dar.gov.ph' : { cls:'gis', icon:'fa-map-marked-alt', text:'Land GIS — Administrator' },
+            'gis@dar.gov.ph'      : { cls:'gis', icon:'fa-map-marked-alt', text:'Land GIS — Staff' },
+            'admin@dar.gov.ph'    : { cls:'fms', icon:'fa-folder-open',    text:'File Management — Admin' },
+            'ajdp@dar.gov.ph'     : { cls:'fms', icon:'fa-folder-open',    text:'File Management — AJDP Staff' },
+            'ltsp@dar.gov.ph'     : { cls:'fms', icon:'fa-folder-open',    text:'File Management — LTSP Staff' },
+            'arbdsp@dar.gov.ph'   : { cls:'fms', icon:'fa-folder-open',    text:'File Management — ARBDSP Staff' },
+            'monitoring@dar.gov.ph':{ cls:'mon', icon:'fa-eye',            text:'Monitoring Portal — DAR Heads' },
+        };
 
-        function selectSystem(sys) {
-            if (sys === 'fms') {
-                window.location.href = 'https://dar-file-management-system.onrender.com/login';
+        function detectRole(email) {
+            const e   = email.toLowerCase().trim();
+            const ind = document.getElementById('roleIndicator');
+            const ico = document.getElementById('roleIcon');
+            const txt = document.getElementById('roleText');
+
+            // Exact match first
+            if (roleMap[e]) {
+                const r = roleMap[e];
+                ind.className = 'role-indicator ' + r.cls;
+                ico.className = 'fas ' + r.icon;
+                txt.textContent = r.text;
                 return;
             }
-            setActive(sys);
-            document.getElementById('emailInput').focus();
+
+            // Partial — detect system by email pattern
+            ind.className = 'role-indicator';  // hide
         }
 
-        function setActive(sys) {
-            document.getElementById('systemField').value = sys;
-            document.getElementById('btn-gis').classList.toggle('active', sys === 'gis');
-            document.getElementById('btn-fms').classList.toggle('active', sys === 'fms');
-        }
-
+        // ── Password toggle ──────────────────────────────────────
         function togglePw() {
-            const inp = document.getElementById('password');
-            const ico = document.getElementById('eyeToggle');
+            const inp = document.getElementById('pwInput');
+            const eye = document.getElementById('pwEye');
             const show = inp.type === 'password';
             inp.type = show ? 'text' : 'password';
-            ico.classList.toggle('fa-eye', !show);
-            ico.classList.toggle('fa-eye-slash', show);
+            eye.className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
         }
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            // If FMS button selected, go directly to FMS login page
-            const sys = document.getElementById('systemField').value;
-            if (sys === 'fms') {
-                e.preventDefault();
-                const email    = document.getElementById('emailInput').value;
-                const password = document.getElementById('password').value;
-                // POST to FMS via a hidden form
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'https://dar-file-management-system.onrender.com/login';
-                form.innerHTML = `
-                    <input name="_token" value="">
-                    <input name="email" value="${email}">
-                    <input name="password" value="${password}">
-                `;
-                // Can't pass CSRF across domains — just redirect with email pre-filled
-                window.location.href = 'https://dar-file-management-system.onrender.com/login?email=' + encodeURIComponent(email);
-                return;
-            }
+        // ── Spinner on submit ────────────────────────────────────
+        document.getElementById('loginForm').addEventListener('submit', function() {
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
-            btn.textContent = 'Signing in...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
         });
+
+        // ── Lock countdown ───────────────────────────────────────
+        @if(session('locked_until'))
+        const lockUntil = {{ session('locked_until') }} * 1000;
+        function updateCountdown() {
+            const left = Math.max(0, Math.ceil((lockUntil - Date.now()) / 1000));
+            const el   = document.getElementById('countdown');
+            if (el) {
+                el.textContent = left + 's';
+                if (left > 0) setTimeout(updateCountdown, 500);
+                else {
+                    document.getElementById('loginBtn').disabled = false;
+                    el.closest('.lock-banner').style.display = 'none';
+                }
+            }
+        }
+        document.getElementById('loginBtn').disabled = true;
+        updateCountdown();
+        @endif
     </script>
 </body>
 </html>

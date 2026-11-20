@@ -25,21 +25,29 @@ class LoginController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // FMS role or FMS-assigned roles → redirect to File Management System
+            // FMS roles → SSO-redirect to File Management System
             $fmsRoles = ['fms', 'ajdp', 'ltsp', 'arbdsp'];
             if (in_array(strtolower($user->role), $fmsRoles)) {
+                // Build a short-lived signed token: base64(email|timestamp|hmac)
+                $email     = $user->email;
+                $ts        = time();
+                $secret    = config('app.key');
+                $signature = hash_hmac('sha256', $email . '|' . $ts, $secret);
+                $token     = base64_encode($email . '|' . $ts . '|' . $signature);
+
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                return redirect('https://dar-file-management-system.onrender.com/login');
+
+                return redirect('https://dar-file-management-system.onrender.com/sso?token=' . urlencode($token));
             }
 
-            // Monitoring role → redirect to monitoring portal
+            // Monitoring role → GIS monitoring portal
             if ($user->role === 'monitoring') {
                 return redirect()->route('monitoring.overview');
             }
 
-            // GIS users (admin, user) → stay here
+            // GIS users (admin, user) → GIS dashboard
             return redirect('/dashboard');
         }
 
