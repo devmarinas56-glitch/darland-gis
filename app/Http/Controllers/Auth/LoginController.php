@@ -31,7 +31,7 @@ class LoginController extends Controller
                 // Build a short-lived signed token: base64(email|timestamp|hmac)
                 $email     = $user->email;
                 $ts        = time();
-                $secret    = config('app.key');
+                $secret    = env('SSO_SECRET', 'dar-pangasinan-sso-2026-shared-secret');
                 $signature = hash_hmac('sha256', $email . '|' . $ts, $secret);
                 $token     = base64_encode($email . '|' . $ts . '|' . $signature);
 
