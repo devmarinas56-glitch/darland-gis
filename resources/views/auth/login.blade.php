@@ -213,7 +213,9 @@
             const s=i.type==='password';i.type=s?'text':'password';e.className=s?'fas fa-eye-slash':'fas fa-eye';
         }
         document.getElementById('loginForm').addEventListener('submit',function(){
-            const b=document.getElementById('signBtn');b.disabled=true;b.textContent='Signing in…';
+            const b=document.getElementById('signBtn');
+            b.disabled=true;
+            b.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i>Signing in…';
         });
         @if(session('locked_until'))
         const lockTs={{ session('locked_until') }}*1000;
