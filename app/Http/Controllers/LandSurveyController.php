@@ -454,15 +454,31 @@ class LandSurveyController extends Controller
     private function formatAttachment(SurveyAttachment $att): array
     {
         return [
-            'id'            => $att->id,
-            'name'          => $att->original_name,
-            'mime_type'     => $att->mime_type,
-            'size_label'    => $att->file_size_label,
-            'file_type'     => $att->file_type,
-            'land_survey_id'=> $att->land_survey_id,
-            'survey_lot_id' => $att->survey_lot_id,
-            'created_at'    => $att->created_at?->format('M j, Y'),
+            'id'              => $att->id,
+            'name'            => $att->original_name,
+            'mime_type'       => $att->mime_type,
+            'size_label'      => $att->file_size_label,
+            'file_type'       => $att->file_type,
+            'land_survey_id'  => $att->land_survey_id,
+            'survey_lot_id'   => $att->survey_lot_id,
+            'created_at'      => $att->created_at?->format('M j, Y'),
+            'remarks'         => $att->remarks,
+            'needs_correction'=> (bool) $att->needs_correction,
         ];
+    }
+
+    // ── Update attachment remarks ─────────────────────────────────
+    public function updateAttachmentRemarks(Request $request, SurveyAttachment $attachment)
+    {
+        $request->validate([
+            'remarks'          => ['nullable', 'string', 'max:1000'],
+            'needs_correction' => ['boolean'],
+        ]);
+        $attachment->update([
+            'remarks'          => $request->remarks,
+            'needs_correction' => $request->boolean('needs_correction'),
+        ]);
+        return response()->json(['success' => true, 'attachment' => $this->formatAttachment($attachment)]);
     }
 
     // ── Geometry: auto-generate rectangle grid ───────────────────

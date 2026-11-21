@@ -185,7 +185,7 @@ class MonitoringController extends Controller
         ));
     }
 
-    // ── GIS Reports ───────────────────────────────────────────────
+    // ── GIS Reports (MPI + summaries) ────────────────────────────
     public function reports()
     {
         $this->requireMonitoring();
@@ -203,8 +203,33 @@ class MonitoringController extends Controller
             'validated'    => $g->where('status','validated')->count(),
         ])->values();
 
+        // ── MPI: targets for GIS (parcels validated per month) ───
+        $monthsTracked = max(1, \App\Models\LandSurvey::selectRaw(
+            "COUNT(DISTINCT TO_CHAR(created_at,'YYYY-MM'))"
+        )->value('count'));
+        $gisStaff = \App\Models\User::whereIn('role',['admin','user'])->count();
+        $mpiTarget = max($gisStaff * $monthsTracked, 1);
+        $mpiRate   = $total > 0 ? round(($validated / $total) * 100, 1) : 0;
+
+        // ── Monthly breakdown (last 12 months) ────────────────────
+        $monthly = LandSurvey::selectRaw(
+            "TO_CHAR(created_at,'YYYY-MM') as ym,
+             TO_CHAR(created_at,'Mon YYYY') as period,
+             DATE_TRUNC('month',created_at) as month_start,
+             count(*) as surveys_added,
+             sum(lot_count) as lots_added"
+        )->groupByRaw("TO_CHAR(created_at,'YYYY-MM'), TO_CHAR(created_at,'Mon YYYY'), DATE_TRUNC('month',created_at)")
+         ->orderByDesc('month_start')->take(12)->get();
+
+        // ── Annual breakdown ──────────────────────────────────────
+        $annualYears = LandSurvey::selectRaw("EXTRACT(YEAR FROM created_at)::int as yr, count(*) as surveys, sum(lot_count) as lots")
+            ->groupByRaw("EXTRACT(YEAR FROM created_at)")
+            ->orderByDesc('yr')->get();
+
         return view('monitoring.gis-reports', compact(
-            'parcels', 'total', 'validated', 'forReview', 'pending', 'byMuni'
+            'parcels', 'total', 'validated', 'forReview', 'pending', 'byMuni',
+            'mpiTarget', 'mpiRate', 'gisStaff', 'monthsTracked',
+            'monthly', 'annualYears'
         ));
     }
 }

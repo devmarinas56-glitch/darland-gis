@@ -482,12 +482,39 @@
                     </div>
                     <div class="form-grid-2">
                         <div class="form-row">
-                            <label class="form-label">Province</label>
-                            <input type="text" id="surveyProvince" class="form-input" placeholder="e.g. Pangasinan">
+                            <label class="form-label">Province <span class="info-tip" data-tip="Select the province first. Municipalities will auto-populate based on your selection.">?</span></label>
+                            <select id="surveyProvince" class="form-input" onchange="onProvinceChange(this.value)">
+                                <option value="">— Select Province —</option>
+                                <option value="Pangasinan">Pangasinan</option>
+                            </select>
                         </div>
                         <div class="form-row">
                             <label class="form-label">Date Registered</label>
                             <input type="date" id="surveyDate" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Municipality/City <span class="info-tip" data-tip="Select a municipality from the list. Available municipalities update based on the selected province.">?</span></label>
+                            <select id="surveyMunicipality" class="form-input" onchange="onMunicipalityChange(this.value)" disabled>
+                                <option value="">— Select Municipality —</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Named Barangay <span class="info-tip" data-tip="Select a barangay or type a custom one. Barangays populate after selecting a municipality.">?</span></label>
+                            <select id="surveyBarangay" class="form-input" disabled>
+                                <option value="">— Select Barangay —</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label class="form-label">Barangay No./Zone</label>
+                            <input type="text" id="surveyZone" class="form-input" placeholder="e.g. Zone 3">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Location / Address</label>
+                            <input type="text" id="surveyLocation" class="form-input" placeholder="Full address">
                         </div>
                     </div>
                     <div class="form-row">
@@ -2014,11 +2041,15 @@ function renderAttachList(listEl, countEl, attachments) {
         return;
     }
     listEl.innerHTML = attachments.map(a => `
-        <div class="attach-item" id="att-${a.id}">
+        <div class="attach-item" id="att-${a.id}" style="${a.needs_correction ? 'border-left:3px solid #e53935;background:#fff8f8' : ''}">
             <i class="fas ${attachIcon(a.file_type)} attach-icon ${a.file_type}"></i>
-            <span class="attach-name" title="${escJs(a.name)}">${a.name}</span>
+            <div style="flex:1;min-width:0">
+                <div class="attach-name" title="${escJs(a.name)}">${a.name}</div>
+                ${a.remarks ? `<div style="font-size:10.5px;color:${a.needs_correction?'#e53935':'#888'};margin-top:2px;font-style:italic"><i class="fas fa-${a.needs_correction?'exclamation-triangle':'comment'}" style="margin-right:4px"></i>${a.remarks}</div>` : ''}
+            </div>
             <span class="attach-meta">${a.size_label}</span>
             <a href="/api/attachments/${a.id}/download" target="_blank" class="attach-btn" title="View/Download"><i class="fas fa-download"></i></a>
+            ${isAdmin ? `<button class="attach-btn" title="Add/edit remark" onclick="editAttachRemark(${a.id},'${escJs(a.remarks||'')}',${a.needs_correction})"><i class="fas fa-comment${a.remarks?'-dots':''}"></i></button>` : ''}
             ${isAdmin ? `<button class="attach-btn del" title="Delete" onclick="deleteAttachment(${a.id})"><i class="fas fa-times"></i></button>` : ''}
         </div>
     `).join('');
@@ -2380,7 +2411,194 @@ function saveAddPin() {
     switchTab('pins');
 }
 
+// ── Edit attachment remark ────────────────────────────────────
+async function editAttachRemark(id, currentRemark, needsCorrection) {
+    const remark = prompt('Remarks for this attachment (leave blank to clear):\n(Check "Needs correction" to flag it)', currentRemark || '');
+    if (remark === null) return; // cancelled
+    const needsCorr = confirm('Flag this attachment as "Needs Correction"?\n(OK = Yes flag, Cancel = No)');
+    try {
+        const res = await apiFetch(`/api/attachments/${id}/remarks`, 'PATCH', {
+            remarks: remark.trim() || null,
+            needs_correction: needsCorr,
+        });
+        if (res.success) {
+            // Refresh whichever list this attachment belongs to
+            if (currentSurveyId) loadSurveyAttachments(currentSurveyId);
+            if (currentLotId)    loadLotAttachments(currentLotId);
+        }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
 // ── Boot: init custom pins & datalist ────────────────────────
+
+// ══════════════════════════════════════════════════════════════
+// CASCADING LOCATION DROPDOWNS (Province → Municipality → Barangay)
+// ══════════════════════════════════════════════════════════════
+const locationData = {
+    'Pangasinan': {
+        'Alaminos City':   ['Barangay Lucap','Barangay Poblacion','Barangay Patar','Barangay San Antonio','Barangay Telbang','Barangay Victoria','— Custom —'],
+        'Dagupan City':    ['Barangay Bonuan Binloc','Barangay Bonuan Gueset','Barangay Calmay','Barangay Lucao','Barangay Poblacion','Barangay Pogo Chico','— Custom —'],
+        'San Carlos City': ['Barangay Abanon','Barangay Balaya','Barangay Bolingit','Barangay Poblacion','Barangay Roxas','— Custom —'],
+        'Urdaneta City':   ['Barangay Bayaoas','Barangay Bolaoen','Barangay Cabaruan','Barangay Catablan','Barangay Nancalobasaan','Barangay Poblacion','Barangay San Vicente','Barangay Tablang','— Custom —'],
+        'Agno':            ['Barangay Allabon','Barangay Aloleng','Barangay Bangan-Oda','Barangay Banog Norte','Barangay Banog Sur','Barangay Poblacion','— Custom —'],
+        'Aguilar':         ['Barangay Bayambang','Barangay Capandanan','Barangay Domalandan','Barangay Maasin','Barangay Poblacion','— Custom —'],
+        'Alcala':          ['Barangay Alos','Barangay Ambalangan-Dalin','Barangay Baleyadaan','Barangay Poblacion','Barangay Tagudin','— Custom —'],
+        'Anda':            ['Barangay Awile','Barangay Bituag','Barangay Cabungan','Barangay Calungbuyan','Barangay Poblacion','— Custom —'],
+        'Asingan':         ['Barangay Bobonan','Barangay Cabalitian','Barangay Macalong','Barangay Poblacion','Barangay San Vicente','— Custom —'],
+        'Balungao':        ['Barangay Artacho','Barangay Cablong','Barangay Manaois','Barangay Poblacion','— Custom —'],
+        'Bani':            ['Barangay Ambabaay','Barangay Apolong','Barangay Banog Norte','Barangay Poblacion','— Custom —'],
+        'Basista':         ['Barangay Bayambang','Barangay Cabilaoan','Barangay Poblacion','— Custom —'],
+        'Bautista':        ['Barangay Artacho','Barangay Baluyot','Barangay Bongar','Barangay Poblacion','— Custom —'],
+        'Bayambang':       ['Barangay Barangobong','Barangay Caoayan','Barangay Mapandan','Barangay Poblacion','Barangay San Fabian','— Custom —'],
+        'Binalonan':       ['Barangay Balangobong','Barangay Bued','Barangay Bugallon','Barangay Calomboyan','Barangay Poblacion','— Custom —'],
+        'Binmaley':        ['Barangay Alilan','Barangay Amandiego','Barangay Baybay Lopez','Barangay Poblacion','— Custom —'],
+        'Bolinao':         ['Barangay Arnedo','Barangay Balingasay','Barangay Binabalian','Barangay Poblacion','Barangay Santiago','— Custom —'],
+        'Bugallon':        ['Barangay Ampid','Barangay Bacabac','Barangay Bancal','Barangay Poblacion','— Custom —'],
+        'Burgos':          ['Barangay Bosnit','Barangay Cato','Barangay Laoac','Barangay Poblacion','— Custom —'],
+        'Calasiao':        ['Barangay Ambonao','Barangay Ambuetel','Barangay Banaoang','Barangay Bued','Barangay Buenlag','Barangay Poblacion','— Custom —'],
+        'Dagupan City':    ['Barangay Bonuan Binloc','Barangay Bonuan Gueset','Barangay Calmay','Barangay Lucao','Barangay Poblacion','— Custom —'],
+        'Dasol':           ['Barangay Allabon','Barangay Banog','Barangay Burgos','Barangay Poblacion','— Custom —'],
+        'Infanta':         ['Barangay Batang','Barangay Beleng-Beléng','Barangay Bolaoen','Barangay Poblacion','— Custom —'],
+        'Labrador':        ['Barangay Anonang Norte','Barangay Anonang Sur','Barangay Panacol','Barangay Poblacion','— Custom —'],
+        'Laoac':           ['Barangay Baluyot','Barangay Bautista','Barangay Bobonan','Barangay Poblacion','— Custom —'],
+        'Lingayen':        ['Barangay Aliwekwek','Barangay Baay','Barangay Balangobong','Barangay Balococ','Barangay Poblacion','— Custom —'],
+        'Mabini':          ['Barangay Barlo','Barangay Calaocan','Barangay Nangalisan','Barangay Poblacion','— Custom —'],
+        'Malasiqui':       ['Barangay Amamperez','Barangay Binday','Barangay Bolaoen','Barangay Boyambong','Barangay Poblacion','— Custom —'],
+        'Manaoag':         ['Barangay Artacho','Barangay Bantog','Barangay Calaocan','Barangay Poblacion','Barangay Villaflor','— Custom —'],
+        'Mangaldan':       ['Barangay Alitaya','Barangay Amansabina','Barangay Anolid','Barangay Barangobong','Barangay Poblacion','— Custom —'],
+        'Mangatarem':      ['Barangay Bacabac','Barangay Balayang','Barangay Balut','Barangay Bancagan','Barangay Poblacion','— Custom —'],
+        'Mapandan':        ['Barangay Amanoaoac','Barangay Aporao','Barangay Arellano','Barangay Poblacion','— Custom —'],
+        'Natividad':       ['Barangay Barangobong','Barangay Cabalitaan','Barangay Mabini','Barangay Poblacion','— Custom —'],
+        'Pozorrubio':      ['Barangay Alipangpang','Barangay Alos','Barangay Ambalangan','Barangay Barangobong','Barangay Poblacion','— Custom —'],
+        'Rosales':         ['Barangay Acop','Barangay Bakbakeng','Barangay Balobooc','Barangay Bantayan','Barangay Poblacion','— Custom —'],
+        'San Fabian':      ['Barangay Acao','Barangay Anonang','Barangay Aramat','Barangay Bandera','Barangay Poblacion','— Custom —'],
+        'San Jacinto':     ['Barangay Basing','Barangay Estanza','Barangay Poblacion','Barangay Talogtog','— Custom —'],
+        'San Manuel':      ['Barangay Aglipay','Barangay Bantog','Barangay Basing','Barangay Calaocan','Barangay Poblacion','— Custom —'],
+        'San Nicolas':     ['Barangay Bacabac','Barangay Balangobong','Barangay Cabalitian','Barangay Poblacion','— Custom —'],
+        'Santa Barbara':   ['Barangay Alibago','Barangay Bobonan','Barangay Poblacion','Barangay San Nicolas','— Custom —'],
+        'Santa Maria':     ['Barangay Balungao','Barangay Bantog','Barangay Calomboyan','Barangay Poblacion','— Custom —'],
+        'Santo Tomas':     ['Barangay Arellano','Barangay Bantog','Barangay Calomboyan','Barangay Poblacion','— Custom —'],
+        'Sison':           ['Barangay Agno','Barangay Artacho','Barangay Bobonan','Barangay Poblacion','— Custom —'],
+        'Sual':            ['Barangay Baquioen','Barangay Baybay Natividad','Barangay Baybay Pangalo','Barangay Poblacion','— Custom —'],
+        'Tayug':           ['Barangay Agno','Barangay Artacho','Barangay Balungao','Barangay Poblacion','— Custom —'],
+        'Umingan':         ['Barangay Artacho','Barangay Balangobong','Barangay Cabalitian','Barangay Poblacion','Barangay San Antonio','— Custom —'],
+        'Urbiztondo':      ['Barangay Anonang','Barangay Aramal','Barangay Banaybanay','Barangay Poblacion','— Custom —'],
+        'Villasis':        ['Barangay Barangobong','Barangay Baritao','Barangay Nancalobasaan','Barangay Poblacion','— Custom —'],
+    }
+};
+
+function onProvinceChange(province) {
+    const muniSel = document.getElementById('surveyMunicipality');
+    const brgySel = document.getElementById('surveyBarangay');
+    muniSel.innerHTML = '<option value="">— Select Municipality —</option>';
+    brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
+    brgySel.disabled = true;
+
+    if (!province || !locationData[province]) {
+        muniSel.disabled = true;
+        return;
+    }
+    muniSel.disabled = false;
+    const munis = Object.keys(locationData[province]).sort();
+    munis.forEach(m => {
+        const o = document.createElement('option');
+        o.value = m; o.textContent = m;
+        muniSel.appendChild(o);
+    });
+    // Add custom option
+    const custom = document.createElement('option');
+    custom.value = '__custom__'; custom.textContent = '— Type custom municipality —';
+    muniSel.appendChild(custom);
+}
+
+function onMunicipalityChange(muni) {
+    const brgySel = document.getElementById('surveyBarangay');
+    brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
+
+    if (muni === '__custom__') {
+        // Replace select with text input temporarily
+        const wrap = brgySel.parentElement;
+        brgySel.disabled = true;
+        const province = document.getElementById('surveyProvince').value;
+        document.getElementById('surveyMunicipality').outerHTML =
+            '<input type="text" id="surveyMunicipality" class="form-input" placeholder="Type municipality name" oninput="syncMuniText()">';
+        brgySel.disabled = false;
+        return;
+    }
+
+    const province = document.getElementById('surveyProvince').value;
+    if (!province || !locationData[province] || !locationData[province][muni]) {
+        brgySel.disabled = true;
+        return;
+    }
+    brgySel.disabled = false;
+    locationData[province][muni].forEach(b => {
+        const o = document.createElement('option');
+        if (b === '— Custom —') { o.value = '__custom_brgy__'; o.textContent = '— Type custom barangay —'; }
+        else { o.value = b; o.textContent = b; }
+        brgySel.appendChild(o);
+    });
+    brgySel.onchange = function() {
+        if (this.value === '__custom_brgy__') {
+            const wrap = this.parentElement;
+            const curVal = '';
+            this.outerHTML = '<input type="text" id="surveyBarangay" class="form-input" placeholder="Type barangay name">';
+        }
+    };
+}
+
+function syncMuniText() { /* text input already in DOM, no-op */ }
+
+// Auto-select Pangasinan on load
+window.addEventListener('DOMContentLoaded', function() {
+    const provSel = document.getElementById('surveyProvince');
+    if (provSel && provSel.value === '') {
+        provSel.value = 'Pangasinan';
+        onProvinceChange('Pangasinan');
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+// AUTO-PIN FROM TYPED LAT/LNG (Minor 2)
+// ══════════════════════════════════════════════════════════════
+(function() {
+    // Make centerLat/centerLng inputs writable and auto-fly map
+    const makeEditable = () => {
+        const latEl = document.getElementById('centerLat');
+        const lngEl = document.getElementById('centerLng');
+        if (!latEl || !lngEl) return;
+
+        // Remove readonly so users can type
+        latEl.removeAttribute('readonly');
+        lngEl.removeAttribute('readonly');
+        latEl.placeholder = 'e.g. 15.9754';
+        lngEl.placeholder = 'e.g. 120.5701';
+
+        const flyFromInputs = () => {
+            const lat = parseFloat(latEl.value);
+            const lng = parseFloat(lngEl.value);
+            if (isNaN(lat) || isNaN(lng)) return;
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+
+            // Fly map to entered coordinates
+            map.flyTo([lat, lng], 16, { duration: 0.8 });
+
+            // Drop / move pin
+            if (pickedMarker) map.removeLayer(pickedMarker);
+            pickedMarker = L.marker([lat, lng], {
+                icon: L.divIcon({ className: '', html: '<div style="background:#1a2744;color:white;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap">Center</div>', iconAnchor: [28,10] })
+            }).addTo(map);
+        };
+
+        // Debounce so it doesn't fire on every keypress
+        let flyTimer;
+        const debounce = () => { clearTimeout(flyTimer); flyTimer = setTimeout(flyFromInputs, 600); };
+        latEl.addEventListener('input', debounce);
+        lngEl.addEventListener('input', debounce);
+    };
+    // Run after page load (map must be initialised)
+    window.addEventListener('DOMContentLoaded', makeEditable);
+})();
 
 // ── Boot ─────────────────────────────────────────────────────
 setTimeout(() => document.getElementById('mapHint').classList.add('hide'), 5000);

@@ -194,13 +194,15 @@
 
     <script>
         const roleMap = {
-            'gisadmin@dar.gov.ph' : {cls:'gis',icon:'fa-map-marked-alt',text:'Land GIS — Administrator'},
-            'gis@dar.gov.ph'      : {cls:'gis',icon:'fa-map-marked-alt',text:'Land GIS — Staff'},
-            'admin@dar.gov.ph'    : {cls:'fms',icon:'fa-folder-open',   text:'File Management — Admin'},
-            'ajdp@dar.gov.ph'     : {cls:'fms',icon:'fa-folder-open',   text:'File Management — AJDP'},
-            'ltsp@dar.gov.ph'     : {cls:'fms',icon:'fa-folder-open',   text:'File Management — LTSP'},
-            'arbdsp@dar.gov.ph'   : {cls:'fms',icon:'fa-folder-open',   text:'File Management — ARBDSP'},
-            'monitoring@dar.gov.ph':{cls:'mon',icon:'fa-eye',           text:'Monitoring Portal — DAR Heads'},
+            'gisadmin@dar.gov.ph'         : {cls:'gis',icon:'fa-map-marked-alt',text:'Land GIS — Administrator'},
+            'gis@dar.gov.ph'              : {cls:'gis',icon:'fa-map-marked-alt',text:'Land GIS — Staff'},
+            'admin@dar.gov.ph'            : {cls:'fms',icon:'fa-folder-open',   text:'File Management — Admin'},
+            'ajdp@dar.gov.ph'             : {cls:'fms',icon:'fa-folder-open',   text:'File Management — AJDP'},
+            'ltsp@dar.gov.ph'             : {cls:'fms',icon:'fa-folder-open',   text:'File Management — LTSP'},
+            'arbdsp@dar.gov.ph'           : {cls:'fms',icon:'fa-folder-open',   text:'File Management — ARBDSP'},
+            'programofficer@dar.gov.ph'   : {cls:'fms',icon:'fa-user-tie',      text:'File Management — Program Officer II'},
+            'planningofficer@dar.gov.ph'  : {cls:'fms',icon:'fa-chart-line',    text:'File Management — Planning Officer'},
+            'monitoring@dar.gov.ph'       : {cls:'mon',icon:'fa-eye',           text:'Monitoring Portal — DAR Heads'},
         };
         function detectRole(email){
             const r=roleMap[email.toLowerCase().trim()];

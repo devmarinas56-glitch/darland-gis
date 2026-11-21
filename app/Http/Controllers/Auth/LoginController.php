@@ -26,7 +26,7 @@ class LoginController extends Controller
             $user = Auth::user();
 
             // FMS roles → SSO-redirect to File Management System
-            $fmsRoles = ['fms', 'ajdp', 'ltsp', 'arbdsp'];
+            $fmsRoles = ['fms', 'ajdp', 'ltsp', 'arbdsp', 'program_officer', 'planning_officer'];
             if (in_array(strtolower($user->role), $fmsRoles)) {
                 // Build a short-lived signed token: base64(email|timestamp|hmac)
                 $email     = $user->email;

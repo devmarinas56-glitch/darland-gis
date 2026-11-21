@@ -194,6 +194,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/lots/{lot}/attachments', [LandSurveyController::class, 'uploadLotAttachment'])->name('api.lots.attachments.upload');
     Route::get('/api/attachments/{attachment}/download', [LandSurveyController::class, 'downloadAttachment'])->name('api.attachments.download');
     Route::delete('/api/attachments/{attachment}', [LandSurveyController::class, 'deleteAttachment'])->name('api.attachments.delete');
+    Route::patch('/api/attachments/{attachment}/remarks', [LandSurveyController::class, 'updateAttachmentRemarks'])->name('api.attachments.remarks');
     // Admin user management
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
@@ -326,10 +327,13 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
             ['email' => 'monitoring@dar.gov.ph', 'name' => 'Monitoring User', 'username' => 'monitoring', 'role' => 'monitoring', 'password' => 'monitor123'],
 
             // ── File Management mirror accounts (role=fms → redirect) ──
-            ['email' => 'admin@dar.gov.ph',     'name' => 'FMS Admin',         'username' => 'fmsadmin',   'role' => 'fms',   'password' => 'admin123'],
-            ['email' => 'ajdp@dar.gov.ph',      'name' => 'AJDP Staff',        'username' => 'ajdpstaff',  'role' => 'fms',   'password' => 'ajdp123'],
-            ['email' => 'ltsp@dar.gov.ph',       'name' => 'LTSP Staff',        'username' => 'ltspstaff',  'role' => 'fms',   'password' => 'ltsp123'],
-            ['email' => 'arbdsp@dar.gov.ph',    'name' => 'ARBDSP Staff',      'username' => 'arbdspstaff','role' => 'fms',   'password' => 'arbdsp123'],
+            ['email' => 'admin@dar.gov.ph',           'name' => 'FMS Admin',          'username' => 'fmsadmin',       'role' => 'fms',              'password' => 'admin123'],
+            ['email' => 'ajdp@dar.gov.ph',            'name' => 'AJDP Staff',         'username' => 'ajdpstaff',      'role' => 'fms',              'password' => 'ajdp123'],
+            ['email' => 'ltsp@dar.gov.ph',            'name' => 'LTSP Staff',         'username' => 'ltspstaff',      'role' => 'fms',              'password' => 'ltsp123'],
+            ['email' => 'arbdsp@dar.gov.ph',          'name' => 'ARBDSP Staff',       'username' => 'arbdspstaff',    'role' => 'fms',              'password' => 'arbdsp123'],
+            // ── Officer roles (SSO to FM, land in admin dashboard) ──
+            ['email' => 'programofficer@dar.gov.ph',  'name' => 'Program Officer II', 'username' => 'progofficer',    'role' => 'program_officer',  'password' => 'officer123'],
+            ['email' => 'planningofficer@dar.gov.ph', 'name' => 'Planning Officer',   'username' => 'planningofficer','role' => 'planning_officer', 'password' => 'planning123'],
         ];
 
         $results = [];

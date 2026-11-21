@@ -9,7 +9,7 @@ class SurveyAttachment extends Model
     protected $fillable = [
         'land_survey_id', 'survey_lot_id',
         'original_name', 'mime_type', 'file_size',
-        'file_data', 'uploaded_by',
+        'file_data', 'uploaded_by', 'remarks', 'needs_correction',
     ];
 
     public function survey()
