@@ -116,7 +116,8 @@
         .lsn-item-sub { font-size: 11px; color: #888; margin-top: 2px; }
         .lsn-item-badges { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
         .badge { padding: 2px 7px; border-radius: 10px; font-size: 10.5px; font-weight: 600; background: #e8edf5; color: #1a2744; }
-        .lot-list-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 6px; margin-bottom: 4px; background: #f9f9f9; border: 1px solid #eee; }
+        .lot-list-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 6px; margin-bottom: 4px; background: #f9f9f9; border: 1px solid #eee; flex-wrap: wrap; gap: 4px; }
+        .lot-selected { border-color: #1a2744 !important; background: #f0f4ff !important; }
         .lot-list-num { font-size: 11.5px; font-weight: 700; color: #1a2744; background: #e8edf5; padding: 2px 7px; border-radius: 4px; }
         .lot-list-owner { font-size: 12px; color: #444; flex: 1; padding: 0 8px; }
         .lot-list-area { font-size: 11px; color: #888; }
@@ -1470,31 +1471,25 @@ function renderSurveyOnMap(survey) {
     }
 }
 
-// ── Lot popup ─────────────────────────────────────────────────
+// ── Lot popup — opens full detail panel in sidebar ────────────
 function openLotPopup(lot, layer) {
-    const areaHa  = (lot.area / 10000).toFixed(4);
-    const editBtn = isAdmin
-        ? `<button class="popup-edit-btn" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')"><i class="fas fa-pencil-alt"></i> Edit Lot</button>`
-        : '';
-    const attBadge = (lot.attachment_count > 0)
-        ? `<div class="popup-row"><i class="fas fa-paperclip" style="color:#1a2744;font-size:10px"></i> <span>${lot.attachment_count} attachment${lot.attachment_count>1?'s':''}</span></div>`
-        : '';
-    const divideBtn = isAdmin
-        ? `<button class="popup-edit-btn" style="background:#e53935;margin-top:4px" onclick="map.closePopup();openDivideLotModal(${lot.id})"><i class="fas fa-cut"></i> Divide Lot</button>`
-        : '';
-    L.popup({ maxWidth: 220 })
-        .setLatLng(layer.getBounds().getCenter())
-        .setContent(`
-            <div class="popup-title">Lot ${lot.lot_number}</div>
-            <div class="popup-row">Owner: <span>${lot.owner_name}</span></div>
-            <div class="popup-row">Area: <span>${Number(lot.area).toLocaleString()} sqm</span></div>
-            <div class="popup-row">Area: <span>${areaHa} ha</span></div>
-            ${lot.notes ? `<div class="popup-row">Notes: <span>${lot.notes}</span></div>` : ''}
-            ${attBadge}
-            ${editBtn}
-            ${divideBtn}
-        `)
-        .openOn(map);
+    // Find the survey this lot belongs to
+    const survey = allSurveys.find(s => (s.lots||[]).some(l => l.id === lot.id));
+    if (!survey) return;
+
+    // Highlight this layer
+    layer.setStyle({ weight: 3, color: '#1a2744', fillOpacity: 0.45 });
+    setTimeout(() => layer.setStyle({ weight: 1.5, color: '#1a2744', fillColor: '#3a5a9a', fillOpacity: 0.3 }), 3000);
+
+    // Show survey detail panel with this lot pre-selected
+    showSurveyDetail(survey, lot.id);
+    switchTab('surveys');
+
+    // Scroll the lot into view in the list
+    setTimeout(() => {
+        const lotEl = document.getElementById(`lot-row-${lot.id}`);
+        if (lotEl) lotEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 150);
 }
 
 // ── Edit modal ────────────────────────────────────────────────
@@ -1569,7 +1564,7 @@ function selectSurvey(id) {
     switchTab('surveys');
 }
 
-function showSurveyDetail(survey) {
+function showSurveyDetail(survey, selectedLotId = null) {
     const c = document.getElementById('surveyList');
     const areaPerLot = (survey.total_area / survey.lot_count).toFixed(2);
     c.innerHTML = `
@@ -1587,14 +1582,30 @@ function showSurveyDetail(survey) {
             <div class="stat-row"><span class="stat-lbl">Area/Lot</span><span class="stat-val">${Number(areaPerLot).toLocaleString()} sqm</span></div>
         </div>
         <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Lots</div>
-        ${(survey.lots||[]).map(lot => `
-        <div class="lot-list-item">
-            <span class="lot-list-num">Lot ${lot.lot_number}</span>
-            <span class="lot-list-owner">${lot.owner_name}</span>
-            <span class="lot-list-area">${Number(lot.area).toLocaleString()} sqm</span>
-            ${lot.attachment_count > 0 ? `<span style="font-size:9.5px;background:#e8edf5;color:#1a2744;border-radius:8px;padding:1px 6px;margin-right:2px"><i class="fas fa-paperclip"></i> ${lot.attachment_count}</span>` : ''}
-            ${isAdmin ? `<button class="btn-sm btn-edit-sm" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')"><i class="fas fa-pencil-alt"></i></button>` : ''}
-        </div>`).join('')}
+        ${(survey.lots||[]).map(lot => {
+            const isSelected = lot.id === selectedLotId;
+            const areaHa = (lot.area / 10000).toFixed(4);
+            return `
+            <div class="lot-list-item ${isSelected ? 'lot-selected' : ''}" id="lot-row-${lot.id}"
+                 style="${isSelected ? 'border:2px solid #1a2744;background:#f0f4ff;border-radius:8px;' : ''}">
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:6px">
+                    <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                        <span class="lot-list-num">Lot ${lot.lot_number}</span>
+                        <div style="min-width:0">
+                            <div class="lot-list-owner">${lot.owner_name}</div>
+                            <div style="font-size:10.5px;color:#aaa">${Number(lot.area).toLocaleString()} sqm · ${areaHa} ha</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:4px;flex-shrink:0">
+                        ${lot.attachment_count > 0 ? `<span style="font-size:9.5px;background:#e8edf5;color:#1a2744;border-radius:8px;padding:2px 6px"><i class="fas fa-paperclip"></i> ${lot.attachment_count}</span>` : ''}
+                        ${isAdmin ? `<button class="btn-sm btn-edit-sm" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}')" title="Edit lot details"><i class="fas fa-pencil-alt"></i></button>` : ''}
+                        ${isAdmin ? `<button class="btn-sm" style="background:#fff3e0;color:#e65100;border:none;cursor:pointer;border-radius:4px;padding:3px 7px" onclick="openDivideLotModal(${lot.id})" title="Divide this lot"><i class="fas fa-cut"></i></button>` : ''}
+                        ${isAdmin ? `<button class="btn-sm" style="background:#e8edf5;color:#1a2744;border:none;cursor:pointer;border-radius:4px;padding:3px 7px" onclick="openEditModal(${lot.id},${lot.lot_number},'${escJs(lot.owner_name)}','${escJs(lot.notes||'')}');setTimeout(()=>document.getElementById('lotAttachDrop')?.scrollIntoView({behavior:'smooth'}),300)" title="Manage attachments"><i class="fas fa-paperclip"></i></button>` : ''}
+                    </div>
+                </div>
+                ${isSelected && lot.notes ? `<div style="font-size:11px;color:#666;margin-top:4px;padding-top:4px;border-top:1px solid #e8edf5;font-style:italic">${lot.notes}</div>` : ''}
+            </div>`;
+        }).join('')}
         <!-- Survey-level attachments -->
         <div class="attach-section" id="surveyAttachSection" style="margin-top:14px">
             <div class="attach-title">
