@@ -189,6 +189,13 @@
                 </a>
             </div>
 
+            <div style="margin-top:14px;padding:11px 14px;background:#f0f7f0;border:1px solid #c8e6c9;border-radius:9px;font-size:12px;color:#333;line-height:1.6">
+                <strong style="color:#1a3d1a"><i class="fas fa-info-circle" style="margin-right:5px"></i>Account Guide:</strong><br>
+                GIS Admin: <code style="background:#e8f5e9;padding:1px 5px;border-radius:3px;font-size:11px">gisadmin@dar.gov.ph</code> / <code style="background:#e8f5e9;padding:1px 5px;border-radius:3px;font-size:11px">admin123</code><br>
+                GIS Staff: <code style="background:#e8f5e9;padding:1px 5px;border-radius:3px;font-size:11px">gis@dar.gov.ph</code> / <code style="background:#e8f5e9;padding:1px 5px;border-radius:3px;font-size:11px">gis123</code><br>
+                <span style="color:#888;font-size:11px">FM staff log in with their @dar.gov.ph email — the system redirects them automatically.</span>
+            </div>
+
         </div>
     </div>
 

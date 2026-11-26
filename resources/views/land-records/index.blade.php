@@ -857,61 +857,62 @@ function toggleMapStyle() {
 // PANGASINAN MUNICIPALITY PINS & SEARCH
 // ══════════════════════════════════════════════════════════════
 const pangasinanMunis = [
-    // Cities
-    {name:'Alaminos City',   lat:16.1558, lng:119.9781, type:'City'},
-    {name:'Dagupan City',    lat:16.0433, lng:120.3333, type:'City'},
-    {name:'San Carlos City', lat:15.8000, lng:120.3481, type:'City'},
-    {name:'Urdaneta City',   lat:15.9754, lng:120.5701, type:'City'},
-    // Municipalities (District 1 - Western)
-    {name:'Agno',       lat:16.1153, lng:119.7658, type:'Municipality'},
-    {name:'Bani',       lat:16.1742, lng:119.8997, type:'Municipality'},
-    {name:'Bolinao',    lat:16.2464, lng:119.8922, type:'Municipality'},
-    {name:'Burgos',     lat:16.3050, lng:119.8997, type:'Municipality'},
-    {name:'Dasol',      lat:16.0594, lng:119.8522, type:'Municipality'},
-    {name:'Infanta',    lat:16.1139, lng:119.9175, type:'Municipality'},
-    {name:'Mabini',     lat:16.0233, lng:120.0925, type:'Municipality'},
-    {name:'Sual',       lat:16.0389, lng:120.0944, type:'Municipality'},
-    // Municipalities (District 2 - Central West)
-    {name:'Anda',       lat:16.1914, lng:120.2014, type:'Municipality'},
-    {name:'Labrador',   lat:15.9786, lng:120.1403, type:'Municipality'},
-    {name:'Lingayen',   lat:15.8914, lng:120.2361, type:'Municipality'},
-    {name:'Bugallon',   lat:15.7069, lng:120.1422, type:'Municipality'},
-    {name:'Aguilar',    lat:15.6239, lng:120.1753, type:'Municipality'},
-    {name:'Mangatarem', lat:15.7458, lng:120.1522, type:'Municipality'},
-    // Municipalities (District 3 - Central)
-    {name:'Bayambang',  lat:15.7997, lng:120.4572, type:'Municipality'},
-    {name:'Calasiao',   lat:15.9658, lng:120.3622, type:'Municipality'},
-    {name:'Mapandan',   lat:15.8939, lng:120.4092, type:'Municipality'},
-    {name:'Santa Barbara', lat:15.8386, lng:120.3978, type:'Municipality'},
-    {name:'Malasiqui',  lat:15.9108, lng:120.4206, type:'Municipality'},
-    {name:'Binmaley',   lat:15.9489, lng:120.2825, type:'Municipality'},
-    {name:'Basista',    lat:15.8556, lng:120.3597, type:'Municipality'},
-    // Municipalities (District 4 - Central East)
-    {name:'Bautista',   lat:15.8608, lng:120.4881, type:'Municipality'},
-    {name:'Urbiztondo', lat:15.8033, lng:120.4564, type:'Municipality'},
-    {name:'Santa Maria',lat:15.9331, lng:120.4814, type:'Municipality'},
-    {name:'Tayug',      lat:16.1031, lng:120.7347, type:'Municipality'},
-    // Municipalities (District 5 - North East)
-    {name:'Binalonan',  lat:16.0247, lng:120.5492, type:'Municipality'},
-    {name:'Manaoag',    lat:16.0089, lng:120.4086, type:'Municipality'},
-    {name:'Laoac',      lat:16.0500, lng:120.5861, type:'Municipality'},
-    {name:'Pozorrubio', lat:16.0883, lng:120.5489, type:'Municipality'},
-    {name:'Sison',      lat:16.1347, lng:120.5414, type:'Municipality'},
-    {name:'San Manuel', lat:15.9756, lng:120.5956, type:'Municipality'},
-    {name:'San Nicolas',lat:16.0333, lng:120.6256, type:'Municipality'},
-    {name:'Umingan',    lat:16.0611, lng:120.7856, type:'Municipality'},
-    // Municipalities (District 6 - North)
-    {name:'Alcala',     lat:15.9467, lng:120.6892, type:'Municipality'},
-    {name:'Asingan',    lat:15.9756, lng:120.6581, type:'Municipality'},
-    {name:'Balungao',   lat:15.9344, lng:120.6861, type:'Municipality'},
-    {name:'Natividad',  lat:16.0561, lng:120.6728, type:'Municipality'},
-    {name:'Rosales',    lat:15.8781, lng:120.5808, type:'Municipality'},
-    {name:'Santo Tomas',lat:15.8769, lng:120.5789, type:'Municipality'},
-    {name:'Villasis',   lat:15.9386, lng:120.5689, type:'Municipality'},
-    // Municipalities (North Coast)
-    {name:'San Fabian', lat:16.1153, lng:120.3592, type:'Municipality'},
-    {name:'Mangaldan',  lat:16.0758, lng:120.4064, type:'Municipality'},
-    {name:'San Jacinto',lat:16.0286, lng:120.3592, type:'Municipality'},
+    // ── 4 Cities (accurate PSGC coordinates) ──────────────────
+    {name:'Alaminos City',   lat:16.1558, lng:119.9797, type:'City'},
+    {name:'Dagupan City',    lat:16.0432, lng:120.3327, type:'City'},
+    {name:'San Carlos City', lat:15.9269, lng:120.3493, type:'City'},
+    {name:'Urdaneta City',   lat:15.9754, lng:120.5706, type:'City'},
+    // ── 44 Municipalities (PSGC-verified coordinates) ─────────
+    // 1st District - Western Pangasinan
+    {name:'Agno',            lat:16.1192, lng:119.7978, type:'Municipality'},
+    {name:'Bani',            lat:16.1931, lng:119.8669, type:'Municipality'},
+    {name:'Bolinao',         lat:16.3344, lng:119.8992, type:'Municipality'},
+    {name:'Burgos',          lat:16.0472, lng:119.8597, type:'Municipality'},
+    {name:'Dasol',           lat:15.9792, lng:119.8828, type:'Municipality'},
+    {name:'Infanta',         lat:16.0186, lng:119.9033, type:'Municipality'},
+    {name:'Mabini',          lat:16.0631, lng:120.0806, type:'Municipality'},
+    {name:'Sual',            lat:15.9903, lng:120.0783, type:'Municipality'},
+    // 2nd District - South/Central West
+    {name:'Aguilar',         lat:15.8903, lng:120.2322, type:'Municipality'},
+    {name:'Bayambang',       lat:15.8169, lng:120.4511, type:'Municipality'},
+    {name:'Binalonan',       lat:16.0569, lng:120.5903, type:'Municipality'},
+    {name:'Binmaley',        lat:16.0294, lng:120.2697, type:'Municipality'},
+    {name:'Bugallon',        lat:15.7978, lng:120.1878, type:'Municipality'},
+    {name:'Burgos',          lat:15.9961, lng:120.6522, type:'Municipality'},
+    {name:'Calasiao',        lat:16.0097, lng:120.3661, type:'Municipality'},
+    {name:'Labrador',        lat:16.0211, lng:120.1397, type:'Municipality'},
+    {name:'Lingayen',        lat:16.0167, lng:120.2311, type:'Municipality'},
+    {name:'Malasiqui',       lat:15.9178, lng:120.4133, type:'Municipality'},
+    {name:'Manaoag',         lat:16.0444, lng:120.4869, type:'Municipality'},
+    {name:'Mangaldan',       lat:16.0658, lng:120.4019, type:'Municipality'},
+    {name:'Mangatarem',      lat:15.7922, lng:120.2003, type:'Municipality'},
+    {name:'Mapandan',        lat:16.0211, lng:120.4506, type:'Municipality'},
+    // 3rd District
+    {name:'Anda',            lat:16.2814, lng:120.4028, type:'Municipality'},
+    {name:'Basista',         lat:15.8486, lng:120.3794, type:'Municipality'},
+    {name:'Bautista',        lat:15.8878, lng:120.5331, type:'Municipality'},
+    {name:'San Fabian',      lat:16.1197, lng:120.4178, type:'Municipality'},
+    {name:'San Jacinto',     lat:16.0789, lng:120.4544, type:'Municipality'},
+    {name:'San Quintin',     lat:15.9981, lng:120.7736, type:'Municipality'},
+    {name:'Santa Barbara',   lat:15.8822, lng:120.4047, type:'Municipality'},
+    {name:'Santa Maria',     lat:15.9969, lng:120.4697, type:'Municipality'},
+    {name:'Santo Tomas',     lat:15.9036, lng:120.5553, type:'Municipality'},
+    {name:'Urbiztondo',      lat:15.8278, lng:120.3192, type:'Municipality'},
+    // 4th District
+    {name:'Agno',            lat:16.1192, lng:119.7978, type:'Municipality'},
+    {name:'Alcala',          lat:15.8622, lng:120.6356, type:'Municipality'},
+    {name:'Asingan',         lat:16.0003, lng:120.6633, type:'Municipality'},
+    {name:'Balungao',        lat:15.9133, lng:120.7067, type:'Municipality'},
+    {name:'Laoac',           lat:16.0353, lng:120.6364, type:'Municipality'},
+    {name:'Natividad',       lat:15.9889, lng:120.7414, type:'Municipality'},
+    {name:'Pozorrubio',      lat:16.1183, lng:120.5422, type:'Municipality'},
+    {name:'Rosales',         lat:15.8942, lng:120.6322, type:'Municipality'},
+    {name:'San Manuel',      lat:16.0656, lng:120.6628, type:'Municipality'},
+    {name:'San Nicolas',     lat:16.1033, lng:120.6833, type:'Municipality'},
+    {name:'Sison',           lat:16.1711, lng:120.5456, type:'Municipality'},
+    {name:'Tayug',           lat:16.0358, lng:120.7458, type:'Municipality'},
+    {name:'Umingan',         lat:15.9289, lng:120.7819, type:'Municipality'},
+    {name:'Villasis',        lat:15.9014, lng:120.5844, type:'Municipality'},
 ];
 
 let muniPinsLayer = L.layerGroup().addTo(map);
@@ -1547,10 +1548,39 @@ function renderSurveyList(surveys) {
 }
 
 function filterSurveys(q) {
-    renderSurveyList(allSurveys.filter(s =>
+    const filtered = allSurveys.filter(s =>
         s.lsn.toLowerCase().includes(q.toLowerCase()) ||
-        s.original_owner.toLowerCase().includes(q.toLowerCase())
-    ));
+        s.original_owner.toLowerCase().includes(q.toLowerCase()) ||
+        (s.municipality || '').toLowerCase().includes(q.toLowerCase()) ||
+        (s.lots||[]).some(l => l.owner_name.toLowerCase().includes(q.toLowerCase()))
+    );
+    renderSurveyList(filtered);
+
+    // Also highlight/dim map markers based on filter
+    if (q.trim()) {
+        const matchIds = new Set(filtered.map(s => s.id));
+        Object.entries(surveyLayers).forEach(([id, layers]) => {
+            const matched = matchIds.has(parseInt(id));
+            const opacity = matched ? 0.3 : 0.05;
+            const weight  = matched ? 1.5 : 0.5;
+            layers.lots && Object.values(layers.lots).forEach(ll =>
+                ll.forEach && ll.forEach(l => {
+                    if (l.setStyle) l.setStyle({ fillOpacity: opacity, weight });
+                })
+            );
+            if (layers.boundary) layers.boundary.setStyle({ opacity: matched ? 0.7 : 0.1 });
+        });
+    } else {
+        // Reset all to normal
+        Object.values(surveyLayers).forEach(layers => {
+            layers.lots && Object.values(layers.lots).forEach(ll =>
+                ll.forEach && ll.forEach(l => {
+                    if (l.setStyle) l.setStyle({ fillOpacity: 0.3, weight: 1.5 });
+                })
+            );
+            if (layers.boundary) layers.boundary.setStyle({ opacity: 0.7 });
+        });
+    }
 }
 
 function selectSurvey(id) {
