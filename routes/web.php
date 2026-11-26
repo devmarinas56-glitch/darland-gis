@@ -321,7 +321,7 @@ Route::get('/create-gis-users', function(\Illuminate\Http\Request $request) {
         $users = [
             // ── Land GIS accounts ──────────────────────────────────
             ['email' => 'gisadmin@dar.gov.ph', 'name' => 'GIS Administrator', 'username' => 'gisadmin',   'role' => 'admin', 'password' => 'admin123'],
-            ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff',   'role' => 'user',  'password' => 'gis123'],
+            ['email' => 'gis@dar.gov.ph',       'name' => 'GIS Staff',         'username' => 'gisstaff',   'role' => 'admin', 'password' => 'gis123'],
 
             // ── Monitoring account ─────────────────────────────────
             ['email' => 'monitoring@dar.gov.ph', 'name' => 'Monitoring User', 'username' => 'monitoring', 'role' => 'monitoring', 'password' => 'monitor123'],
