@@ -609,6 +609,15 @@
                     <button class="btn-secondary" onclick="resetDrawMode()">
                         <i class="fas fa-redo"></i> Reset
                     </button>
+
+                    <!-- Quick attach section — shown after save -->
+                    <div id="drawSaveAttachHint" style="display:none;margin-top:12px;background:#f0f4ff;border:1px solid #d0dcef;border-radius:8px;padding:10px 12px;font-size:12px;color:#1a2744">
+                        <i class="fas fa-check-circle" style="color:#2e7d32;margin-right:6px"></i>
+                        Survey saved! You can now <strong>attach documents or photos</strong> from the Surveys tab.
+                        <button onclick="switchTab('surveys')" style="display:block;margin-top:8px;width:100%;padding:7px;background:#1a2744;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">
+                            <i class="fas fa-paperclip"></i> Go to Survey → Attach Files
+                        </button>
+                    </div>
                 </div>
 
                 <!-- ══ GRID MODE ══ -->
@@ -742,9 +751,9 @@
                  ondragover="event.preventDefault();this.classList.add('dragover')"
                  ondragleave="this.classList.remove('dragover')"
                  ondrop="handleLotAttachDrop(event)">
-                <div class="attach-drop-text"><i class="fas fa-cloud-upload-alt" style="margin-right:5px"></i>Click or drag files to attach</div>
+                <div class="attach-drop-text"><i class="fas fa-cloud-upload-alt" style="margin-right:5px"></i>Click or drag to attach — photos, PDFs, Word, Excel</div>
                 <input type="file" id="lotAttachInput" multiple
-                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp"
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.bmp"
                        onchange="uploadLotAttachments(this.files)">
             </div>
             @endif
@@ -1284,6 +1293,13 @@ async function saveLSNDraw() {
             showAlert('success', `LSN "${lsn}" saved with ${lots.length} lot${lots.length>1?'s':''}.`);
             resetDrawMode();
             await loadSurveys();
+            // Auto-navigate to survey detail so user can attach files immediately
+            const saved = allSurveys.find(s => s.lsn === lsn);
+            if (saved) {
+                showSurveyDetail(saved);
+                switchTab('surveys');
+            }
+            document.getElementById('drawSaveAttachHint').style.display = 'none';
         } else {
             showAlert('error', res.message || 'Failed to save.');
         }
@@ -1403,6 +1419,9 @@ async function saveLSNGrid() {
             resetGridMode();
             await loadSurveys();
             renderSurveyOnMap(res.survey);
+            // Auto-navigate to survey detail so user can attach files immediately
+            const saved = allSurveys.find(s => s.lsn === lsn);
+            if (saved) { showSurveyDetail(saved); switchTab('surveys'); }
         } else { showAlert('error', res.message || 'Failed.'); }
     } catch(e) { showAlert('error', e.message); }
 }
@@ -1649,10 +1668,10 @@ function showSurveyDetail(survey, selectedLotId = null) {
                  ondragover="event.preventDefault();this.classList.add('dragover')"
                  ondragleave="this.classList.remove('dragover')"
                  ondrop="handleSurveyAttachDrop(event)">
-                <div class="attach-drop-text"><i class="fas fa-cloud-upload-alt" style="margin-right:5px"></i>Click or drag files to attach to this survey</div>
+                <div class="attach-drop-text"><i class="fas fa-cloud-upload-alt" style="margin-right:5px"></i>Click or drag to attach — photos, PDFs, Word, Excel</div>
             </div>
             <input type="file" id="surveyAttachInput" multiple style="display:none"
-                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.bmp"
                    onchange="uploadSurveyAttachments(this.files)">
             ` : ''}
         </div>
@@ -2081,19 +2100,31 @@ function renderAttachList(listEl, countEl, attachments) {
         listEl.innerHTML = '<div style="font-size:11.5px;color:#bbb;padding:6px 2px">No attachments yet.</div>';
         return;
     }
-    listEl.innerHTML = attachments.map(a => `
+    listEl.innerHTML = attachments.map(a => {
+        const isImg = a.mime_type && a.mime_type.startsWith('image/');
+        const imgPreview = isImg
+            ? `<a href="/api/attachments/${a.id}/download" target="_blank" style="display:block;margin-bottom:4px">
+                 <img src="/api/attachments/${a.id}/download" alt="${escJs(a.name)}"
+                      style="max-width:100%;max-height:120px;border-radius:6px;border:1px solid #e0e0e0;cursor:pointer"
+                      onerror="this.style.display='none'">
+               </a>`
+            : '';
+        return `
         <div class="attach-item" id="att-${a.id}" style="${a.needs_correction ? 'border-left:3px solid #e53935;background:#fff8f8' : ''}">
-            <i class="fas ${attachIcon(a.file_type)} attach-icon ${a.file_type}"></i>
-            <div style="flex:1;min-width:0">
-                <div class="attach-name" title="${escJs(a.name)}">${a.name}</div>
-                ${a.remarks ? `<div style="font-size:10.5px;color:${a.needs_correction?'#e53935':'#888'};margin-top:2px;font-style:italic"><i class="fas fa-${a.needs_correction?'exclamation-triangle':'comment'}" style="margin-right:4px"></i>${a.remarks}</div>` : ''}
+            ${imgPreview}
+            <div style="display:flex;align-items:center;gap:7px;width:100%">
+                <i class="fas ${attachIcon(a.file_type)} attach-icon ${a.file_type}" style="flex-shrink:0"></i>
+                <div style="flex:1;min-width:0">
+                    <div class="attach-name" title="${escJs(a.name)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name}</div>
+                    ${a.remarks ? `<div style="font-size:10.5px;color:${a.needs_correction?'#e53935':'#888'};font-style:italic"><i class="fas fa-${a.needs_correction?'exclamation-triangle':'comment'}" style="margin-right:3px"></i>${a.remarks}</div>` : ''}
+                </div>
+                <span class="attach-meta" style="flex-shrink:0">${a.size_label}</span>
+                <a href="/api/attachments/${a.id}/download" target="_blank" class="attach-btn" title="Download/View"><i class="fas fa-${isImg?'eye':'download'}"></i></a>
+                ${isAdmin ? `<button class="attach-btn" title="Add remark" onclick="editAttachRemark(${a.id},'${escJs(a.remarks||'')}',${a.needs_correction})"><i class="fas fa-comment${a.remarks?'-dots':''}"></i></button>` : ''}
+                ${isAdmin ? `<button class="attach-btn del" title="Delete" onclick="deleteAttachment(${a.id})"><i class="fas fa-times"></i></button>` : ''}
             </div>
-            <span class="attach-meta">${a.size_label}</span>
-            <a href="/api/attachments/${a.id}/download" target="_blank" class="attach-btn" title="View/Download"><i class="fas fa-download"></i></a>
-            ${isAdmin ? `<button class="attach-btn" title="Add/edit remark" onclick="editAttachRemark(${a.id},'${escJs(a.remarks||'')}',${a.needs_correction})"><i class="fas fa-comment${a.remarks?'-dots':''}"></i></button>` : ''}
-            ${isAdmin ? `<button class="attach-btn del" title="Delete" onclick="deleteAttachment(${a.id})"><i class="fas fa-times"></i></button>` : ''}
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 // ── Survey-level attachments ──────────────────────────────────

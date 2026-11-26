@@ -395,8 +395,8 @@ class LandSurveyController extends Controller
     private function storeAttachment(Request $request, int $surveyId, ?int $lotId)
     {
         $request->validate([
-            'file' => ['required', 'file', 'max:20480',    // 20 MB
-                       'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif,webp'],
+            'file' => ['required', 'file', 'max:20480',
+                       'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif,webp,bmp'],
         ]);
 
         $file     = $request->file('file');
