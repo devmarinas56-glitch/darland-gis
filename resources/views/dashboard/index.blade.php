@@ -158,6 +158,7 @@
         </div>
         <nav class="nav-menu">
             <a href="/dashboard"    class="nav-item active"><i class="fas fa-home"></i><span>Dashboard</span></a>
+            <a href="/analytics"    class="nav-item"><i class="fas fa-chart-pie"></i><span>Analytics</span></a>
             <a href="/map-viewer"   class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
             <a href="/land-records" class="nav-item"><i class="fas fa-layer-group"></i><span>Land Records</span></a>
         </nav>

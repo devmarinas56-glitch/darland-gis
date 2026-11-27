@@ -374,6 +374,7 @@
     <div class="logo-section"><img src="{{ asset('images/Darlandicon.png') }}" alt="Logo"></div>
     <nav class="nav-menu">
         <a href="/dashboard"    class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
+        <a href="/analytics"    class="nav-item"><i class="fas fa-chart-pie"></i><span>Analytics</span></a>
         <a href="/map-viewer"   class="nav-item"><i class="fas fa-map"></i><span>Map Viewer</span></a>
         <a href="/land-records" class="nav-item active"><i class="fas fa-layer-group"></i><span>Land Records</span></a>
         </nav>
@@ -451,36 +452,23 @@
                 <!-- Shared: LSN info (both modes) -->
                 <div class="ldc-section">
                     <div class="ldc-section-title"><i class="fas fa-map-marker-alt"></i> Survey Info <span class="info-tip" data-tip="Enter the land survey details. Fields marked * are required. Location fields help identify the property.">?</span></div>
+
                     <div class="form-grid-2">
                         <div class="form-row">
                             <label class="form-label">LSN (Survey Number) <span class="req">*</span></label>
                             <input type="text" id="lsnInput" class="form-input" placeholder="e.g. Psd-123456">
                         </div>
                         <div class="form-row">
-                            <label class="form-label">Barangay No./Zone</label>
-                            <input type="text" id="surveyZone" class="form-input" placeholder="e.g. Zone 3">
+                            <label class="form-label">Date Registered</label>
+                            <input type="date" id="surveyDate" class="form-input">
                         </div>
                     </div>
-                    <div class="form-grid-2">
-                        <div class="form-row">
-                            <label class="form-label">Original Owner <span class="req">*</span></label>
-                            <input type="text" id="originalOwner" class="form-input" placeholder="Full name">
-                        </div>
-                        <div class="form-row">
-                            <label class="form-label">Named Barangay</label>
-                            <input type="text" id="surveyBarangay" class="form-input" placeholder="e.g. Brgy. Anonas">
-                        </div>
+
+                    <div class="form-row">
+                        <label class="form-label">Original Owner <span class="req">*</span></label>
+                        <input type="text" id="originalOwner" class="form-input" placeholder="Full name">
                     </div>
-                    <div class="form-grid-2">
-                        <div class="form-row">
-                            <label class="form-label">Location</label>
-                            <input type="text" id="surveyLocation" class="form-input" placeholder="Full address">
-                        </div>
-                        <div class="form-row">
-                            <label class="form-label">Municipality/City</label>
-                            <input type="text" id="surveyMunicipality" class="form-input" placeholder="e.g. Urdaneta City">
-                        </div>
-                    </div>
+
                     <div class="form-grid-2">
                         <div class="form-row">
                             <label class="form-label">Province <span class="info-tip" data-tip="Select the province first. Municipalities will auto-populate based on your selection.">?</span></label>
@@ -490,35 +478,56 @@
                             </select>
                         </div>
                         <div class="form-row">
-                            <label class="form-label">Date Registered</label>
-                            <input type="date" id="surveyDate" class="form-input">
-                        </div>
-                    </div>
-                    <div class="form-grid-2">
-                        <div class="form-row">
-                            <label class="form-label">Municipality/City <span class="info-tip" data-tip="Select a municipality from the list. Available municipalities update based on the selected province.">?</span></label>
+                            <label class="form-label">Municipality/City <span class="info-tip" data-tip="Select a municipality from the list after choosing a province.">?</span></label>
                             <select id="surveyMunicipality" class="form-input" onchange="onMunicipalityChange(this.value)" disabled>
                                 <option value="">— Select Municipality —</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="form-grid-2">
                         <div class="form-row">
-                            <label class="form-label">Named Barangay <span class="info-tip" data-tip="Select a barangay or type a custom one. Barangays populate after selecting a municipality.">?</span></label>
+                            <label class="form-label">Barangay <span class="info-tip" data-tip="Select a barangay after choosing a municipality.">?</span></label>
                             <select id="surveyBarangay" class="form-input" disabled>
                                 <option value="">— Select Barangay —</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="form-grid-2">
                         <div class="form-row">
                             <label class="form-label">Barangay No./Zone</label>
                             <input type="text" id="surveyZone" class="form-input" placeholder="e.g. Zone 3">
                         </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">Location / Address</label>
+                        <input type="text" id="surveyLocation" class="form-input" placeholder="Street or full address (optional)">
+                    </div>
+
+                    <div class="form-grid-2">
                         <div class="form-row">
-                            <label class="form-label">Location / Address</label>
-                            <input type="text" id="surveyLocation" class="form-input" placeholder="Full address">
+                            <label class="form-label">Latitude <span class="info-tip" data-tip="Decimal degrees (e.g. 15.9342). Used to auto-pin the survey on the map. You can also click Pick on the map to auto-fill.">?</span></label>
+                            <div style="position:relative">
+                                <input type="number" id="surveyLat" class="form-input" placeholder="e.g. 15.9342" step="any"
+                                       oninput="onCoordInput()" style="padding-right:32px">
+                                <i class="fas fa-crosshairs" title="Or click Pick on the map"
+                                   style="position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#bbb;font-size:12px;pointer-events:none"></i>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">Longitude <span class="info-tip" data-tip="Decimal degrees (e.g. 120.5567). Used to auto-pin the survey on the map.">?</span></label>
+                            <div style="position:relative">
+                                <input type="number" id="surveyLng" class="form-input" placeholder="e.g. 120.5567" step="any"
+                                       oninput="onCoordInput()" style="padding-right:32px">
+                                <i class="fas fa-crosshairs"
+                                   style="position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#bbb;font-size:12px;pointer-events:none"></i>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div id="coordPinHint" style="display:none;font-size:11px;color:#2e7d32;background:#e8f5e9;border-radius:5px;padding:5px 8px;margin-top:4px">
+                        <i class="fas fa-map-pin"></i> Map will pan to this location when you save.
+                    </div>
+
+                    <div class="form-row" style="margin-top:4px">
                         <label class="form-label">Notes (optional)</label>
                         <input type="text" id="surveyNotes" class="form-input" placeholder="Additional notes">
                     </div>
@@ -1238,6 +1247,15 @@ function removeDrawnLot(index) {
 
 // ── Build notes from extra form fields ──
 function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+// Show hint when user types lat/lng manually
+function onCoordInput() {
+    const lat = parseFloat(document.getElementById('surveyLat').value);
+    const lng = parseFloat(document.getElementById('surveyLng').value);
+    const hint = document.getElementById('coordPinHint');
+    if (hint) hint.style.display = (!isNaN(lat) && !isNaN(lng)) ? 'block' : 'none';
+}
+
 function buildNotes() {
     return [
         val('surveyNotes'),
@@ -1275,11 +1293,19 @@ async function saveLSNDraw() {
         };
     });
 
-    // Compute centroid of all lots
-    const allLats = drawnPolygons.flatMap(p => p.latlngs.map(ll => ll.lat));
-    const allLngs = drawnPolygons.flatMap(p => p.latlngs.map(ll => ll.lng));
-    const centerLat = allLats.reduce((a,b)=>a+b,0) / allLats.length;
-    const centerLng = allLngs.reduce((a,b)=>a+b,0) / allLngs.length;
+    // Use manually entered lat/lng if provided; otherwise compute centroid from drawn lots
+    const manLat = parseFloat(document.getElementById('surveyLat').value);
+    const manLng = parseFloat(document.getElementById('surveyLng').value);
+    let centerLat, centerLng;
+    if (!isNaN(manLat) && !isNaN(manLng)) {
+        centerLat = manLat;
+        centerLng = manLng;
+    } else {
+        const allLats = drawnPolygons.flatMap(p => p.latlngs.map(ll => ll.lat));
+        const allLngs = drawnPolygons.flatMap(p => p.latlngs.map(ll => ll.lng));
+        centerLat = allLats.reduce((a,b)=>a+b,0) / allLats.length;
+        centerLng = allLngs.reduce((a,b)=>a+b,0) / allLngs.length;
+    }
 
     try {
         const res = await apiFetch('/api/surveys', 'POST', {
@@ -1314,9 +1340,11 @@ function resetDrawMode() {
     drawnPolygons = [];
     renderDrawnLotsList();
     ['lsnInput','originalOwner','surveyNotes','surveyMunicipality','surveyDate',
-     'surveyZone','surveyBarangay','surveyLocation','surveyProvince',
+     'surveyZone','surveyBarangay','surveyLocation','surveyProvince','surveyLat','surveyLng',
      'boundaryLine','boundaryBearing','boundaryDistance','boundaryLotNo','boundaryClaimant'
     ].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+    const hint = document.getElementById('coordPinHint');
+    if (hint) hint.style.display = 'none';
     document.getElementById('step2').classList.remove('active-step','done-step');
     document.getElementById('step3').classList.remove('active-step','done-step');
     document.getElementById('drawBtnText').textContent = 'Start Drawing Lot';
@@ -1396,13 +1424,18 @@ async function saveLSNGrid() {
     const municipality = document.getElementById('surveyMunicipality').value.trim();
     const dateRegistered = document.getElementById('surveyDate').value;
     const notes = buildNotes();
-    const lat   = parseFloat(document.getElementById('centerLat').value);
-    const lng   = parseFloat(document.getElementById('centerLng').value);
+    // Prefer manual lat/lng from Survey Info; fall back to the picked map center
+    const manLat = parseFloat(document.getElementById('surveyLat').value);
+    const manLng = parseFloat(document.getElementById('surveyLng').value);
+    const pickLat = parseFloat(document.getElementById('centerLat').value);
+    const pickLng = parseFloat(document.getElementById('centerLng').value);
+    const lat   = !isNaN(manLat) ? manLat : pickLat;
+    const lng   = !isNaN(manLng) ? manLng : pickLng;
     const area  = parseFloat(document.getElementById('totalArea').value);
     const count = parseInt(document.getElementById('lotCount').value);
 
     if (!lsn || !owner || isNaN(lat) || isNaN(lng) || !area || !count) {
-        showAlert('error', 'Fill in all fields and pick a center location.'); return;
+        showAlert('error', 'Fill in all fields and pick a center location (or enter Lat/Lng).'); return;
     }
     const lots = [];
     for (let i = 1; i <= count; i++) {
@@ -1428,10 +1461,12 @@ async function saveLSNGrid() {
 
 function resetGridMode() {
     ['lsnInput','originalOwner','surveyNotes','surveyMunicipality','surveyDate',
-     'surveyZone','surveyBarangay','surveyLocation','surveyProvince',
+     'surveyZone','surveyBarangay','surveyLocation','surveyProvince','surveyLat','surveyLng',
      'boundaryLine','boundaryBearing','boundaryDistance','boundaryLotNo','boundaryClaimant',
      'centerLat','centerLng','totalArea','lotCount'
     ].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+    const hint = document.getElementById('coordPinHint');
+    if (hint) hint.style.display = 'none';
     document.getElementById('lotOwnerRows').innerHTML = '<div style="font-size:11.5px;color:#aaa;text-align:center;padding:14px">Enter number of lots above</div>';
     document.getElementById('areaPerLotDisplay').style.display = 'none';
     const chip = document.getElementById('computedChip');
