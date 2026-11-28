@@ -20,16 +20,15 @@ class MonitoringController extends Controller
         }
     }
 
-    // ── Shared parcel data (uses real survey/lot rows) ─────────────
-    private function getParcels(): array
+    // ── Shared survey data — real records from DB ────────────────
+    private function getSurveys(): \Illuminate\Support\Collection
     {
-        $surveys = LandSurvey::with(['lots', 'attachments'])->orderBy('lsn')->get();
-
-        $parcels = [];
-        foreach ($surveys as $si => $survey) {
-            // Status derived from attachment count + age
-            $attCount  = $survey->attachments->count() + $survey->lots->flatMap->attachments->count();
+        return LandSurvey::with(['lots', 'attachments'])->orderBy('lsn')->get()->map(function ($survey, $si) {
+            $attCount  = $survey->attachments->count()
+                       + $survey->lots->flatMap(fn($l) => $l->attachments)->count();
             $ageMonths = $survey->created_at->diffInMonths(now());
+
+            // Status: validated if has ≥2 attachments, for_review if 1 or recent, pending otherwise
             if ($attCount >= 2) {
                 $status = 'validated';
             } elseif ($attCount === 1 || $ageMonths < 1) {
@@ -38,36 +37,181 @@ class MonitoringController extends Controller
                 $status = 'pending';
             }
 
-            $totalArea = $survey->lots->sum('area');
-            $areaHa    = round($totalArea / 10000, 2);
+            $totalAreaSqm = $survey->lots->sum('area');
+            $areaHa       = round($totalAreaSqm / 10000, 4);
 
-            $parcels[] = [
-                'id'          => $survey->id,
-                'ref'         => 'PARCEL-PGN-' . str_pad($si + 1, 3, '0', STR_PAD_LEFT),
-                'lsn'         => $survey->lsn,
-                'municipality'=> $survey->municipality ?: 'Unknown',
-                'barangay'    => $this->extractBarangay($survey->notes),
-                'area_ha'     => $areaHa,
-                'lot_count'   => $survey->lot_count,
-                'status'      => $status,
-                'owner'       => $survey->original_owner,
-                'attachments' => $attCount,
-                'updated'     => $survey->updated_at,
-                'created'     => $survey->created_at,
-                'notes'       => $survey->notes,
+            // Extract barangay from notes field
+            $barangay = '';
+            if ($survey->notes) {
+                preg_match('/Brgy[.:]\s*([^|]+)/i', $survey->notes, $m);
+                $barangay = isset($m[1]) ? trim($m[1]) : '';
+            }
+
+            // Land types from lots
+            $landTypes = $survey->lots->pluck('land_type')->filter()->unique()->values()->toArray();
+
+            return (object)[
+                'id'            => $survey->id,
+                'lsn'           => $survey->lsn,
+                'original_owner'=> $survey->original_owner,
+                'municipality'  => $survey->municipality ?: 'Unknown',
+                'date_registered'=> $survey->date_registered,
+                'barangay'      => $barangay ?: 'N/A',
+                'area_ha'       => $areaHa,
+                'area_sqm'      => $totalAreaSqm,
+                'lot_count'     => $survey->lots->count(),
+                'lot_owners'    => $survey->lots->pluck('owner_name')->filter()->unique()->values(),
+                'land_types'    => $landTypes,
+                'status'        => $status,
+                'attachments'   => $attCount,
+                'notes'         => $survey->notes,
+                'updated_at'    => $survey->updated_at,
+                'created_at'    => $survey->created_at,
             ];
-        }
-        return $parcels;
+        });
     }
 
-    private function extractBarangay(?string $notes): string
+    // ── Overview ──────────────────────────────────────────────────
+    public function overview()
     {
-        if (!$notes) return 'Sample Barangay';
-        preg_match('/Brgy[.:]\s*([^|]+)/i', $notes, $m);
-        return isset($m[1]) ? trim($m[1]) : 'Sample Barangay';
+        $this->requireMonitoring();
+        $surveys     = $this->getSurveys();
+        $total       = $surveys->count();
+        $validated   = $surveys->where('status', 'validated')->count();
+        $forReview   = $surveys->where('status', 'for_review')->count();
+        $pending     = $surveys->where('status', 'pending')->count();
+        $totalAreaHa = $surveys->sum('area_ha');
+        $municipalities = $surveys->pluck('municipality')->unique()->sort()->values();
+
+        // Recent activity (last 10 updated)
+        $recentActivity = $surveys->sortByDesc('updated_at')->take(10);
+
+        // Status breakdown by municipality
+        $byMuni = $surveys->groupBy('municipality')->map(fn($g) => [
+            'municipality' => $g->first()->municipality,
+            'total'        => $g->count(),
+            'validated'    => $g->where('status','validated')->count(),
+            'for_review'   => $g->where('status','for_review')->count(),
+            'pending'      => $g->where('status','pending')->count(),
+        ])->values()->sortByDesc('total');
+
+        return view('monitoring.gis-overview', compact(
+            'surveys','total','validated','forReview','pending','totalAreaHa',
+            'municipalities','recentActivity','byMuni'
+        ));
     }
 
-    // ── Login ─────────────────────────────────────────────────────
+    // ── Land Parcel Monitoring ────────────────────────────────────
+    public function parcels()
+    {
+        $this->requireMonitoring();
+        $surveys     = $this->getSurveys();
+        $total       = $surveys->count();
+        $validated   = $surveys->where('status','validated')->count();
+        $forReview   = $surveys->where('status','for_review')->count();
+        $pending     = $surveys->where('status','pending')->count();
+
+        $municipalities = $surveys->pluck('municipality')->unique()->sort()->values();
+        $barangays      = $surveys->pluck('barangay')->filter()->unique()->sort()->values();
+        $landTypes      = $surveys->flatMap(fn($s) => $s->land_types)->unique()->sort()->values();
+
+        return view('monitoring.gis-parcels', compact(
+            'surveys','total','validated','forReview','pending',
+            'municipalities','barangays','landTypes'
+        ));
+    }
+
+    // ── GIS Activity History ──────────────────────────────────────
+    public function activity()
+    {
+        $this->requireMonitoring();
+        $surveys = $this->getSurveys()->sortByDesc('updated_at');
+
+        $gisEvents    = $surveys->count();
+        $validEvents  = $surveys->where('status','validated')->count();
+        $reviewEvents = $surveys->where('status','for_review')->count();
+        $locChecks    = $surveys->where('status','pending')->count();
+
+        // Build activity items from real survey data
+        $activities = $surveys->map(function ($s) {
+            $action = match($s->status) {
+                'validated'  => 'Survey record validated — LSN ' . $s->lsn,
+                'for_review' => 'Survey flagged for attachment review — LSN ' . $s->lsn,
+                default      => 'Survey record pending verification — LSN ' . $s->lsn,
+            };
+            return [
+                'lsn'          => $s->lsn,
+                'municipality' => $s->municipality,
+                'owner'        => $s->original_owner,
+                'action'       => $action,
+                'status'       => $s->status,
+                'attachments'  => $s->attachments,
+                'lot_count'    => $s->lot_count,
+                'area_ha'      => $s->area_ha,
+                'date'         => $s->updated_at,
+                'registered'   => $s->date_registered,
+            ];
+        })->values();
+
+        return view('monitoring.gis-activity', compact(
+            'activities','gisEvents','validEvents','reviewEvents','locChecks'
+        ));
+    }
+
+    // ── GIS Reports ───────────────────────────────────────────────
+    public function reports()
+    {
+        $this->requireMonitoring();
+        $surveys   = $this->getSurveys();
+        $total     = $surveys->count();
+        $validated = $surveys->where('status','validated')->count();
+        $forReview = $surveys->where('status','for_review')->count();
+        $pending   = $surveys->where('status','pending')->count();
+        $totalAreaHa = round($surveys->sum('area_ha'), 2);
+        $totalLots   = $surveys->sum('lot_count');
+
+        // Municipality breakdown
+        $byMuni = $surveys->groupBy('municipality')->map(fn($g) => [
+            'municipality' => $g->first()->municipality,
+            'surveys'      => $g->count(),
+            'lots'         => $g->sum('lot_count'),
+            'area_ha'      => round($g->sum('area_ha'), 2),
+            'validated'    => $g->where('status','validated')->count(),
+            'for_review'   => $g->where('status','for_review')->count(),
+            'pending'      => $g->where('status','pending')->count(),
+        ])->sortByDesc('surveys')->values();
+
+        // MPI
+        $gisStaff    = max(\App\Models\User::whereIn('role',['admin','user'])->count(), 1);
+        $mpiTarget   = $gisStaff * 10; // target: 10 validated surveys per staff
+        $mpiRate     = $total > 0 ? round(($validated / $total) * 100, 1) : 0;
+
+        // Monthly breakdown (last 12 months)
+        $monthly = LandSurvey::selectRaw(
+            "TO_CHAR(created_at,'YYYY-MM') as ym,
+             TO_CHAR(created_at,'Mon YYYY') as period,
+             DATE_TRUNC('month',created_at) as month_start,
+             count(*) as surveys_added,
+             sum(lot_count) as lots_added"
+        )->groupByRaw("TO_CHAR(created_at,'YYYY-MM'), TO_CHAR(created_at,'Mon YYYY'), DATE_TRUNC('month',created_at)")
+         ->orderByDesc('month_start')->take(12)->get();
+
+        // Annual breakdown
+        $annualYears = LandSurvey::selectRaw(
+            "EXTRACT(YEAR FROM created_at)::int as yr,
+             count(*) as surveys, sum(lot_count) as lots"
+        )->groupByRaw("EXTRACT(YEAR FROM created_at)")
+         ->orderByDesc('yr')->get();
+
+        return view('monitoring.gis-reports', compact(
+            'surveys','total','validated','forReview','pending',
+            'totalAreaHa','totalLots','byMuni',
+            'mpiTarget','mpiRate','gisStaff',
+            'monthly','annualYears'
+        ));
+    }
+
+    // -- Login -----------------------------------------------------
     public function showLogin()
     {
         if (Auth::check() && Auth::user()->role === 'monitoring') {
@@ -82,22 +226,16 @@ class MonitoringController extends Controller
             'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
-
         if (Auth::attempt($credentials, false)) {
             $user = Auth::user();
             if ($user->role !== 'monitoring') {
                 Auth::logout();
-                return back()
-                    ->withErrors(['email' => 'This account does not have monitoring access.'])
-                    ->withInput($request->only('email'));
+                return back()->withErrors(['email' => 'This account does not have monitoring access.'])->withInput($request->only('email'));
             }
             $request->session()->regenerate();
             return redirect()->route('monitoring.overview');
         }
-
-        return back()
-            ->withErrors(['email' => 'Invalid email or password.'])
-            ->withInput($request->only('email'));
+        return back()->withErrors(['email' => 'Invalid email or password.'])->withInput($request->only('email'));
     }
 
     public function logout(Request $request)
@@ -107,132 +245,6 @@ class MonitoringController extends Controller
         $request->session()->regenerateToken();
         return redirect()->route('monitoring.login');
     }
-
-    // ── GIS Overview ──────────────────────────────────────────────
-    public function overview()
-    {
-        $this->requireMonitoring();
-
-        $parcels    = $this->getParcels();
-        $total      = count($parcels);
-        $validated  = count(array_filter($parcels, fn($p) => $p['status'] === 'validated'));
-        $forReview  = count(array_filter($parcels, fn($p) => $p['status'] === 'for_review'));
-        $pending    = count(array_filter($parcels, fn($p) => $p['status'] === 'pending'));
-
-        // Alerts = parcels needing review
-        $alerts = array_filter($parcels, fn($p) => in_array($p['status'], ['for_review', 'pending']));
-
-        // Municipality list for filter
-        $municipalities = collect($parcels)->pluck('municipality')->unique()->sort()->values();
-
-        return view('monitoring.gis-overview', compact(
-            'parcels', 'total', 'validated', 'forReview', 'pending',
-            'alerts', 'municipalities'
-        ));
-    }
-
-    // ── Land Parcel Monitoring ────────────────────────────────────
-    public function parcels()
-    {
-        $this->requireMonitoring();
-
-        $parcels       = $this->getParcels();
-        $total         = count($parcels);
-        $validated     = count(array_filter($parcels, fn($p) => $p['status'] === 'validated'));
-        $forReview     = count(array_filter($parcels, fn($p) => $p['status'] === 'for_review'));
-        $pending       = count(array_filter($parcels, fn($p) => $p['status'] === 'pending'));
-        $municipalities= collect($parcels)->pluck('municipality')->unique()->sort()->values();
-        $barangays     = collect($parcels)->pluck('barangay')->unique()->sort()->values();
-
-        return view('monitoring.gis-parcels', compact(
-            'parcels', 'total', 'validated', 'forReview', 'pending',
-            'municipalities', 'barangays'
-        ));
-    }
-
-    // ── GIS Activity History ──────────────────────────────────────
-    public function activity()
-    {
-        $this->requireMonitoring();
-
-        $parcels = $this->getParcels();
-
-        $activities = collect($parcels)->map(function ($p, $i) {
-            $actions = [
-                'validated'  => 'Parcel record validated',
-                'for_review' => 'Boundary record flagged for review',
-                'pending'    => 'Location reference pending verification',
-            ];
-            $units = ['GIS Records Unit', 'Field Monitoring Unit'];
-            return [
-                'ref'         => $p['ref'],
-                'lsn'         => $p['lsn'],
-                'municipality'=> $p['municipality'],
-                'unit'        => $units[$i % 2],
-                'action'      => $actions[$p['status']] ?? 'Record updated',
-                'status'      => $p['status'],
-                'date'        => $p['updated'],
-            ];
-        })->sortByDesc('date')->values();
-
-        $gisEvents    = $activities->count();
-        $validEvents  = $activities->where('status', 'validated')->count();
-        $reviewEvents = $activities->where('status', 'for_review')->count();
-        $locChecks    = $activities->where('status', 'pending')->count();
-
-        return view('monitoring.gis-activity', compact(
-            'activities', 'gisEvents', 'validEvents', 'reviewEvents', 'locChecks'
-        ));
-    }
-
-    // ── GIS Reports (MPI + summaries) ────────────────────────────
-    public function reports()
-    {
-        $this->requireMonitoring();
-
-        $parcels   = $this->getParcels();
-        $total     = count($parcels);
-        $validated = count(array_filter($parcels, fn($p) => $p['status'] === 'validated'));
-        $forReview = count(array_filter($parcels, fn($p) => $p['status'] === 'for_review'));
-        $pending   = count(array_filter($parcels, fn($p) => $p['status'] === 'pending'));
-
-        // Municipality breakdown
-        $byMuni = collect($parcels)->groupBy('municipality')->map(fn($g) => [
-            'municipality' => $g->first()['municipality'],
-            'count'        => $g->count(),
-            'validated'    => $g->where('status','validated')->count(),
-        ])->values();
-
-        // ── MPI: targets for GIS (parcels validated per month) ───
-        $monthsTracked = max(1, \App\Models\LandSurvey::selectRaw(
-            "COUNT(DISTINCT TO_CHAR(created_at,'YYYY-MM'))"
-        )->value('count'));
-        $gisStaff = \App\Models\User::whereIn('role',['admin','user'])->count();
-        $mpiTarget = max($gisStaff * $monthsTracked, 1);
-        $mpiRate   = $total > 0 ? round(($validated / $total) * 100, 1) : 0;
-
-        // ── Monthly breakdown (last 12 months) ────────────────────
-        $monthly = LandSurvey::selectRaw(
-            "TO_CHAR(created_at,'YYYY-MM') as ym,
-             TO_CHAR(created_at,'Mon YYYY') as period,
-             DATE_TRUNC('month',created_at) as month_start,
-             count(*) as surveys_added,
-             sum(lot_count) as lots_added"
-        )->groupByRaw("TO_CHAR(created_at,'YYYY-MM'), TO_CHAR(created_at,'Mon YYYY'), DATE_TRUNC('month',created_at)")
-         ->orderByDesc('month_start')->take(12)->get();
-
-        // ── Annual breakdown ──────────────────────────────────────
-        $annualYears = LandSurvey::selectRaw("EXTRACT(YEAR FROM created_at)::int as yr, count(*) as surveys, sum(lot_count) as lots")
-            ->groupByRaw("EXTRACT(YEAR FROM created_at)")
-            ->orderByDesc('yr')->get();
-
-        return view('monitoring.gis-reports', compact(
-            'parcels', 'total', 'validated', 'forReview', 'pending', 'byMuni',
-            'mpiTarget', 'mpiRate', 'gisStaff', 'monthsTracked',
-            'monthly', 'annualYears'
-        ));
-    }
-
     // -- GIS Analytics ---------------------------------------------
     public function analytics()
     {
@@ -250,7 +262,7 @@ class MonitoringController extends Controller
             "COALESCE(NULLIF(TRIM(municipality),''),'Unknown') as municipality, COUNT(*) as count"
         )->groupBy('municipality')->orderByDesc('count')->take(10)->get();
 
-        // Municipality area � use correct FK: land_survey_id
+        // Municipality area � use correct FK: land_survey_id
         $muniArea = SurveyLot::selectRaw(
             "COALESCE(NULLIF(TRIM(land_surveys.municipality),''),'Unknown') as municipality,
              SUM(survey_lots.area) as total_area"
