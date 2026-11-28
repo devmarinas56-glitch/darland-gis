@@ -171,6 +171,7 @@
         <a href="{{ route('monitoring.parcels') }}"   class="nav-item {{ ($active??'')==='parcels'   ? 'active' : '' }}"><i class="fas fa-map"></i> Land Parcel Monitoring</a>
         <a href="{{ route('monitoring.activity') }}"  class="nav-item {{ ($active??'')==='activity'  ? 'active' : '' }}"><i class="fas fa-history"></i> GIS Activity History</a>
         <a href="{{ route('monitoring.reports') }}"   class="nav-item {{ ($active??'')==='reports'   ? 'active' : '' }}"><i class="fas fa-chart-bar"></i> GIS Reports</a>
+        <a href="{{ route('monitoring.analytics') }}" class="nav-item {{ ($active??'')==='analytics' ? 'active' : '' }}"><i class="fas fa-chart-line"></i> Analytics</a>
     </div>
 
     <div class="sb-footer">

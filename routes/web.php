@@ -99,6 +99,7 @@ Route::middleware(['auth'])->prefix('monitoring')->name('monitoring.')->group(fu
     Route::get('/parcels',   [\App\Http\Controllers\MonitoringController::class, 'parcels'])->name('parcels');
     Route::get('/activity',  [\App\Http\Controllers\MonitoringController::class, 'activity'])->name('activity');
     Route::get('/reports',   [\App\Http\Controllers\MonitoringController::class, 'reports'])->name('reports');
+    Route::get('/analytics', [\App\Http\Controllers\MonitoringController::class, 'analytics'])->name('analytics');
 });
 // Registration disabled — admin creates accounts
 // Route::get('/register', ...)
@@ -171,75 +172,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/land-records', [LandSurveyController::class, 'index'])->name('land-records.index');
     Route::get('/add-record', fn() => redirect('/land-records'))->name('add-record');
 
-    // Analytics
-    Route::get('/analytics', function() {
-        $totalSurveys  = \App\Models\LandSurvey::count();
-        $totalLots     = \App\Models\SurveyLot::count();
-        $totalAreaSqm  = \App\Models\SurveyLot::sum('area');
-        $totalAreaHa   = $totalAreaSqm / 10000;
-        $totalOwners   = \App\Models\SurveyLot::whereNotNull('owner_name')->distinct('owner_name')->count('owner_name');
-        $totalMunicipalities = \App\Models\LandSurvey::whereNotNull('municipality')->distinct('municipality')->count('municipality');
-
-        // Top municipalities by survey count + area
-        $byMunicipality = \App\Models\LandSurvey::selectRaw(
-            "COALESCE(NULLIF(TRIM(municipality),''), 'Unknown') as municipality, COUNT(*) as count, SUM(0) as total_area"
-        )->groupBy('municipality')->orderByDesc('count')->take(10)->get();
-
-        // Municipality area (from lots via survey)
-        $muniArea = \App\Models\SurveyLot::selectRaw(
-            "COALESCE(NULLIF(TRIM(land_surveys.municipality),''),'Unknown') as municipality, SUM(survey_lots.area) as total_area"
-        )->join('land_surveys','land_surveys.id','=','survey_lots.survey_id')
-         ->groupBy('land_surveys.municipality')
-         ->orderByDesc('total_area')->take(10)->get();
-
-        // Merge area into byMunicipality
-        $muniAreaMap = $muniArea->keyBy('municipality');
-        $byMunicipality = $byMunicipality->map(function($row) use ($muniAreaMap) {
-            $row->total_area = $muniAreaMap[$row->municipality]->total_area ?? 0;
-            return $row;
-        });
-
-        // Top owners
-        $topOwners = \App\Models\SurveyLot::selectRaw("owner_name, COUNT(*) as lot_count, SUM(area) as total_area")
-            ->whereNotNull('owner_name')->where('owner_name','<>','')
-            ->groupBy('owner_name')->orderByDesc('lot_count')->take(20)->get();
-
-        // Monthly lots + surveys added (last 12 months)
-        $monthLabels  = [];
-        $lotCounts    = [];
-        $surveyCounts = [];
-        $cumulMonths  = [];
-        $cumulAreas   = [];
-        $runningArea  = 0;
-        for ($i = 11; $i >= 0; $i--) {
-            $m = now()->subMonths($i);
-            $monthLabels[]  = $m->format('M Y');
-            $cumulMonths[]  = $m->format('M Y');
-            $lc = \App\Models\SurveyLot::whereMonth('created_at',$m->month)->whereYear('created_at',$m->year)->count();
-            $sc = \App\Models\LandSurvey::whereMonth('created_at',$m->month)->whereYear('created_at',$m->year)->count();
-            $ma = \App\Models\SurveyLot::whereMonth('created_at',$m->month)->whereYear('created_at',$m->year)->sum('area');
-            $lotCounts[]    = $lc;
-            $surveyCounts[] = $sc;
-            $runningArea   += round($ma / 10000, 2);
-            $cumulAreas[]   = $runningArea;
-        }
-
-        // Lot size distribution (how many surveys have 1, 2-5, 6-10, 11+ lots)
-        $surveys = \App\Models\LandSurvey::withCount('lots')->get();
-        $lotSizeBuckets = [
-            $surveys->where('lots_count',1)->count(),
-            $surveys->whereBetween('lots_count',[2,5])->count(),
-            $surveys->whereBetween('lots_count',[6,10])->count(),
-            $surveys->where('lots_count','>=',11)->count(),
-        ];
-
-        return view('analytics.index', compact(
-            'totalSurveys','totalLots','totalAreaSqm','totalAreaHa','totalOwners','totalMunicipalities',
-            'byMunicipality','topOwners','monthLabels','lotCounts','surveyCounts',
-            'cumulMonths','cumulAreas','lotSizeBuckets'
-        ));
-    })->name('analytics');
-
+    // Analytics — removed from here, now lives under /monitoring/analytics
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
