@@ -13,7 +13,7 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e8e8e8; display: flex; min-height: 100vh; }
 
         /* ── Sidebar ── */
-        .sidebar { width: 200px; background: #1a2744; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 1000; }
+        .sidebar { width: 200px; background: #1a2744; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 1000; overflow: hidden; }
         .logo-section { padding: 20px 15px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .logo-section img { width: 50px; height: 50px; }
         .nav-menu { flex: 1; padding: 15px 0; }

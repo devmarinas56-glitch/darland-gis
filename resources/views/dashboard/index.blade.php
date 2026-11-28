@@ -8,10 +8,10 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e8e8e8; display: flex; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e8e8e8; display: flex; min-height: 100vh; }
 
         /* ── Sidebar ── */
-        .sidebar { width: 190px; background: #1a2744; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 100; }
+        .sidebar { width: 200px; background: #1a2744; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 100; overflow: hidden; }
         .logo-section { padding: 18px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .logo-section img { width: 42px; height: 42px; object-fit: contain; }
         .logo-text .dept { font-size: 8px; font-weight: 700; color: rgba(255,255,255,0.7); text-transform: uppercase; }
@@ -26,10 +26,10 @@
         .logout-btn:hover { background: rgba(255,255,255,0.15); color: white; }
 
         /* ── Main ── */
-        .main-content { flex: 1; margin-left: 190px; display: flex; flex-direction: column; min-height: 100vh; }
+        .main-content { flex: 1; margin-left: 200px; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 
         /* ── Top bar ── */
-        .top-bar { background: #e8e8e8; padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .top-bar { background: #e8e8e8; padding: 12px 28px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
         .page-heading { font-size: 18px; font-weight: 700; color: #1a1a1a; }
         .top-right { display: flex; align-items: center; gap: 14px; }
         .user-chip { display: flex; align-items: center; gap: 10px; text-decoration: none; }

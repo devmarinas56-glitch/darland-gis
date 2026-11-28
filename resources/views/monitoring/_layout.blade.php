@@ -9,10 +9,10 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         html,body{height:100%;font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f5f7}
-        body{display:flex}
+        body{display:flex;min-height:100vh}
 
         /* ── Sidebar ── */
-        .sidebar{width:200px;background:#1a3d1a;display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:100}
+        .sidebar{width:200px;background:#1a3d1a;display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:100;overflow:hidden}
         .sb-brand{padding:16px 14px 12px;border-bottom:1px solid rgba(255,255,255,0.1)}
         .sb-brand-row{display:flex;align-items:center;gap:9px;margin-bottom:4px}
         .sb-brand-row img{width:36px;height:36px;object-fit:contain}
@@ -43,10 +43,10 @@
         .logout-btn:hover{background:rgba(255,255,255,0.15);color:white}
 
         /* ── Main ── */
-        .main{flex:1;margin-left:200px;display:flex;flex-direction:column;min-height:100vh}
+        .main{flex:1;margin-left:200px;display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
 
         /* ── Top bar ── */
-        .top-bar{background:white;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;flex-shrink:0}
+        .top-bar{background:white;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;flex-shrink:0;position:sticky;top:0;z-index:50}
         .tb-breadcrumb{font-size:10.5px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
         .tb-title{font-size:20px;font-weight:800;color:#111}
         .tb-sub{font-size:12.5px;color:#aaa;margin-top:1px}
