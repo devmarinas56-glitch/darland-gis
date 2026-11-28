@@ -1336,6 +1336,14 @@ function renderDrawnLotsList() {
             <div class="drawn-lot-num">${p.lotNum}</div>
             <input type="text" class="drawn-lot-input" id="drawn-owner-${i}"
                    placeholder="Owner name" value="">
+            <select id="drawn-type-${i}" class="drawn-lot-input" style="width:110px;font-size:11px;padding:4px 5px">
+                <option value="agricultural">Agricultural</option>
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="industrial">Industrial</option>
+                <option value="government">Government</option>
+                <option value="other">Other</option>
+            </select>
             <span class="drawn-lot-area">${Math.round(p.areaSqm).toLocaleString()} sqm</span>
             <button class="drawn-lot-del" onclick="removeDrawnLot(${i})" title="Remove"><i class="fas fa-times"></i></button>
         </div>
@@ -1443,9 +1451,11 @@ async function saveLSNDraw() {
     // Build lots array
     const lots = drawnPolygons.map((p, i) => {
         const ownerName = document.getElementById(`drawn-owner-${i}`)?.value.trim() || owner;
+        const landType  = document.getElementById(`drawn-type-${i}`)?.value || 'agricultural';
         return {
             lot_number: p.lotNum,
             owner_name: ownerName,
+            land_type:  landType,
             area:       Math.round(p.areaSqm * 100) / 100,
             polygon:    p.latlngs.map(ll => [ll.lat, ll.lng]),
         };
@@ -1579,7 +1589,18 @@ function updateLotRows() {
     }
     let html = '';
     for (let i = 1; i <= count; i++) {
-        html += `<div class="lot-row"><div class="lot-num-label">${i}</div><input type="text" class="form-input" id="owner_${i}" placeholder="Owner" style="font-size:12px"></div>`;
+        html += `<div class="lot-row"><div class="lot-num-label">${i}</div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex:1">
+                <input type="text" class="form-input" id="owner_${i}" placeholder="Owner" style="font-size:12px">
+                <select id="type_${i}" class="form-input" style="font-size:11.5px;padding:5px 7px">
+                    <option value="agricultural">Agricultural</option>
+                    <option value="residential">Residential</option>
+                    <option value="commercial">Commercial</option>
+                    <option value="industrial">Industrial</option>
+                    <option value="government">Government</option>
+                    <option value="other">Other</option>
+                </select>
+            </div></div>`;
     }
     container.innerHTML = html;
 }
@@ -1611,7 +1632,11 @@ async function saveLSNGrid() {
     }
     const lots = [];
     for (let i = 1; i <= count; i++) {
-        lots.push({ lot_number: i, owner_name: document.getElementById(`owner_${i}`)?.value.trim() || `Owner ${i}` });
+        lots.push({
+            lot_number: i,
+            owner_name: document.getElementById(`owner_${i}`)?.value.trim() || `Owner ${i}`,
+            land_type:  document.getElementById(`type_${i}`)?.value || 'agricultural',
+        });
     }
     try {
         const res = await apiFetch('/api/surveys', 'POST', {

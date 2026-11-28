@@ -232,6 +232,7 @@ class MonitoringController extends Controller
             'monthly', 'annualYears'
         ));
     }
+
     // -- GIS Analytics ---------------------------------------------
     public function analytics()
     {
@@ -244,31 +245,90 @@ class MonitoringController extends Controller
         $totalOwners         = SurveyLot::whereNotNull('owner_name')->distinct('owner_name')->count('owner_name');
         $totalMunicipalities = LandSurvey::whereNotNull('municipality')->distinct('municipality')->count('municipality');
 
-        $byMunicipality = LandSurvey::selectRaw("COALESCE(NULLIF(TRIM(municipality),''),'Unknown') as municipality, COUNT(*) as count")->groupBy('municipality')->orderByDesc('count')->take(10)->get();
+        // Top municipalities by survey count
+        $byMunicipality = LandSurvey::selectRaw(
+            "COALESCE(NULLIF(TRIM(municipality),''),'Unknown') as municipality, COUNT(*) as count"
+        )->groupBy('municipality')->orderByDesc('count')->take(10)->get();
 
-        $muniArea = SurveyLot::selectRaw("COALESCE(NULLIF(TRIM(land_surveys.municipality),''),'Unknown') as municipality, SUM(survey_lots.area) as total_area")->join('land_surveys','land_surveys.id','=','survey_lots.survey_id')->groupBy('land_surveys.municipality')->orderByDesc('total_area')->take(10)->get();
+        // Municipality area — use correct FK: land_survey_id
+        $muniArea = SurveyLot::selectRaw(
+            "COALESCE(NULLIF(TRIM(land_surveys.municipality),''),'Unknown') as municipality,
+             SUM(survey_lots.area) as total_area"
+        )->join('land_surveys', 'land_surveys.id', '=', 'survey_lots.land_survey_id')
+         ->groupBy('land_surveys.municipality')
+         ->orderByDesc('total_area')->take(10)->get();
 
-        $muniAreaMap = $muniArea->keyBy('municipality');
+        $muniAreaMap    = $muniArea->keyBy('municipality');
         $byMunicipality = $byMunicipality->map(function ($row) use ($muniAreaMap) {
             $row->total_area = $muniAreaMap[$row->municipality]->total_area ?? 0;
             return $row;
         });
 
-        $topOwners = SurveyLot::selectRaw("owner_name, COUNT(*) as lot_count, SUM(area) as total_area")->whereNotNull('owner_name')->where('owner_name','<>','')->groupBy('owner_name')->orderByDesc('lot_count')->take(20)->get();
+        // Municipality detailed breakdown: plots, owners, area, surveys
+        $muniDetails = SurveyLot::selectRaw(
+            "COALESCE(NULLIF(TRIM(land_surveys.municipality),''),'Unknown') as municipality,
+             COUNT(survey_lots.id)                      as plot_count,
+             COUNT(DISTINCT survey_lots.owner_name)     as owner_count,
+             SUM(survey_lots.area)                      as total_area_sqm,
+             COUNT(DISTINCT land_surveys.id)            as survey_count"
+        )->join('land_surveys', 'land_surveys.id', '=', 'survey_lots.land_survey_id')
+         ->groupBy('land_surveys.municipality')
+         ->orderByDesc('plot_count')
+         ->get();
 
-        $monthLabels=[];$lotCounts=[];$surveyCounts=[];$cumulMonths=[];$cumulAreas=[];$runningArea=0;
-        for ($i=11;$i>=0;$i--) {
-            $m=now()->subMonths($i);
-            $monthLabels[]=$m->format('M Y');$cumulMonths[]=$m->format('M Y');
-            $lc=SurveyLot::whereMonth('created_at',$m->month)->whereYear('created_at',$m->year)->count();
-            $sc=LandSurvey::whereMonth('created_at',$m->month)->whereYear('created_at',$m->year)->count();
-            $ma=SurveyLot::whereMonth('created_at',$m->month)->whereYear('created_at',$m->year)->sum('area');
-            $lotCounts[]=$lc;$surveyCounts[]=$sc;$runningArea+=round($ma/10000,2);$cumulAreas[]=$runningArea;
+        // Land type distribution
+        $landTypes = SurveyLot::selectRaw(
+            "COALESCE(NULLIF(TRIM(land_type),''),'agricultural') as land_type,
+             COUNT(*) as count,
+             SUM(area) as total_area"
+        )->groupBy('land_type')->orderByDesc('count')->get();
+
+        $typeConfig = [
+            'agricultural' => ['label' => 'Agricultural',  'color' => '#2e7d32'],
+            'residential'  => ['label' => 'Residential',   'color' => '#1565c0'],
+            'commercial'   => ['label' => 'Commercial',    'color' => '#e65100'],
+            'industrial'   => ['label' => 'Industrial',    'color' => '#6a1b9a'],
+            'government'   => ['label' => 'Government',    'color' => '#00838f'],
+            'other'        => ['label' => 'Other',         'color' => '#78909c'],
+        ];
+
+        // Top 20 owners
+        $topOwners = SurveyLot::selectRaw(
+            "owner_name, COUNT(*) as lot_count, SUM(area) as total_area"
+        )->whereNotNull('owner_name')->where('owner_name', '<>', '')
+         ->groupBy('owner_name')->orderByDesc('lot_count')->take(20)->get();
+
+        // Monthly lots + surveys (last 12 months)
+        $monthLabels = []; $lotCounts = []; $surveyCounts = [];
+        $cumulMonths = []; $cumulAreas = []; $runningArea  = 0;
+        for ($i = 11; $i >= 0; $i--) {
+            $m = now()->subMonths($i);
+            $monthLabels[]  = $m->format('M Y');
+            $cumulMonths[]  = $m->format('M Y');
+            $lc = SurveyLot::whereMonth('created_at', $m->month)->whereYear('created_at', $m->year)->count();
+            $sc = LandSurvey::whereMonth('created_at', $m->month)->whereYear('created_at', $m->year)->count();
+            $ma = SurveyLot::whereMonth('created_at', $m->month)->whereYear('created_at', $m->year)->sum('area');
+            $lotCounts[]    = $lc;
+            $surveyCounts[] = $sc;
+            $runningArea   += round($ma / 10000, 2);
+            $cumulAreas[]   = $runningArea;
         }
 
-        $surveys=LandSurvey::withCount('lots')->get();
-        $lotSizeBuckets=[$surveys->where('lots_count',1)->count(),$surveys->whereBetween('lots_count',[2,5])->count(),$surveys->whereBetween('lots_count',[6,10])->count(),$surveys->where('lots_count','>=',11)->count()];
+        // Lot size distribution buckets
+        $surveys        = LandSurvey::withCount('lots')->get();
+        $lotSizeBuckets = [
+            $surveys->where('lots_count', 1)->count(),
+            $surveys->whereBetween('lots_count', [2, 5])->count(),
+            $surveys->whereBetween('lots_count', [6, 10])->count(),
+            $surveys->where('lots_count', '>=', 11)->count(),
+        ];
 
-        return view('analytics.index', compact('totalSurveys','totalLots','totalAreaSqm','totalAreaHa','totalOwners','totalMunicipalities','byMunicipality','topOwners','monthLabels','lotCounts','surveyCounts','cumulMonths','cumulAreas','lotSizeBuckets'));
+        return view('analytics.index', compact(
+            'totalSurveys', 'totalLots', 'totalAreaSqm', 'totalAreaHa',
+            'totalOwners', 'totalMunicipalities',
+            'byMunicipality', 'muniDetails', 'landTypes', 'typeConfig',
+            'topOwners', 'monthLabels', 'lotCounts', 'surveyCounts',
+            'cumulMonths', 'cumulAreas', 'lotSizeBuckets'
+        ));
     }
 }

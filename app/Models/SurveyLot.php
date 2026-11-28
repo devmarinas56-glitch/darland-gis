@@ -8,7 +8,7 @@ class SurveyLot extends Model
 {
     protected $fillable = [
         'land_survey_id', 'lot_number', 'owner_name',
-        'area', 'polygons', 'notes',
+        'area', 'land_type', 'polygons', 'notes',
     ];
 
     public function survey()

@@ -90,6 +90,7 @@ class LandSurveyController extends Controller
                     'land_survey_id' => $survey->id,
                     'lot_number'     => $lotData['lot_number'],
                     'owner_name'     => $lotData['owner_name'],
+                    'land_type'      => $lotData['land_type'] ?? 'agricultural',
                     'area'           => round(floatval($lotData['area'] ?? 0), 2),
                     'polygons'       => json_encode([$lotData['polygon']]),
                     'notes'          => $lotData['notes'] ?? null,
@@ -110,6 +111,7 @@ class LandSurveyController extends Controller
                     'land_survey_id' => $survey->id,
                     'lot_number'     => $lotData['lot_number'],
                     'owner_name'     => $lotData['owner_name'],
+                    'land_type'      => $lotData['land_type'] ?? 'agricultural',
                     'area'           => $areaPerLot,
                     'polygons'       => json_encode([$polygons[$i] ?? $polygons[0]]),
                 ]);
@@ -149,14 +151,16 @@ class LandSurveyController extends Controller
         $validated = $request->validate([
             'lot_number' => ['required', 'integer', 'min:1'],
             'owner_name' => ['required', 'string'],
+            'land_type'  => ['nullable', 'string', 'max:50'],
             'notes'      => ['nullable', 'string'],
-            'polygon'    => ['nullable', 'array'],  // optional geometry update
+            'polygon'    => ['nullable', 'array'],
             'area'       => ['nullable', 'numeric'],
         ]);
 
         $update = [
             'lot_number' => $validated['lot_number'],
             'owner_name' => $validated['owner_name'],
+            'land_type'  => $validated['land_type'] ?? $lot->land_type ?? 'agricultural',
             'notes'      => $validated['notes'] ?? null,
         ];
 
@@ -184,6 +188,7 @@ class LandSurveyController extends Controller
     {
         $validated = $request->validate([
             'owner_name' => ['required', 'string'],
+            'land_type'  => ['nullable', 'string', 'max:50'],
             'polygon'    => ['required', 'array'],
             'area'       => ['required', 'numeric', 'min:0'],
             'notes'      => ['nullable', 'string'],
@@ -209,6 +214,7 @@ class LandSurveyController extends Controller
             'land_survey_id' => $survey->id,
             'lot_number'     => $nextLotNumber,
             'owner_name'     => $validated['owner_name'],
+            'land_type'      => $validated['land_type'] ?? 'agricultural',
             'area'           => round(floatval($validated['area']), 2),
             'polygons'       => json_encode([$validated['polygon']]),
             'notes'          => $validated['notes'] ?? null,
