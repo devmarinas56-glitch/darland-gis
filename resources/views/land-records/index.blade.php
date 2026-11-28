@@ -483,6 +483,9 @@
                             <select id="surveyMunicipality" class="form-input" onchange="onMunicipalityChange(this.value)" disabled>
                                 <option value="">— Select Municipality —</option>
                             </select>
+                            <input type="text" id="surveyMunicipalityCustom" class="form-input"
+                                   placeholder="Type municipality name" style="display:none;margin-top:6px"
+                                   oninput="onCustomMuniInput()">
                         </div>
                     </div>
 
@@ -492,6 +495,8 @@
                             <select id="surveyBarangay" class="form-input" disabled>
                                 <option value="">— Select Barangay —</option>
                             </select>
+                            <input type="text" id="surveyBarangayCustom" class="form-input"
+                                   placeholder="Type barangay name" style="display:none;margin-top:6px">
                         </div>
                         <div class="form-row">
                             <label class="form-label">Barangay No./Zone</label>
@@ -572,7 +577,7 @@
                                 <div class="step-num">1</div>
                                 <div class="step-title">Draw each lot on the map <span class="info-tip" data-tip="Click the Start Drawing button, then click points on the map to trace each lot boundary. Double-click to finish a lot. Repeat for every lot in the survey.">?</span></div>
                             </div>
-                            <div class="step-desc">Click the button below, trace the lot boundary by clicking points, double-click to finish. Repeat for every lot.</div>
+                            <div class="step-desc">Fill in LSN, Owner, and Municipality above first, then draw.</div>
                             <div style="margin-top:8px">
                                 <button class="btn-draw" id="drawBtn" onclick="toggleDrawing()">
                                     <i class="fas fa-draw-polygon"></i> <span id="drawBtnText">Start Drawing Lot</span>
@@ -1173,9 +1178,31 @@ function toggleDrawing() {
         // Finish current polygon if has enough points
         if (currentPoints.length >= 3) finishCurrentPolygon();
         else cancelCurrentDraw();
-    } else {
-        startDrawing();
+        return;
     }
+
+    // ── Require survey info before allowing drawing ──
+    const lsn   = document.getElementById('lsnInput').value.trim();
+    const owner = document.getElementById('originalOwner').value.trim();
+    const muni  = getMuniValue();
+
+    if (!lsn) {
+        showAlert('error', 'Please enter a Survey Number (LSN) before drawing.');
+        document.getElementById('lsnInput').focus();
+        return;
+    }
+    if (!owner) {
+        showAlert('error', 'Please enter the Original Owner before drawing.');
+        document.getElementById('originalOwner').focus();
+        return;
+    }
+    if (!muni) {
+        showAlert('error', 'Please select a Municipality before drawing.');
+        document.getElementById('surveyMunicipality').focus();
+        return;
+    }
+
+    startDrawing();
 }
 
 function startDrawing() {
@@ -1348,6 +1375,37 @@ function removeDrawnLot(index) {
 // ── Build notes from extra form fields ──
 function val(id) { return (document.getElementById(id)?.value || '').trim(); }
 
+// Read municipality — either the select value or the custom text input
+function getMuniValue() {
+    const sel = document.getElementById('surveyMunicipality');
+    if (sel && sel.value === '__custom__') {
+        return (document.getElementById('surveyMunicipalityCustom')?.value || '').trim();
+    }
+    return sel ? sel.value.trim() : '';
+}
+
+// Read barangay — either the select value or the custom text input
+function getBrgyValue() {
+    const sel = document.getElementById('surveyBarangay');
+    if (sel && sel.value === '__custom_brgy__') {
+        return (document.getElementById('surveyBarangayCustom')?.value || '').trim();
+    }
+    return sel ? sel.value.trim() : '';
+}
+
+// When user types in the custom municipality box, enable barangay only if known
+function onCustomMuniInput() {
+    // No barangay data for custom municipalities — keep disabled with empty
+    const brgySel = document.getElementById('surveyBarangay');
+    if (brgySel) {
+        brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
+        const custom = document.createElement('option');
+        custom.value = '__custom_brgy__'; custom.textContent = '— Type custom barangay —';
+        brgySel.appendChild(custom);
+        brgySel.disabled = false;
+    }
+}
+
 // Show hint when user types lat/lng manually
 function onCoordInput() {
     const lat = parseFloat(document.getElementById('surveyLat').value);
@@ -1359,27 +1417,28 @@ function onCoordInput() {
 function buildNotes() {
     return [
         val('surveyNotes'),
-        val('surveyZone')        ? 'Zone: '      + val('surveyZone')        : '',
-        val('surveyBarangay')     ? 'Brgy: '      + val('surveyBarangay')     : '',
-        val('surveyLocation')     ? 'Loc: '       + val('surveyLocation')     : '',
-        val('surveyProvince')     ? 'Province: '  + val('surveyProvince')     : '',
-        val('boundaryLine')       ? 'Line: '      + val('boundaryLine')       : '',
-        val('boundaryBearing')    ? 'Bearing: '   + val('boundaryBearing')    : '',
-        val('boundaryDistance')   ? 'Distance: '  + val('boundaryDistance')   + 'm' : '',
-        val('boundaryLotNo')       ? 'Lot ref: '   + val('boundaryLotNo')      : '',
-        val('boundaryClaimant')   ? 'Claimant: '  + val('boundaryClaimant')   : '',
+        val('surveyZone')          ? 'Zone: '      + val('surveyZone')        : '',
+        getBrgyValue()             ? 'Brgy: '      + getBrgyValue()           : '',
+        val('surveyLocation')      ? 'Loc: '       + val('surveyLocation')    : '',
+        val('surveyProvince')      ? 'Province: '  + val('surveyProvince')    : '',
+        val('boundaryLine')        ? 'Line: '      + val('boundaryLine')      : '',
+        val('boundaryBearing')     ? 'Bearing: '   + val('boundaryBearing')   : '',
+        val('boundaryDistance')    ? 'Distance: '  + val('boundaryDistance')  + 'm' : '',
+        val('boundaryLotNo')       ? 'Lot ref: '   + val('boundaryLotNo')     : '',
+        val('boundaryClaimant')    ? 'Claimant: '  + val('boundaryClaimant')  : '',
     ].filter(Boolean).join(' | ');
 }
 
 async function saveLSNDraw() {
-    const lsn   = document.getElementById('lsnInput').value.trim();
-    const owner = document.getElementById('originalOwner').value.trim();
-    const municipality = document.getElementById('surveyMunicipality').value.trim();
+    const lsn          = document.getElementById('lsnInput').value.trim();
+    const owner        = document.getElementById('originalOwner').value.trim();
+    const municipality = getMuniValue();
     const dateRegistered = document.getElementById('surveyDate').value;
     const notes = buildNotes();
 
-    if (!lsn)   { showAlert('error', 'Please enter an LSN.'); return; }
-    if (!owner) { showAlert('error', 'Please enter the original owner.'); return; }
+    if (!lsn)          { showAlert('error', 'Please enter a Survey Number (LSN).'); return; }
+    if (!owner)        { showAlert('error', 'Please enter the original owner name.'); return; }
+    if (!municipality) { showAlert('error', 'Please select a municipality/city.'); return; }
     if (drawnPolygons.length === 0) { showAlert('error', 'Draw at least one lot on the map.'); return; }
 
     // Build lots array
@@ -1441,8 +1500,16 @@ function resetDrawMode() {
     renderDrawnLotsList();
     ['lsnInput','originalOwner','surveyNotes','surveyMunicipality','surveyDate',
      'surveyZone','surveyBarangay','surveyLocation','surveyProvince','surveyLat','surveyLng',
+     'surveyMunicipalityCustom','surveyBarangayCustom',
      'boundaryLine','boundaryBearing','boundaryDistance','boundaryLotNo','boundaryClaimant'
     ].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+    // Reset custom input visibility
+    const cm = document.getElementById('surveyMunicipalityCustom');
+    const cb = document.getElementById('surveyBarangayCustom');
+    if (cm) cm.style.display = 'none';
+    if (cb) cb.style.display = 'none';
+    // Re-populate municipality list (province stays Pangasinan)
+    onProvinceChange('Pangasinan');
     const hint = document.getElementById('coordPinHint');
     if (hint) hint.style.display = 'none';
     document.getElementById('step2').classList.remove('active-step','done-step');
@@ -1519,9 +1586,9 @@ function updateLotRows() {
 }
 
 async function saveLSNGrid() {
-    const lsn   = document.getElementById('lsnInput').value.trim();
-    const owner = document.getElementById('originalOwner').value.trim();
-    const municipality = document.getElementById('surveyMunicipality').value.trim();
+    const lsn          = document.getElementById('lsnInput').value.trim();
+    const owner        = document.getElementById('originalOwner').value.trim();
+    const municipality = getMuniValue();
     const dateRegistered = document.getElementById('surveyDate').value;
     const notes = buildNotes();
     // Prefer manual lat/lng from Survey Info; fall back to the picked map center
@@ -1534,8 +1601,14 @@ async function saveLSNGrid() {
     const area  = parseFloat(document.getElementById('totalArea').value);
     const count = parseInt(document.getElementById('lotCount').value);
 
-    if (!lsn || !owner || isNaN(lat) || isNaN(lng) || !area || !count) {
-        showAlert('error', 'Fill in all fields and pick a center location (or enter Lat/Lng).'); return;
+    if (!lsn)          { showAlert('error', 'Please enter a Survey Number (LSN).'); return; }
+    if (!owner)        { showAlert('error', 'Please enter the original owner name.'); return; }
+    if (!municipality) { showAlert('error', 'Please select a municipality/city.'); return; }
+    if (isNaN(lat) || isNaN(lng)) {
+        showAlert('error', 'Please pick a center location on the map or enter Lat/Lng.'); return;
+    }
+    if (!area || !count) {
+        showAlert('error', 'Please enter total area and number of lots.'); return;
     }
     const lots = [];
     for (let i = 1; i <= count; i++) {
@@ -1562,9 +1635,15 @@ async function saveLSNGrid() {
 function resetGridMode() {
     ['lsnInput','originalOwner','surveyNotes','surveyMunicipality','surveyDate',
      'surveyZone','surveyBarangay','surveyLocation','surveyProvince','surveyLat','surveyLng',
+     'surveyMunicipalityCustom','surveyBarangayCustom',
      'boundaryLine','boundaryBearing','boundaryDistance','boundaryLotNo','boundaryClaimant',
      'centerLat','centerLng','totalArea','lotCount'
     ].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+    const cm2 = document.getElementById('surveyMunicipalityCustom');
+    const cb2 = document.getElementById('surveyBarangayCustom');
+    if (cm2) cm2.style.display = 'none';
+    if (cb2) cb2.style.display = 'none';
+    onProvinceChange('Pangasinan');
     const hint = document.getElementById('coordPinHint');
     if (hint) hint.style.display = 'none';
     document.getElementById('lotOwnerRows').innerHTML = '<div style="font-size:11.5px;color:#aaa;text-align:center;padding:14px">Enter number of lots above</div>';
@@ -2853,6 +2932,8 @@ const locationData = {
 function onProvinceChange(province) {
     const muniSel = document.getElementById('surveyMunicipality');
     const brgySel = document.getElementById('surveyBarangay');
+    if (!muniSel) return;
+
     muniSel.innerHTML = '<option value="">— Select Municipality —</option>';
     brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
     brgySel.disabled = true;
@@ -2861,6 +2942,7 @@ function onProvinceChange(province) {
         muniSel.disabled = true;
         return;
     }
+
     muniSel.disabled = false;
     const munis = Object.keys(locationData[province]).sort();
     munis.forEach(m => {
@@ -2868,57 +2950,66 @@ function onProvinceChange(province) {
         o.value = m; o.textContent = m;
         muniSel.appendChild(o);
     });
-    // Add custom option
+    // Custom option
     const custom = document.createElement('option');
     custom.value = '__custom__'; custom.textContent = '— Type custom municipality —';
     muniSel.appendChild(custom);
+
+    // Show/hide the custom municipality text input
+    const customInput = document.getElementById('surveyMunicipalityCustom');
+    if (customInput) customInput.style.display = 'none';
 }
 
 function onMunicipalityChange(muni) {
     const brgySel = document.getElementById('surveyBarangay');
-    brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
+    const customMuniInput = document.getElementById('surveyMunicipalityCustom');
 
-    if (muni === '__custom__') {
-        // Replace select with text input temporarily
-        const wrap = brgySel.parentElement;
-        brgySel.disabled = true;
-        const province = document.getElementById('surveyProvince').value;
-        document.getElementById('surveyMunicipality').outerHTML =
-            '<input type="text" id="surveyMunicipality" class="form-input" placeholder="Type municipality name" oninput="syncMuniText()">';
-        brgySel.disabled = false;
-        return;
+    brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
+    brgySel.disabled = true;
+
+    // Show/hide custom municipality text input
+    if (customMuniInput) {
+        customMuniInput.style.display = (muni === '__custom__') ? 'block' : 'none';
+        if (muni === '__custom__') {
+            customMuniInput.focus();
+            return; // barangay stays disabled until they type
+        }
     }
 
     const province = document.getElementById('surveyProvince').value;
     if (!province || !locationData[province] || !locationData[province][muni]) {
-        brgySel.disabled = true;
         return;
     }
+
     brgySel.disabled = false;
     locationData[province][muni].forEach(b => {
         const o = document.createElement('option');
-        if (b === '— Custom —') { o.value = '__custom_brgy__'; o.textContent = '— Type custom barangay —'; }
-        else { o.value = b; o.textContent = b; }
+        if (b === '— Custom —') {
+            o.value = '__custom_brgy__';
+            o.textContent = '— Type custom barangay —';
+        } else {
+            o.value = b; o.textContent = b;
+        }
         brgySel.appendChild(o);
     });
+
+    // Show/hide custom barangay text input on change
     brgySel.onchange = function() {
-        if (this.value === '__custom_brgy__') {
-            const wrap = this.parentElement;
-            const curVal = '';
-            this.outerHTML = '<input type="text" id="surveyBarangay" class="form-input" placeholder="Type barangay name">';
+        const customBrgyInput = document.getElementById('surveyBarangayCustom');
+        if (customBrgyInput) {
+            customBrgyInput.style.display = (this.value === '__custom_brgy__') ? 'block' : 'none';
+            if (this.value === '__custom_brgy__') customBrgyInput.focus();
         }
     };
 }
 
-function syncMuniText() { /* text input already in DOM, no-op */ }
-
-// Auto-select Pangasinan on load
+// Auto-select Pangasinan on load — always fire since province is locked
 window.addEventListener('DOMContentLoaded', function() {
+    // Province is fixed to Pangasinan — populate municipalities immediately
+    onProvinceChange('Pangasinan');
+    // Ensure the province select shows Pangasinan
     const provSel = document.getElementById('surveyProvince');
-    if (provSel && provSel.value === '') {
-        provSel.value = 'Pangasinan';
-        onProvinceChange('Pangasinan');
-    }
+    if (provSel) provSel.value = 'Pangasinan';
 });
 
 // ══════════════════════════════════════════════════════════════
