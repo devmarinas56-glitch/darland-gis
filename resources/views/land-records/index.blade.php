@@ -2267,7 +2267,7 @@ function closeAddLotModal() {
     map.doubleClickZoom.enable();
     map.getContainer().style.cursor = '';
     hideFloatingBar();
-    restoreModalOverlay('addLotModal');
+    activeDrawModal = null;
     document.getElementById('addLotModal').style.display = 'none';
 }
 
@@ -2475,9 +2475,23 @@ function closeDivideLotModal() {
     if (divideLayerB) { map.removeLayer(divideLayerB); divideLayerB = null; }
     map.doubleClickZoom.enable();
     map.getContainer().style.cursor = '';
-    // Always restore modal + hide floating bar
     hideFloatingBar();
+    activeDrawModal = null;
     document.getElementById('divideLotModal').style.display = 'none';
+}
+
+let activeDrawModal = null; // tracks which modal to restore after drawing
+
+function collapseModalOverlay(modalId) {
+    activeDrawModal = modalId;
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function restoreModalOverlay(modalId) {
+    if (modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+    }
+    activeDrawModal = null;
 }
 
 function showFloatingBar(msg, color) {
@@ -2489,18 +2503,6 @@ function showFloatingBar(msg, color) {
 
 function hideFloatingBar() {
     document.getElementById('floatingDrawBar').style.display = 'none';
-}
-
-function collapseModalOverlay(modalId) {
-    const m = document.getElementById(modalId);
-    m.style.background      = 'transparent';
-    m.style.pointerEvents   = 'none';
-}
-
-function restoreModalOverlay(modalId) {
-    const m = document.getElementById(modalId);
-    m.style.background      = 'rgba(0,0,0,0.5)';
-    m.style.pointerEvents   = '';
 }
 
 function startDivideDrawA() {
