@@ -346,7 +346,9 @@
         .province-item .pi-name { flex: 1; font-weight: 500; }
         .province-item .pi-badge { font-size: 9.5px; color: #aaa; background: #f5f5f5; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
         .province-item .pi-badge.brgy { background: #ffeaea; color: #e53935; }
+        .province-item .pi-badge.barangay { background: #ffeaea; color: #e53935; }
         .province-item .pi-badge.city { background: #e8f5e9; color: #2e7d32; }
+        .province-item .pi-badge.other { background: #fff3e0; color: #e65100; }
         .province-item .pi-del { background: none; border: none; color: #ddd; cursor: pointer; font-size: 11px; padding: 2px 3px; margin-left: 2px; }
         .province-item .pi-del:hover { color: #e53935; }
 
@@ -471,10 +473,9 @@
 
                     <div class="form-grid-2">
                         <div class="form-row">
-                            <label class="form-label">Province <span class="info-tip" data-tip="Select the province first. Municipalities will auto-populate based on your selection.">?</span></label>
+                            <label class="form-label">Province <span class="info-tip" data-tip="Province is locked to Pangasinan for this system.">?</span></label>
                             <select id="surveyProvince" class="form-input" onchange="onProvinceChange(this.value)">
-                                <option value="">— Select Province —</option>
-                                <option value="Pangasinan">Pangasinan</option>
+                                <option value="Pangasinan" selected>Pangasinan</option>
                             </select>
                         </div>
                         <div class="form-row">
@@ -576,6 +577,11 @@
                                 <button class="btn-draw" id="drawBtn" onclick="toggleDrawing()">
                                     <i class="fas fa-draw-polygon"></i> <span id="drawBtnText">Start Drawing Lot</span>
                                 </button>
+                                <div style="display:flex;gap:6px;margin-top:6px">
+                                    <button id="drawUndoBtn" onclick="undoLastPoint()" style="display:none;flex:1;padding:7px 10px;background:#fff3e0;color:#e65100;border:1.5px solid #ffcc80;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;align-items:center;justify-content:center;gap:5px" title="Remove the last placed point">
+                                        <i class="fas fa-undo"></i> Undo Point
+                                    </button>
+                                </div>
                                 <div class="draw-legend">
                                     <div class="draw-legend-item"><div class="draw-legend-dot" style="background:#2e7d32"></div> Completed lot</div>
                                     <div class="draw-legend-item"><div class="draw-legend-dot" style="background:#ff9800;opacity:0.6"></div> Drawing…</div>
@@ -716,24 +722,69 @@
 <!-- Add Barangay Pin Modal -->
 <div class="add-pin-overlay" id="addPinOverlay">
     <div class="add-pin-modal">
-        <h3><i class="fas fa-map-pin" style="color:#e53935;margin-right:7px"></i>Add Barangay Pin</h3>
+        <h3><i class="fas fa-map-pin" style="color:#e53935;margin-right:7px"></i>Add Pin</h3>
         <div class="add-pin-coords" id="addPinCoords">Lat: — · Lng: —</div>
-        <div class="form-row">
-            <label class="form-label">Barangay Name <span style="color:#e53935">*</span></label>
-            <input type="text" id="addPinBarangay" class="form-input" placeholder="e.g. Brgy. Anonas">
+
+        <!-- Pin Type -->
+        <div class="form-row" style="margin-bottom:10px">
+            <label class="form-label" style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:5px">Pin Type</label>
+            <div style="display:flex;gap:8px">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:7px 12px;border:1.5px solid #e53935;border-radius:7px;background:#ffeaea;color:#c62828;font-weight:600;flex:1;justify-content:center">
+                    <input type="radio" name="pinTypeRadio" id="addPinTypeBarangay" value="barangay" checked onchange="onPinTypeChange('barangay')" style="accent-color:#e53935">
+                    <i class="fas fa-map-pin"></i> Barangay
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:7px 12px;border:1.5px solid #ddd;border-radius:7px;background:#fff8f0;color:#666;font-weight:600;flex:1;justify-content:center" id="addPinTypeOtherLabel">
+                    <input type="radio" name="pinTypeRadio" id="addPinTypeOther" value="other" onchange="onPinTypeChange('other')" style="accent-color:#ff9800">
+                    <i class="fas fa-location-dot"></i> Other
+                </label>
+            </div>
         </div>
+        <input type="hidden" id="addPinType" value="barangay">
+
+        <!-- Municipality (auto-detected, editable) -->
         <div class="form-row">
-            <label class="form-label">Municipality / City <span style="color:#e53935">*</span></label>
-            <input type="text" id="addPinMunicipality" class="form-input" placeholder="e.g. Urdaneta City" list="muniSuggestions">
-            <datalist id="muniSuggestions"></datalist>
+            <label class="form-label" style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:4px">Municipality / City <span style="color:#e53935">*</span></label>
+            <select id="addPinMunicipality" class="form-input" style="font-size:12.5px" onchange="populateAddPinBarangaySelect(this.value)">
+                <option value="">— Select Municipality —</option>
+                @foreach([
+                    'Alaminos City','Dagupan City','San Carlos City','Urdaneta City',
+                    'Agno','Aguilar','Alcala','Anda','Asingan','Balungao','Bani','Basista','Bautista',
+                    'Bayambang','Binalonan','Binmaley','Bolinao','Bugallon','Burgos','Calasiao',
+                    'Dasol','Infanta','Labrador','Laoac','Lingayen','Mabini','Malasiqui','Manaoag',
+                    'Mangaldan','Mangatarem','Mapandan','Natividad','Pozorrubio','Rosales',
+                    'San Fabian','San Jacinto','San Manuel','San Nicolas','San Quintin',
+                    'Santa Barbara','Santa Maria','Santo Tomas','Sison','Sual','Tayug',
+                    'Umingan','Urbiztondo','Villasis'
+                ] as $m)
+                <option value="{{ $m }}">{{ $m }}</option>
+                @endforeach
+            </select>
+            <div id="addPinAutoMuniHint" style="display:none;font-size:11px;color:#2e7d32;background:#e8f5e9;border-radius:5px;padding:4px 8px;margin-top:4px"><i class="fas fa-magic"></i> <span></span></div>
         </div>
+
+        <!-- Barangay from known list (only shown for Barangay type) -->
+        <div class="form-row" id="addPinBarangayRow">
+            <label class="form-label" id="addPinNameLabel" style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:4px">Barangay Name</label>
+            <select id="addPinBarangay" class="form-input" style="font-size:12.5px">
+                <option value="">— Select or type below —</option>
+            </select>
+        </div>
+
+        <!-- Custom / free-text name -->
+        <div class="form-row" id="addPinCustomRow">
+            <label class="form-label" style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:4px">Or type a custom barangay name:</label>
+            <input type="text" id="addPinCustomName" class="form-input" placeholder="Custom name (overrides selection above)" style="font-size:12.5px">
+        </div>
+
+        <!-- Province — locked to Pangasinan -->
         <div class="form-row">
-            <label class="form-label">Province</label>
-            <input type="text" id="addPinProvince" class="form-input" value="Pangasinan" placeholder="e.g. Pangasinan">
+            <label class="form-label" style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:4px">Province</label>
+            <input type="text" class="form-input" value="Pangasinan" readonly style="background:#f5f5f5;color:#888;font-size:12.5px;cursor:default">
         </div>
+
         <div style="display:flex;gap:10px;margin-top:16px">
             <button onclick="cancelAddPin()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
-            <button onclick="saveAddPin()"   style="flex:1;padding:9px;background:#e53935;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700"><i class="fas fa-map-pin"></i> Save Pin</button>
+            <button onclick="saveAddPin()" style="flex:1;padding:9px;background:#e53935;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700" id="savePinBtn"><i class="fas fa-map-pin"></i> Save Pin</button>
         </div>
     </div>
 </div>
@@ -1113,9 +1164,11 @@ function startDrawing() {
     document.getElementById('drawBtn').classList.add('drawing');
     document.getElementById('drawBtnText').textContent = 'Finish Lot (or double-click)';
     map.getContainer().style.cursor = 'crosshair';
-    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points. Double-click to close the lot.';
+    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points. Double-click to close the lot. Use Undo to remove last point.';
     document.getElementById('mapHint').classList.remove('hide');
     document.getElementById('step1').classList.add('active-step');
+    const undoBtn = document.getElementById('drawUndoBtn');
+    if (undoBtn) { undoBtn.style.display = 'flex'; }
 }
 
 function cancelCurrentDraw() {
@@ -1123,24 +1176,43 @@ function cancelCurrentDraw() {
     currentPoints = [];
     previewLayerGroup.clearLayers();
     previewLine = null;
+    clearTimeout(drawClickTimer);
     document.getElementById('drawBtn').classList.remove('drawing');
-    document.getElementById('drawBtnText').textContent = 'Start Drawing Lot';
+    document.getElementById('drawBtnText').textContent = drawnPolygons.length > 0 ? 'Draw Next Lot' : 'Start Drawing Lot';
+    const undoBtn = document.getElementById('drawUndoBtn');
+    if (undoBtn) { undoBtn.style.display = 'none'; }
     map.getContainer().style.cursor = '';
     document.getElementById('mapHint').classList.add('hide');
+}
+
+function undoLastPoint() {
+    if (!drawingActive || currentPoints.length === 0) return;
+    currentPoints.pop();
+    updatePreview();
+    if (currentPoints.length === 0) {
+        document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points. Double-click to close the lot. Use Undo to remove last point.';
+    }
 }
 
 // Map click — add point
 map.on('click', function(e) {
     if (!drawingActive || currentMode !== 'draw') return;
-    currentPoints.push(e.latlng);
-    updatePreview();
+    // Prevent firing when dblclick ends drawing (Leaflet fires click before dblclick)
+    // We use a small timer so dblclick can cancel the last click
+    clearTimeout(drawClickTimer);
+    drawClickTimer = setTimeout(() => {
+        currentPoints.push(e.latlng);
+        updatePreview();
+    }, 180);
 });
+
+let drawClickTimer = null;
 
 // Map dblclick — finish polygon
 map.on('dblclick', function(e) {
     if (!drawingActive || currentMode !== 'draw') return;
-    // Remove the last point added by the click that preceded dblclick
-    if (currentPoints.length > 0) currentPoints.pop();
+    // Cancel the pending single-click that fired just before the dblclick
+    clearTimeout(drawClickTimer);
     if (currentPoints.length >= 3) finishCurrentPolygon();
     else { showAlert('error', 'Need at least 3 points to form a lot.'); cancelCurrentDraw(); }
     L.DomEvent.stop(e);
@@ -1190,8 +1262,11 @@ function finishCurrentPolygon() {
     currentPoints = [];
     previewLayerGroup.clearLayers();
     drawingActive = false;
+    clearTimeout(drawClickTimer);
     document.getElementById('drawBtn').classList.remove('drawing');
     document.getElementById('drawBtnText').textContent = 'Draw Next Lot';
+    const undoBtn2 = document.getElementById('drawUndoBtn');
+    if (undoBtn2) { undoBtn2.style.display = 'none'; }
     map.getContainer().style.cursor = '';
     document.getElementById('mapHint').classList.add('hide');
 
@@ -1372,7 +1447,7 @@ function togglePick() {
 }
 
 map.on('click', function(e) {
-    if (!pickingMode || currentMode !== 'grid') return;
+    if (!pickingMode || currentMode !== 'grid' || drawingActive) return;
     const {lat, lng} = e.latlng;
     document.getElementById('centerLat').value = lat.toFixed(7);
     document.getElementById('centerLng').value = lng.toFixed(7);
@@ -1892,7 +1967,7 @@ function startAddLotDraw() {
 
 // Hook into map click/dblclick for add-lot mode
 map.on('click', function(e) {
-    if (!addLotDrawing) return;
+    if (!addLotDrawing || drawingActive) return;
     addLotPoints.push(e.latlng);
     // Preview
     addLotPreviewLG.clearLayers();
@@ -2036,6 +2111,7 @@ function startDivideDrawB() {
 }
 
 map.on('click', function(e) {
+    if ((!divideDrawingA && !divideDrawingB) || drawingActive || addLotDrawing) return;
     if (divideDrawingA) {
         dividePointsA.push(e.latlng);
         dividePreviewLG.clearLayers();
@@ -2280,19 +2356,24 @@ let customPinsLayer = L.layerGroup().addTo(map);
 let customPinMarkers = []; // [{id, name, municipality, province, lat, lng, marker}]
 
 function addCustomPinToMap(pin) {
+    const isOther = (pin.pinType === 'other');
+    const pinColor = isOther ? '#ff9800' : '#e53935';
+    const pinLabel = isOther ? '📍' : pin.name.charAt(0).toUpperCase();
+    const typeLabel = isOther ? 'Other Location' : 'Barangay';
+
     const marker = L.marker([pin.lat, pin.lng], {
         icon: L.divIcon({
             className: '',
-            html: `<div class="brgy-pin-marker"><span>${pin.name.charAt(0).toUpperCase()}</span></div>`,
+            html: `<div class="brgy-pin-marker" style="background:${pinColor}"><span>${pin.name.charAt(0).toUpperCase()}</span></div>`,
             iconSize: [20, 20],
             iconAnchor: [10, 20],
             popupAnchor: [0, -22],
         })
     });
     marker.bindPopup(`
-        <div class="muni-popup-name"><i class="fas fa-map-pin" style="color:#e53935;font-size:11px;margin-right:4px"></i>${pin.name}</div>
-        <div class="muni-popup-type">Barangay · ${pin.municipality}</div>
-        <div style="font-size:11px;color:#888;margin-top:3px">${pin.province}</div>
+        <div class="muni-popup-name"><i class="fas fa-map-pin" style="color:${pinColor};font-size:11px;margin-right:4px"></i>${pin.name}</div>
+        <div class="muni-popup-type">${typeLabel} · ${pin.municipality}</div>
+        <div style="font-size:11px;color:#888;margin-top:3px">Pangasinan</div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">Lat: ${pin.lat.toFixed(5)}, Lng: ${pin.lng.toFixed(5)}</div>
         ${isAdmin ? `<button onclick="deleteCustomPin('${pin.id}')" style="margin-top:8px;width:100%;padding:5px;background:#ffebee;color:#e53935;border:1px solid #ffcdd2;border-radius:5px;font-size:11.5px;cursor:pointer;font-weight:600"><i class='fas fa-trash'></i> Remove Pin</button>` : ''}
     `);
@@ -2327,6 +2408,66 @@ function populateMuniDatalist() {
     });
 }
 
+// ── Auto-detect nearest municipality from coordinates ─────────
+function findNearestMunicipality(lat, lng) {
+    if (!pangasinanMunis.length) return null;
+    let nearest = null;
+    let minDist = Infinity;
+    pangasinanMunis.forEach(m => {
+        const dlat = m.lat - lat;
+        const dlng = m.lng - lng;
+        const dist = Math.sqrt(dlat*dlat + dlng*dlng); // in degrees
+        if (dist < minDist) { minDist = dist; nearest = { ...m, dist }; }
+    });
+    // Only suggest if within ~25km (≈0.22 degrees)
+    return (minDist < 0.22) ? nearest : null;
+}
+
+// ── Pin type toggle in Add Pin modal ─────────────────────────
+function onPinTypeChange(type) {
+    document.getElementById('addPinType').value = type;
+    const isBarangay = (type === 'barangay');
+    const brgyRow    = document.getElementById('addPinBarangayRow');
+    const customLbl  = document.getElementById('addPinCustomRow').querySelector('label');
+    const nameLabel  = document.getElementById('addPinNameLabel');
+    const savePinBtn = document.getElementById('savePinBtn');
+
+    if (isBarangay) {
+        brgyRow.style.display = 'block';
+        nameLabel.textContent  = 'Barangay Name';
+        customLbl.textContent  = 'Or type a custom barangay name:';
+        savePinBtn.style.background = '#e53935';
+    } else {
+        brgyRow.style.display = 'none';
+        nameLabel.textContent  = 'Location Name';
+        customLbl.textContent  = 'Location Name *';
+        savePinBtn.style.background = '#ff9800';
+    }
+
+    // Visual active state on radio labels
+    document.getElementById('addPinTypeBarangay').closest('label').style.borderColor = isBarangay ? '#e53935' : '#ddd';
+    document.getElementById('addPinTypeBarangay').closest('label').style.background  = isBarangay ? '#ffeaea' : '#f5f5f5';
+    document.getElementById('addPinTypeBarangay').closest('label').style.color       = isBarangay ? '#c62828' : '#888';
+    document.getElementById('addPinTypeOther').closest('label').style.borderColor    = !isBarangay ? '#ff9800' : '#ddd';
+    document.getElementById('addPinTypeOther').closest('label').style.background     = !isBarangay ? '#fff3e0' : '#f5f5f5';
+    document.getElementById('addPinTypeOther').closest('label').style.color          = !isBarangay ? '#e65100' : '#888';
+}
+
+// ── Populate the barangay select from loaded pins data ───────
+function populateAddPinBarangaySelect(muni) {
+    // For known municipalities, we can offer known barangay names from locationData
+    const select = document.getElementById('addPinBarangay');
+    select.innerHTML = '<option value="">— Select or type below —</option>';
+    if (!muni || !locationData?.Pangasinan?.[muni]) return;
+    const brgys = locationData.Pangasinan[muni] || [];
+    brgys.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+        select.appendChild(opt);
+    });
+}
+
 // ── Province list rendering ───────────────────────────────────
 function buildProvinceData(query = '') {
     const q = query.trim().toLowerCase();
@@ -2354,7 +2495,8 @@ function buildProvinceData(query = '') {
             id:         p.id,
             name:       p.name,
             province:   p.province || 'Pangasinan',
-            type:       'Barangay',
+            type:       p.pinType === 'other' ? 'Other' : 'Barangay',
+            pinType:    p.pinType || 'barangay',
             lat:        p.lat,
             lng:        p.lng,
             municipality: p.municipality,
@@ -2413,9 +2555,9 @@ function renderProvinceList(query = '') {
             <div class="province-group-items">
                 ${items.map(item => `
                 <div class="province-item" onclick="flyToPin(${item.lat}, ${item.lng}, '${escJs(item.name)}')">
-                    <i class="fas ${item.isCustom ? 'fa-map-pin' : 'fa-map-marker-alt'} pi-icon" style="color:${item.type==='Barangay'?'#e53935':item.type==='City'?'#2e7d32':'#1a2744'}"></i>
+                    <i class="fas ${item.isCustom ? 'fa-map-pin' : 'fa-map-marker-alt'} pi-icon" style="color:${item.type==='Barangay'?'#e53935':item.pinType==='other'?'#ff9800':item.type==='City'?'#2e7d32':'#1a2744'}"></i>
                     <span class="pi-name">${item.name}${item.municipality && item.type==='Barangay' ? `<span style="font-size:10px;color:#aaa;display:block;margin-top:1px">${item.municipality}</span>` : ''}</span>
-                    <span class="pi-badge ${item.type.toLowerCase()}">${item.type}</span>
+                    <span class="pi-badge ${item.pinType==='other'?'other':item.type.toLowerCase()}">${item.pinType==='other'?'Other':item.type}</span>
                     ${item.isCustom && isAdmin ? `<button class="pi-del" onclick="event.stopPropagation();deleteCustomPin('${item.id}')" title="Remove pin"><i class="fas fa-times"></i></button>` : ''}
                 </div>`).join('')}
             </div>
@@ -2465,12 +2607,25 @@ function togglePinMode() {
 
 // Hook into map click for pin placement
 map.on('click', function(e) {
-    if (!pinModeActive) return;
+    if (!pinModeActive || drawingActive || addLotDrawing) return;
     pendingPinLatLng = e.latlng;
+    // Auto-detect municipality from coordinate proximity
+    const nearestMuni = findNearestMunicipality(e.latlng.lat, e.latlng.lng);
     document.getElementById('addPinCoords').textContent = `Lat: ${e.latlng.lat.toFixed(6)} · Lng: ${e.latlng.lng.toFixed(6)}`;
     document.getElementById('addPinBarangay').value    = '';
-    document.getElementById('addPinMunicipality').value = '';
-    document.getElementById('addPinProvince').value    = 'Pangasinan';
+    document.getElementById('addPinCustomName').value  = '';
+    // Auto-fill municipality
+    const muniSelect = document.getElementById('addPinMunicipality');
+    muniSelect.value = nearestMuni ? nearestMuni.name : '';
+    if (nearestMuni) {
+        document.getElementById('addPinAutoMuniHint').querySelector('span').textContent = `Auto-detected: ${nearestMuni.name} (${(nearestMuni.dist * 111.32).toFixed(1)} km away)`;
+        document.getElementById('addPinAutoMuniHint').style.display = 'block';
+    } else {
+        document.getElementById('addPinAutoMuniHint').style.display = 'none';
+    }
+    // Reset pin type to Barangay by default
+    document.getElementById('addPinType').value = 'barangay';
+    onPinTypeChange('barangay');
     document.getElementById('addPinOverlay').classList.add('show');
     togglePinMode(); // exit pin mode after placing
 });
@@ -2486,18 +2641,34 @@ function cancelAddPin() {
 }
 
 function saveAddPin() {
-    const name  = document.getElementById('addPinBarangay').value.trim();
-    const muni  = document.getElementById('addPinMunicipality').value.trim();
-    const prov  = document.getElementById('addPinProvince').value.trim() || 'Pangasinan';
-    if (!name)  { alert('Please enter a barangay name.');         return; }
-    if (!muni)  { alert('Please enter the municipality/city.');   return; }
+    const pinType = document.getElementById('addPinType').value; // 'barangay' or 'other'
+    const isBarangay = (pinType === 'barangay');
+
+    // Name: use the barangay select value if barangay type, else custom name field
+    let name = '';
+    if (isBarangay) {
+        const selectVal = document.getElementById('addPinBarangay').value.trim();
+        const customVal = document.getElementById('addPinCustomName').value.trim();
+        name = selectVal || customVal;
+    } else {
+        name = document.getElementById('addPinCustomName').value.trim() ||
+               document.getElementById('addPinBarangay').value.trim();
+    }
+
+    const muniSelect = document.getElementById('addPinMunicipality');
+    const muni  = muniSelect.value.trim();
+    const prov  = 'Pangasinan';
+
+    if (!name) { alert('Please enter a name for this pin.'); return; }
+    if (!muni) { alert('Please select the municipality/city.'); return; }
     if (!pendingPinLatLng) return;
 
     const pin = {
-        id:           'brgy_' + Date.now(),
+        id:           'pin_' + Date.now(),
         name,
         municipality: muni,
         province:     prov,
+        pinType:      pinType,   // 'barangay' or 'other'
         lat:          pendingPinLatLng.lat,
         lng:          pendingPinLatLng.lng,
     };
@@ -2510,11 +2681,8 @@ function saveAddPin() {
     cancelAddPin();
     renderProvinceList(document.getElementById('provinceSearch')?.value || '');
 
-    // Also update the search input to show the new pin's municipality
     filterMuni(muni);
-    showAlert('success', `Barangay pin "${name}" added to ${muni}.`);
-
-    // Switch to Pins tab to show it
+    showAlert('success', `${isBarangay ? 'Barangay' : 'Pin'} "${name}" added to ${muni}.`);
     switchTab('pins');
 }
 
