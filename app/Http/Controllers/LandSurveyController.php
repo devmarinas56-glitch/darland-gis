@@ -131,11 +131,14 @@ class LandSurveyController extends Controller
     public function update(Request $request, LandSurvey $survey)
     {
         $validated = $request->validate([
-            'original_owner' => ['required', 'string'],
-            'notes'          => ['nullable', 'string'],
+            'lsn'             => ['sometimes', 'string', 'max:100'],
+            'original_owner'  => ['required', 'string'],
+            'municipality'    => ['nullable', 'string', 'max:100'],
+            'date_registered' => ['nullable', 'date'],
+            'notes'           => ['nullable', 'string'],
         ]);
         $survey->update($validated);
-        return response()->json(['success' => true, 'survey' => $survey]);
+        return response()->json(['success' => true, 'survey' => $survey->fresh()]);
     }
 
     // ── Delete LSN (cascades to lots) ────────────────────────────

@@ -425,6 +425,13 @@
             </div>
             @endif
             <div class="map-hint" id="mapHint"><i class="fas fa-draw-polygon"></i> Draw mode: click points to trace a lot boundary. Double-click to finish.</div>
+
+            <!-- Floating draw control — shown when add-lot or new draw is active, keeps modal out of the way -->
+            <div id="floatingDrawBar" style="display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:900;background:#1a2744;color:white;border-radius:12px;padding:10px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:none;align-items:center;gap:14px;white-space:nowrap">
+                <span id="floatingDrawMsg" style="font-size:13px;font-weight:600"><i class="fas fa-draw-polygon" style="margin-right:7px"></i>Click points on map · Double-click to finish</span>
+                <button onclick="undoAddLotPoint()" id="floatingUndoBtn" style="padding:5px 12px;background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-undo"></i> Undo</button>
+                <button onclick="cancelAddLotDraw()" style="padding:5px 12px;background:#e53935;border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-times"></i> Cancel</button>
+            </div>
         </div>
 
         <!-- Right Panel -->
@@ -810,6 +817,53 @@
         <div style="display:flex;gap:10px;margin-top:16px">
             <button onclick="cancelAddPin()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
             <button onclick="saveAddPin()" style="flex:1;padding:9px;background:#e53935;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700" id="savePinBtn"><i class="fas fa-map-pin"></i> Save Pin</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Survey Modal -->
+<div id="editSurveyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center">
+    <div style="background:white;border-radius:14px;padding:26px;width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2)">
+        <h3 style="font-size:15px;font-weight:700;color:#1a2744;margin-bottom:16px"><i class="fas fa-edit" style="margin-right:7px;color:#1a2744"></i>Edit Survey Info</h3>
+        <input type="hidden" id="editSurveyId">
+        <div class="form-row"><label class="form-label">LSN (Survey Number) <span style="color:#e53935">*</span></label><input type="text" id="editSurveyLsn" class="form-input" placeholder="e.g. Psd-123456"></div>
+        <div class="form-row"><label class="form-label">Original Owner <span style="color:#e53935">*</span></label><input type="text" id="editSurveyOwner" class="form-input" placeholder="Full name"></div>
+        <div class="form-row">
+            <label class="form-label">Municipality / City</label>
+            <select id="editSurveyMunicipality" class="form-input" onchange="onEditSurveyMuniChange(this.value)">
+                <option value="">— Select Municipality —</option>
+                @foreach([
+                    'Alaminos City','Dagupan City','San Carlos City','Urdaneta City',
+                    'Agno','Aguilar','Alcala','Anda','Asingan','Balungao','Bani','Basista','Bautista',
+                    'Bayambang','Binalonan','Binmaley','Bolinao','Bugallon','Burgos','Calasiao',
+                    'Dasol','Infanta','Labrador','Laoac','Lingayen','Mabini','Malasiqui','Manaoag',
+                    'Mangaldan','Mangatarem','Mapandan','Natividad','Pozorrubio','Rosales',
+                    'San Fabian','San Jacinto','San Manuel','San Nicolas','San Quintin',
+                    'Santa Barbara','Santa Maria','Santo Tomas','Sison','Sual','Tayug',
+                    'Umingan','Urbiztondo','Villasis'
+                ] as $m)
+                <option value="{{ $m }}">{{ $m }}</option>
+                @endforeach
+                <option value="__custom__">— Type custom —</option>
+            </select>
+            <input type="text" id="editSurveyMunicipalityCustom" class="form-input" placeholder="Type municipality name"
+                   style="display:none;margin-top:6px">
+        </div>
+        <div class="form-row">
+            <label class="form-label">Barangay</label>
+            <select id="editSurveyBarangay" class="form-input" disabled>
+                <option value="">— Select Barangay —</option>
+            </select>
+            <input type="text" id="editSurveyBarangayCustom" class="form-input" placeholder="Type barangay name"
+                   style="display:none;margin-top:6px">
+        </div>
+        <div class="form-row"><label class="form-label">Barangay No./Zone</label><input type="text" id="editSurveyZone" class="form-input" placeholder="e.g. Zone 3"></div>
+        <div class="form-row"><label class="form-label">Location / Address</label><input type="text" id="editSurveyLocation" class="form-input" placeholder="Street or full address"></div>
+        <div class="form-row"><label class="form-label">Date Registered</label><input type="date" id="editSurveyDate" class="form-input"></div>
+        <div class="form-row"><label class="form-label">Notes</label><input type="text" id="editSurveyNotes" class="form-input" placeholder="Additional notes"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+            <button onclick="closeEditSurveyModal()" style="flex:1;padding:9px;background:#f5f5f5;color:#555;border:none;border-radius:7px;cursor:pointer;font-size:13px">Cancel</button>
+            <button onclick="saveSurveyEdit()" style="flex:1;padding:9px;background:#1a2744;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700">Save Changes</button>
         </div>
     </div>
 </div>
@@ -1751,6 +1805,143 @@ function openLotPopup(lot, layer) {
 }
 
 // ── Edit modal ────────────────────────────────────────────────
+// ── Edit Survey modal ─────────────────────────────────────────
+let currentEditSurveyId = null;
+
+function openEditSurveyModal(id, lsn, owner, municipality, dateReg, notes) {
+    currentEditSurveyId = id;
+    document.getElementById('editSurveyId').value = id;
+    document.getElementById('editSurveyLsn').value = lsn || '';
+    document.getElementById('editSurveyOwner').value = owner || '';
+    document.getElementById('editSurveyDate').value = dateReg ? dateReg.split('T')[0] : '';
+    document.getElementById('editSurveyNotes').value = notes || '';
+
+    // Parse barangay/zone/location from notes
+    const brgyMatch = (notes||'').match(/Brgy[.:]\s*([^|]+)/i);
+    const zoneMatch = (notes||'').match(/Zone[.:]\s*([^|]+)/i);
+    const locMatch  = (notes||'').match(/Loc[.:]\s*([^|]+)/i);
+    document.getElementById('editSurveyZone').value     = zoneMatch ? zoneMatch[1].trim() : '';
+    document.getElementById('editSurveyLocation').value = locMatch  ? locMatch[1].trim()  : '';
+
+    // Set municipality
+    const muniSel = document.getElementById('editSurveyMunicipality');
+    const muniCustom = document.getElementById('editSurveyMunicipalityCustom');
+    // Check if municipality is in the list
+    const opt = Array.from(muniSel.options).find(o => o.value === municipality);
+    if (opt) {
+        muniSel.value = municipality;
+        muniCustom.style.display = 'none';
+        onEditSurveyMuniChange(municipality);
+    } else if (municipality) {
+        muniSel.value = '__custom__';
+        muniCustom.style.display = 'block';
+        muniCustom.value = municipality;
+    } else {
+        muniSel.value = '';
+        muniCustom.style.display = 'none';
+    }
+
+    // Set barangay
+    const brgySel = document.getElementById('editSurveyBarangay');
+    const brgyCustom = document.getElementById('editSurveyBarangayCustom');
+    const brgyVal = brgyMatch ? brgyMatch[1].trim() : '';
+    setTimeout(() => {
+        const brgyOpt = Array.from(brgySel.options).find(o => o.value === brgyVal);
+        if (brgyOpt) {
+            brgySel.value = brgyVal;
+            brgyCustom.style.display = 'none';
+        } else if (brgyVal) {
+            brgySel.value = '__custom_brgy__';
+            brgyCustom.style.display = 'block';
+            brgyCustom.value = brgyVal;
+        }
+    }, 100);
+
+    document.getElementById('editSurveyModal').style.display = 'flex';
+}
+
+function closeEditSurveyModal() {
+    document.getElementById('editSurveyModal').style.display = 'none';
+    currentEditSurveyId = null;
+}
+
+function onEditSurveyMuniChange(muni) {
+    const muniCustom = document.getElementById('editSurveyMunicipalityCustom');
+    const brgySel    = document.getElementById('editSurveyBarangay');
+    const brgyCustom = document.getElementById('editSurveyBarangayCustom');
+
+    muniCustom.style.display = (muni === '__custom__') ? 'block' : 'none';
+    if (muni === '__custom__') { muniCustom.focus(); return; }
+
+    // Populate barangay from locationData
+    brgySel.innerHTML = '<option value="">— Select Barangay —</option>';
+    brgyCustom.style.display = 'none';
+    const brgys = window.locationData?.Pangasinan?.[muni] || [];
+    brgys.filter(b => b !== '— Custom —').forEach(b => {
+        const o = document.createElement('option');
+        o.value = b; o.textContent = b;
+        brgySel.appendChild(o);
+    });
+    const customOpt = document.createElement('option');
+    customOpt.value = '__custom_brgy__'; customOpt.textContent = '— Type custom barangay —';
+    brgySel.appendChild(customOpt);
+    brgySel.disabled = false;
+    brgySel.onchange = function() {
+        brgyCustom.style.display = (this.value === '__custom_brgy__') ? 'block' : 'none';
+        if (this.value === '__custom_brgy__') brgyCustom.focus();
+    };
+}
+
+async function saveSurveyEdit() {
+    const id    = currentEditSurveyId;
+    const lsn   = document.getElementById('editSurveyLsn').value.trim();
+    const owner = document.getElementById('editSurveyOwner').value.trim();
+    if (!lsn || !owner) { showAlert('error', 'LSN and Owner are required.'); return; }
+
+    // Build municipality value
+    const muniSel = document.getElementById('editSurveyMunicipality');
+    let municipality = muniSel.value === '__custom__'
+        ? document.getElementById('editSurveyMunicipalityCustom').value.trim()
+        : muniSel.value;
+
+    // Build barangay value
+    const brgySel = document.getElementById('editSurveyBarangay');
+    let barangay = brgySel.value === '__custom_brgy__'
+        ? document.getElementById('editSurveyBarangayCustom').value.trim()
+        : (brgySel.value || '');
+
+    const zone     = document.getElementById('editSurveyZone').value.trim();
+    const location = document.getElementById('editSurveyLocation').value.trim();
+    const dateReg  = document.getElementById('editSurveyDate').value;
+    const baseNotes= document.getElementById('editSurveyNotes').value.trim();
+
+    // Rebuild notes with updated fields
+    const notesParts = [
+        baseNotes,
+        zone      ? 'Zone: ' + zone      : '',
+        barangay  ? 'Brgy: ' + barangay  : '',
+        location  ? 'Loc: '  + location  : '',
+        municipality ? 'Province: Pangasinan' : '',
+    ].filter(Boolean);
+    const notes = notesParts.join(' | ') || null;
+
+    try {
+        const res = await apiFetch(`/api/surveys/${id}`, 'PUT', {
+            lsn, original_owner: owner, municipality: municipality || null,
+            date_registered: dateReg || null, notes,
+        });
+        if (res.success) {
+            closeEditSurveyModal();
+            await loadSurveys();
+            const updated = allSurveys.find(s => s.id === id);
+            if (updated) showSurveyDetail(updated);
+            showAlert('success', `Survey "${lsn}" updated.`);
+        } else {
+            showAlert('error', res.message || 'Failed to save.');
+        }
+    } catch(e) { showAlert('error', e.message); }
+}
+
 function openEditModal(lotId, lotNum, ownerName, notes) {
     document.getElementById('editLotId').value = lotId;
     document.getElementById('editLotNumber').value = lotNum;
@@ -1913,7 +2104,8 @@ function showSurveyDetail(survey, selectedLotId = null) {
                    onchange="uploadSurveyAttachments(this.files)">
             ` : ''}
         </div>
-        ${isAdmin ? `<button class="btn-primary" style="margin-top:10px;width:100%" onclick="openAddLotModal(${survey.id})"><i class="fas fa-plus-circle"></i> Add Lot to Survey</button>` : ''}
+        ${isAdmin ? `<button class="btn-primary" style="margin-top:10px;width:100%" onclick="openEditSurveyModal(${survey.id},'${escJs(survey.lsn)}','${escJs(survey.original_owner)}','${escJs(survey.municipality||'')}','${escJs(survey.date_registered||'')}','${escJs(survey.notes||'')}')"><i class="fas fa-edit"></i> Edit Survey Info</button>` : ''}
+        ${isAdmin ? `<button class="btn-primary" style="margin-top:8px;width:100%;background:#2e7d32" onclick="openAddLotModal(${survey.id})"><i class="fas fa-plus-circle"></i> Add Lot to Survey</button>` : ''}
         ${isAdmin ? `<button class="btn-secondary" style="margin-top:8px" onclick="deleteSurvey(${survey.id},'${escJs(survey.lsn)}')"><i class="fas fa-trash" style="color:#e53935"></i> Delete Survey</button>` : ''}
     `;
     // Load survey attachments after rendering
@@ -2066,31 +2258,60 @@ function closeAddLotModal() {
     addLotPoints  = [];
     addLotPreviewLG.clearLayers();
     if (addLotFinalLayer) { map.removeLayer(addLotFinalLayer); addLotFinalLayer = null; }
+    map.doubleClickZoom.enable();
     map.getContainer().style.cursor = '';
+    document.getElementById('floatingDrawBar').style.display = 'none';
+    document.getElementById('addLotModal').style.background = 'rgba(0,0,0,0.5)';
+    document.getElementById('addLotModal').style.pointerEvents = '';
     document.getElementById('addLotModal').style.display = 'none';
 }
 
 function startAddLotDraw() {
     if (addLotDrawing) {
-        // Cancel
-        addLotDrawing = false;
-        addLotPoints  = [];
-        addLotPreviewLG.clearLayers();
-        map.getContainer().style.cursor = '';
-        document.getElementById('addLotDrawBtnText').textContent = 'Draw Lot on Map';
-        document.getElementById('addLotDrawBtn').style.background = '#2e7d32';
+        cancelAddLotDraw();
         return;
     }
     addLotDrawing = true;
     addLotPoints  = [];
     if (addLotFinalLayer) { map.removeLayer(addLotFinalLayer); addLotFinalLayer = null; }
     addLotPreviewLG.clearLayers();
+    map.doubleClickZoom.disable();
     map.getContainer().style.cursor = 'crosshair';
-    document.getElementById('addLotDrawBtnText').textContent = 'Cancel Drawing';
-    document.getElementById('addLotDrawBtn').style.background = '#e53935';
-    document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-hand-pointer"></i> Click points on the map. Double-click to finish.';
-    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points. Double-click to close.';
+
+    // Hide the modal overlay so the map is fully accessible
+    document.getElementById('addLotModal').style.background = 'transparent';
+    document.getElementById('addLotModal').style.pointerEvents = 'none';
+
+    // Show the floating bar
+    const bar = document.getElementById('floatingDrawBar');
+    bar.style.display = 'flex';
+    document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points · Double-click to finish lot';
     document.getElementById('mapHint').classList.remove('hide');
+}
+
+function cancelAddLotDraw() {
+    addLotDrawing = false;
+    addLotPoints  = [];
+    addLotPreviewLG.clearLayers();
+    map.doubleClickZoom.enable();
+    map.getContainer().style.cursor = '';
+    document.getElementById('mapHint').classList.add('hide');
+    // Restore modal overlay
+    document.getElementById('addLotModal').style.background = 'rgba(0,0,0,0.5)';
+    document.getElementById('addLotModal').style.pointerEvents = '';
+    document.getElementById('floatingDrawBar').style.display = 'none';
+    document.getElementById('addLotDrawBtnText').textContent = 'Draw Lot on Map';
+    document.getElementById('addLotDrawBtn').style.background = '#2e7d32';
+}
+
+function undoAddLotPoint() {
+    if (addLotPoints.length === 0) return;
+    addLotPoints.pop();
+    addLotPreviewLG.clearLayers();
+    if (addLotPoints.length > 0) {
+        addLotPoints.forEach(p => L.circleMarker(p, { radius:4, color:'#2e7d32', fillColor:'#2e7d32', fillOpacity:1 }).addTo(addLotPreviewLG));
+        if (addLotPoints.length >= 2) L.polyline(addLotPoints, { color:'#2e7d32', dashArray:'5,4' }).addTo(addLotPreviewLG);
+    }
 }
 
 // Hook into map click/dblclick for add-lot mode
@@ -2143,6 +2364,11 @@ map.on('dblclick', async function(e) {
     document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32"></i> Lot drawn! Fill in owner and save.';
     document.getElementById('addLotOverlapWarning').style.display = 'none';
     document.getElementById('mapHint').classList.add('hide');
+    // Restore modal so user can fill in owner details
+    document.getElementById('floatingDrawBar').style.display = 'none';
+    document.getElementById('addLotModal').style.background = 'rgba(0,0,0,0.5)';
+    document.getElementById('addLotModal').style.pointerEvents = '';
+    map.doubleClickZoom.enable();
 });
 
 async function saveAddLot() {
