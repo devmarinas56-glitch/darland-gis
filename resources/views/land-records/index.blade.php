@@ -426,11 +426,11 @@
             @endif
             <div class="map-hint" id="mapHint"><i class="fas fa-draw-polygon"></i> Draw mode: click points to trace a lot boundary. Double-click to finish.</div>
 
-            <!-- Floating draw control — shown when add-lot or new draw is active, keeps modal out of the way -->
-            <div id="floatingDrawBar" style="display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:900;background:#1a2744;color:white;border-radius:12px;padding:10px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.3);display:none;align-items:center;gap:14px;white-space:nowrap">
+            <!-- Floating draw control — shown when add-lot or divide drawing is active -->
+            <div id="floatingDrawBar" style="display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:900;background:#1a2744;color:white;border-radius:12px;padding:10px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.3);align-items:center;gap:14px;white-space:nowrap">
                 <span id="floatingDrawMsg" style="font-size:13px;font-weight:600"><i class="fas fa-draw-polygon" style="margin-right:7px"></i>Click points on map · Double-click to finish</span>
-                <button onclick="undoAddLotPoint()" id="floatingUndoBtn" style="padding:5px 12px;background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-undo"></i> Undo</button>
-                <button onclick="cancelAddLotDraw()" style="padding:5px 12px;background:#e53935;border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-times"></i> Cancel</button>
+                <button onclick="undoCurrentDraw()" style="padding:5px 12px;background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-undo"></i> Undo</button>
+                <button onclick="cancelCurrentDraw()" style="padding:5px 12px;background:#e53935;border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-times"></i> Cancel</button>
             </div>
         </div>
 
@@ -2260,9 +2260,8 @@ function closeAddLotModal() {
     if (addLotFinalLayer) { map.removeLayer(addLotFinalLayer); addLotFinalLayer = null; }
     map.doubleClickZoom.enable();
     map.getContainer().style.cursor = '';
-    document.getElementById('floatingDrawBar').style.display = 'none';
-    document.getElementById('addLotModal').style.background = 'rgba(0,0,0,0.5)';
-    document.getElementById('addLotModal').style.pointerEvents = '';
+    hideFloatingBar();
+    restoreModalOverlay('addLotModal');
     document.getElementById('addLotModal').style.display = 'none';
 }
 
@@ -2277,14 +2276,8 @@ function startAddLotDraw() {
     addLotPreviewLG.clearLayers();
     map.doubleClickZoom.disable();
     map.getContainer().style.cursor = 'crosshair';
-
-    // Hide the modal overlay so the map is fully accessible
-    document.getElementById('addLotModal').style.background = 'transparent';
-    document.getElementById('addLotModal').style.pointerEvents = 'none';
-
-    // Show the floating bar
-    const bar = document.getElementById('floatingDrawBar');
-    bar.style.display = 'flex';
+    collapseModalOverlay('addLotModal');
+    showFloatingBar('Click points on map · Double-click to finish lot', '#a5d6a7');
     document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Click to place points · Double-click to finish lot';
     document.getElementById('mapHint').classList.remove('hide');
 }
@@ -2296,10 +2289,8 @@ function cancelAddLotDraw() {
     map.doubleClickZoom.enable();
     map.getContainer().style.cursor = '';
     document.getElementById('mapHint').classList.add('hide');
-    // Restore modal overlay
-    document.getElementById('addLotModal').style.background = 'rgba(0,0,0,0.5)';
-    document.getElementById('addLotModal').style.pointerEvents = '';
-    document.getElementById('floatingDrawBar').style.display = 'none';
+    restoreModalOverlay('addLotModal');
+    hideFloatingBar();
     document.getElementById('addLotDrawBtnText').textContent = 'Draw Lot on Map';
     document.getElementById('addLotDrawBtn').style.background = '#2e7d32';
 }
@@ -2311,6 +2302,46 @@ function undoAddLotPoint() {
     if (addLotPoints.length > 0) {
         addLotPoints.forEach(p => L.circleMarker(p, { radius:4, color:'#2e7d32', fillColor:'#2e7d32', fillOpacity:1 }).addTo(addLotPreviewLG));
         if (addLotPoints.length >= 2) L.polyline(addLotPoints, { color:'#2e7d32', dashArray:'5,4' }).addTo(addLotPreviewLG);
+    }
+}
+
+// ── Unified floating-bar cancel / undo ────────────────────────
+function cancelCurrentDraw() {
+    if (addLotDrawing)   { cancelAddLotDraw();   return; }
+    if (divideDrawingA)  {
+        divideDrawingA = false;
+        dividePointsA  = [];
+        dividePreviewLG.clearLayers();
+        map.doubleClickZoom.enable();
+        map.getContainer().style.cursor = '';
+        document.getElementById('mapHint').classList.add('hide');
+        hideFloatingBar();
+        restoreModalOverlay('divideLotModal');
+        return;
+    }
+    if (divideDrawingB) {
+        divideDrawingB = false;
+        dividePointsB  = [];
+        dividePreviewLG.clearLayers();
+        map.doubleClickZoom.enable();
+        map.getContainer().style.cursor = '';
+        document.getElementById('mapHint').classList.add('hide');
+        hideFloatingBar();
+        restoreModalOverlay('divideLotModal');
+    }
+}
+
+function undoCurrentDraw() {
+    if (addLotDrawing) { undoAddLotPoint(); return; }
+    if (divideDrawingA && dividePointsA.length > 0) {
+        dividePointsA.pop();
+        dividePreviewLG.clearLayers();
+        if (dividePointsA.length >= 2) L.polyline(dividePointsA, { color:'#1976d2', dashArray:'5,4' }).addTo(dividePreviewLG);
+    }
+    if (divideDrawingB && dividePointsB.length > 0) {
+        dividePointsB.pop();
+        dividePreviewLG.clearLayers();
+        if (dividePointsB.length >= 2) L.polyline(dividePointsB, { color:'#e53935', dashArray:'5,4' }).addTo(dividePreviewLG);
     }
 }
 
@@ -2364,10 +2395,8 @@ map.on('dblclick', async function(e) {
     document.getElementById('addLotDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32"></i> Lot drawn! Fill in owner and save.';
     document.getElementById('addLotOverlapWarning').style.display = 'none';
     document.getElementById('mapHint').classList.add('hide');
-    // Restore modal so user can fill in owner details
-    document.getElementById('floatingDrawBar').style.display = 'none';
-    document.getElementById('addLotModal').style.background = 'rgba(0,0,0,0.5)';
-    document.getElementById('addLotModal').style.pointerEvents = '';
+    hideFloatingBar();
+    restoreModalOverlay('addLotModal');
     map.doubleClickZoom.enable();
 });
 
@@ -2438,8 +2467,34 @@ function closeDivideLotModal() {
     dividePreviewLG.clearLayers();
     if (divideLayerA) { map.removeLayer(divideLayerA); divideLayerA = null; }
     if (divideLayerB) { map.removeLayer(divideLayerB); divideLayerB = null; }
+    map.doubleClickZoom.enable();
     map.getContainer().style.cursor = '';
+    // Always restore modal + hide floating bar
+    hideFloatingBar();
     document.getElementById('divideLotModal').style.display = 'none';
+}
+
+function showFloatingBar(msg, color) {
+    const bar = document.getElementById('floatingDrawBar');
+    document.getElementById('floatingDrawMsg').innerHTML =
+        `<i class="fas fa-draw-polygon" style="margin-right:7px;color:${color||'#fff'}"></i>${msg}`;
+    bar.style.display = 'flex';
+}
+
+function hideFloatingBar() {
+    document.getElementById('floatingDrawBar').style.display = 'none';
+}
+
+function collapseModalOverlay(modalId) {
+    const m = document.getElementById(modalId);
+    m.style.background      = 'transparent';
+    m.style.pointerEvents   = 'none';
+}
+
+function restoreModalOverlay(modalId) {
+    const m = document.getElementById(modalId);
+    m.style.background      = 'rgba(0,0,0,0.5)';
+    m.style.pointerEvents   = '';
 }
 
 function startDivideDrawA() {
@@ -2447,8 +2502,10 @@ function startDivideDrawA() {
     dividePointsA  = [];
     dividePreviewLG.clearLayers();
     if (divideLayerA) { map.removeLayer(divideLayerA); divideLayerA = null; }
+    map.doubleClickZoom.disable();
     map.getContainer().style.cursor = 'crosshair';
-    document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-hand-pointer"></i> Drawing Part A — click points, double-click to finish.';
+    collapseModalOverlay('divideLotModal');
+    showFloatingBar('Drawing Part A — click points · Double-click to finish', '#64b5f6');
     document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Part A: click points, double-click to finish.';
     document.getElementById('mapHint').classList.remove('hide');
 }
@@ -2458,8 +2515,10 @@ function startDivideDrawB() {
     dividePointsB  = [];
     dividePreviewLG.clearLayers();
     if (divideLayerB) { map.removeLayer(divideLayerB); divideLayerB = null; }
+    map.doubleClickZoom.disable();
     map.getContainer().style.cursor = 'crosshair';
-    document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-hand-pointer"></i> Drawing Part B — click points, double-click to finish.';
+    collapseModalOverlay('divideLotModal');
+    showFloatingBar('Drawing Part B — click points · Double-click to finish', '#ef9a9a');
     document.getElementById('mapHint').innerHTML = '<i class="fas fa-draw-polygon"></i> Part B: click points, double-click to finish.';
     document.getElementById('mapHint').classList.remove('hide');
 }
@@ -2484,6 +2543,7 @@ map.on('dblclick', function(e) {
         if (dividePointsA.length < 3) { alert('Need at least 3 points for Part A.'); return; }
         divideDrawingA = false;
         dividePreviewLG.clearLayers();
+        map.doubleClickZoom.enable();
         map.getContainer().style.cursor = '';
         const area = polygonAreaSqm(dividePointsA);
         divideLayerA = L.polygon(dividePointsA, { color:'#1976d2', fillColor:'#1976d2', fillOpacity:0.3, weight:2 }).addTo(map);
@@ -2491,17 +2551,22 @@ map.on('dblclick', function(e) {
         document.getElementById('divideDrawBBtn').disabled = false;
         document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#1976d2"></i> Part A drawn! Now click <strong>Draw Part B</strong>.';
         document.getElementById('mapHint').classList.add('hide');
+        hideFloatingBar();
+        restoreModalOverlay('divideLotModal');
     } else if (divideDrawingB) {
         if (dividePointsB.length > 0) dividePointsB.pop();
         if (dividePointsB.length < 3) { alert('Need at least 3 points for Part B.'); return; }
         divideDrawingB = false;
         dividePreviewLG.clearLayers();
+        map.doubleClickZoom.enable();
         map.getContainer().style.cursor = '';
         const area = polygonAreaSqm(dividePointsB);
         divideLayerB = L.polygon(dividePointsB, { color:'#e53935', fillColor:'#e53935', fillOpacity:0.3, weight:2 }).addTo(map);
         document.getElementById('divideAreaB').textContent = `${Math.round(area).toLocaleString()} sqm`;
         document.getElementById('divideDrawStatus').innerHTML = '<i class="fas fa-check-circle" style="color:#2e7d32"></i> Both parts drawn! Enter owners and save.';
         document.getElementById('mapHint').classList.add('hide');
+        hideFloatingBar();
+        restoreModalOverlay('divideLotModal');
     }
 });
 
