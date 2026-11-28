@@ -426,11 +426,17 @@
             @endif
             <div class="map-hint" id="mapHint"><i class="fas fa-draw-polygon"></i> Draw mode: click points to trace a lot boundary. Double-click to finish.</div>
 
-            <!-- Floating draw control — shown when add-lot or divide drawing is active -->
-            <div id="floatingDrawBar" style="display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:900;background:#1a2744;color:white;border-radius:12px;padding:10px 18px;box-shadow:0 4px 20px rgba(0,0,0,0.3);align-items:center;gap:14px;white-space:nowrap">
-                <span id="floatingDrawMsg" style="font-size:13px;font-weight:600"><i class="fas fa-draw-polygon" style="margin-right:7px"></i>Click points on map · Double-click to finish</span>
-                <button onclick="undoCurrentDraw()" style="padding:5px 12px;background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-undo"></i> Undo</button>
-                <button onclick="cancelCurrentDraw()" style="padding:5px 12px;background:#e53935;border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600"><i class="fas fa-times"></i> Cancel</button>
+            <!-- Floating draw control — top-right corner, vertical stack, out of drawing area -->
+            <div id="floatingDrawBar" style="display:none;position:absolute;top:10px;right:56px;z-index:1001;background:#1a2744;color:white;border-radius:10px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,0.35);flex-direction:column;gap:8px;min-width:170px;max-width:200px">
+                <div id="floatingDrawMsg" style="font-size:12px;font-weight:600;line-height:1.4;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:8px">
+                    <i class="fas fa-draw-polygon" style="margin-right:6px;color:#a5d6a7"></i>Click points on map.<br>Double-click to finish.
+                </div>
+                <button onclick="undoCurrentDraw()" style="width:100%;padding:6px 10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:600;text-align:left;display:flex;align-items:center;gap:7px">
+                    <i class="fas fa-undo" style="font-size:11px"></i> Undo Last Point
+                </button>
+                <button onclick="cancelCurrentDraw()" style="width:100%;padding:6px 10px;background:#e53935;border:none;border-radius:6px;color:white;cursor:pointer;font-size:12px;font-weight:700;text-align:left;display:flex;align-items:center;gap:7px">
+                    <i class="fas fa-times" style="font-size:11px"></i> Cancel Drawing
+                </button>
             </div>
         </div>
 
@@ -2477,7 +2483,7 @@ function closeDivideLotModal() {
 function showFloatingBar(msg, color) {
     const bar = document.getElementById('floatingDrawBar');
     document.getElementById('floatingDrawMsg').innerHTML =
-        `<i class="fas fa-draw-polygon" style="margin-right:7px;color:${color||'#fff'}"></i>${msg}`;
+        `<i class="fas fa-draw-polygon" style="margin-right:6px;color:${color||'#a5d6a7'}"></i>${msg}`;
     bar.style.display = 'flex';
 }
 
